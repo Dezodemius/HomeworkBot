@@ -26,7 +26,6 @@ namespace DataContracts
       Accepted
     }
 
-
     public string Id { get; set; }
     public string FullName { get; set; }
     public UserRole Role { get; set; }

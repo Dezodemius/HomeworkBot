@@ -51,7 +51,7 @@ namespace TelegramBot_HomeWork
             participant = new RoleModels.Student(message.Chat.Id.ToString(), $"{message.Chat.LastName} {message.Chat.FirstName}");
             break;
           case IParticipant.UserRole.Teacher:
-            participant = new RoleModels.Teacher();
+            participant = new RoleModels.Teacher(message.Chat.Id.ToString(), $"{message.Chat.LastName} {message.Chat.FirstName}");
             break;
           case IParticipant.UserRole.Admin:
             participant = new RoleModels.Administrator();
