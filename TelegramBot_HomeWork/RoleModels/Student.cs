@@ -16,8 +16,8 @@ namespace RoleModels
     public string Id { get; set; }
     public string FullName { get; set; }
     public UserRole Role { get; set; }
+    public string ActiveHomeWorkNumber { get; set; }
     static SqliteDatabase sqliteDatabase;
-    static string homeWorkNumber;
 
     /// <summary>
     /// Основной метод, обрабатывающий входящие сообщения.
@@ -119,12 +119,12 @@ namespace RoleModels
       {
         if (status == HomeworkStatus.NotReviewed)
         {
-          await client.SendTextMessageAsync(message.Chat.Id, "Вы не можете изменить данное домашнее задание, пока преподаватель его не проверил. Выберите другое задание.", cancellationToken: token);
+          await ShowHomeworkOptions(client, message.Chat.Id, "Вы не можете изменить данное домашнее задание, пока преподаватель его не проверил. Выберите другое задание.", token);
           return;
         }
         else if (status == HomeworkStatus.Accepted)
         {
-          await client.SendTextMessageAsync(message.Chat.Id, "Ваше домашнее задание уже зачтено. Пожалуйста, не нагружайте преподавателя лишней работой. Выберите другое задание.", cancellationToken: token);
+          await ShowHomeworkOptions(client, message.Chat.Id, "Ваше домашнее задание уже зачтено. Пожалуйста, не нагружайте преподавателя лишней работой. Выберите другое задание.", token);
           return;
         }
       }
@@ -136,7 +136,7 @@ namespace RoleModels
       {
         ResizeKeyboard = true
       }, cancellationToken: token);
-      homeWorkNumber = message.Text;
+      ActiveHomeWorkNumber = message.Text;
     }
 
     /// <summary>
@@ -187,13 +187,13 @@ namespace RoleModels
     /// <param name="token">Токен отмены.</param>
     private async Task HandleGitHubLink(ITelegramBotClient client, Message message, CancellationToken token)
     {
-      if (await sqliteDatabase.AddHomeworkRecordAsync(this, homeWorkNumber, message.Text))
+      if (await sqliteDatabase.AddHomeworkRecordAsync(this, ActiveHomeWorkNumber, message.Text))
       {
         List<string> teachers = await sqliteDatabase.GetAllTeacherIdsAsync();
         foreach (string teacher in teachers)
         {
           ChatId id = new ChatId(teacher);
-          await client.SendTextMessageAsync(id, $"Пользователь: {FullName} добавил ответ на \"{homeWorkNumber}\" : {message.Text}", cancellationToken: token);
+          await client.SendTextMessageAsync(id, $"Пользователь: {FullName} добавил ответ на \"{ActiveHomeWorkNumber}\" : {message.Text}", cancellationToken: token);
         }
       }
 
@@ -240,6 +240,20 @@ namespace RoleModels
       FullName = fulName;
       Role = UserRole.Student;
       sqliteDatabase = new SqliteDatabase(DefaultData.botConfig.DbConnectionString, null, null);
+    }
+
+    /// <summary>
+    /// Конструктор класса Student.
+    /// </summary>
+    /// <param name="id">Идентификатор студента.</param>
+    /// <param name="fullName">Полное имя студента.</param>
+    public Student(string id, string fulName, string numberHomeWork)
+    {
+      Id = id;
+      FullName = fulName;
+      Role = UserRole.Student;
+      sqliteDatabase = new SqliteDatabase(DefaultData.botConfig.DbConnectionString, null, null);
+      ActiveHomeWorkNumber = numberHomeWork;
     }
   }
 }
