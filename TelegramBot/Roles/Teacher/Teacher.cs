@@ -1,15 +1,14 @@
+using ModelInterfaceHub.Interfaces;
+using ModelInterfaceHub.Models;
 using Telegram.Bot.Types.ReplyMarkups;
-using TelegramBot.Data;
-using TelegramBot.Models;
 
 namespace TelegramBot.Roles
 {
   /// <summary>
   /// Представляет пользователя с ролью учителя в системе.
   /// </summary>
-  public class Teacher : User
+  public class Teacher : UserModel, IMessageHandler
   {
-    private readonly DatabaseManager _dbManager;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса Teacher.
@@ -18,77 +17,74 @@ namespace TelegramBot.Roles
     /// <param name="firstName">Имя учителя.</param>
     /// <param name="lastName">Фамилия учителя.</param>
     /// <param name="email">Адрес электронной почты учителя.</param>
-    /// <param name="dbManager">Менеджер базы данных.</param>
-    public Teacher(long telegramChatId, string firstName, string lastName, string email, DatabaseManager dbManager)
-        : base(telegramChatId, firstName, lastName, email, UserRole.Teacher)
-    {
-      _dbManager = dbManager;
-    }
-
-    public override InlineKeyboardMarkup Start()
-    {
-      return new InlineKeyboardMarkup(new[]
-      {
-         new[]
-         {
-             InlineKeyboardButton.WithCallbackData("Тест препода 1", $"test_teacher_1"),
-             InlineKeyboardButton.WithCallbackData("Тест препода 2", $"test_teacher_2")
-         }
-      });
-    }
-
+    public Teacher(long telegramChatId, string firstName, string lastName, string email)
+        : base(telegramChatId, firstName, lastName, email, UserRole.Teacher) { }
 
     /// <summary>
-    /// Метод для создания нового задания.
+    /// Обрабатывает входящее сообщение от преподавателя.
     /// </summary>
-    public void CreateAssignment()
-    {
-      // Реализация создания задания
-    }
-
-    /// <summary>
-    /// Обрабатывает входящее сообщение от учителя.
-    /// </summary>
-    /// <param name="message">Текст сообщения от учителя.</param>
+    /// <param name="message">Текст сообщения от пропеодавателя.</param>
     /// <returns>Ответ на сообщение учителя.</returns>
-    public override async Task<string> ProcessMessageAsync(string message)
+    public async Task<string> ProcessMessageAsync(string message)
     {
-      if (message.StartsWith("/createcourse"))
-      {
-        return await CreateCourseAsync(message);
-      }
-      else if (message.StartsWith("/assignhomework"))
-      {
-        return await AssignHomeworkAsync(message);
-      }
-      return "Неизвестная команда учителя.";
-    }
-
-    public override Task<string> ProcessCallbackAsync(string callbackData)
-    {
-      return base.ProcessCallbackAsync(callbackData);
+      throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Создает новый курс.
+    /// Обработка Callback запросов от преподавателя.
     /// </summary>
-    /// <param name="message">Сообщение с информацией о курсе.</param>
-    /// <returns>Результат создания курса.</returns>
-    private async Task<string> CreateCourseAsync(string message)
+    /// <param name="callbackData">Данные обратного вызова.</param>
+    /// <returns>Результат обработки запроса.</returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public async Task<string> ProcessCallbackAsync(string callbackData)
     {
-      // Реализация создания курса
-      return "Курс успешно создан.";
+      throw new NotImplementedException();  
     }
 
     /// <summary>
-    /// Назначает домашнее задание.
+    /// Просмотр непроверенных домашних заданий.
     /// </summary>
-    /// <param name="message">Сообщение с информацией о домашнем задании.</param>
-    /// <returns>Результат назначения домашнего задания.</returns>
-    private async Task<string> AssignHomeworkAsync(string message)
-    {
-      // Реализация назначения домашнего задания
-      return "Домашнее задание успешно назначено.";
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task ViewUncheckedHomeworks()
+    { 
+      throw new NotImplementedException();  
     }
+
+    /// <summary>
+    /// Отображение непроверенных домашних заданий.
+    /// </summary>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task ShowUncheckedHomeworks()
+    { 
+      throw new NotImplementedException();  
+    }
+
+    /// <summary>
+    /// Отображение кнопок для работы с домашними заданиями.
+    /// </summary>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task DisplayHomeworkButtons()
+    { 
+      throw new NotImplementedException();  
+    }
+
+    /// <summary>
+    /// Отображение невыполненных домашних заданий.
+    /// </summary>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task ShowUncompletedHomeworks()
+    { 
+      throw new NotImplementedException();  
+    }
+
+    /// <summary>
+    /// Отображение выполненных домашних заданий.
+    /// </summary>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task ShowCompletedHomeworks()
+    {
+      throw new NotImplementedException();
+    }
+
   }
 }

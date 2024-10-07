@@ -1,6 +1,5 @@
-using Telegram.Bot.Types.ReplyMarkups;
 
-namespace TelegramBot.Models
+namespace ModelInterfaceHub.Models
 {
   /// <summary>
   /// Перечисление, представляющее роли пользователей в системе.
@@ -26,7 +25,7 @@ namespace TelegramBot.Models
   /// <summary>
   /// Представляет пользователя в системе с общими атрибутами для всех ролей.
   /// </summary>
-  public class User
+  public class UserModel
   {
     /// <summary>
     /// Получает или устанавливает идентификатор чата Telegram пользователя.
@@ -61,7 +60,7 @@ namespace TelegramBot.Models
     /// <param name="lastName">Фамилия пользователя.</param>
     /// <param name="email">Адрес электронной почты пользователя.</param>
     /// <param name="role">Роль пользователя в системе.</param>
-    public User(long telegramChatId, string firstName, string lastName, string email, UserRole role)
+    public UserModel(long telegramChatId, string firstName, string lastName, string email, UserRole role)
     {
       TelegramChatId = telegramChatId;
       FirstName = firstName;
@@ -78,40 +77,5 @@ namespace TelegramBot.Models
     {
       return $"{FirstName} {LastName} ({Role}) - {Email}";
     }
-
-    /// <summary>
-    /// Обрабатывает входящее сообщение от пользователя.
-    /// </summary>
-    /// <param name="message">Текст сообщения от пользователя.</param>
-    /// <returns>Ответ на сообщение пользователя.</returns>
-    public virtual async Task<string> ProcessMessageAsync(string message)
-    {
-      // Базовая реализация
-      return "Это базовый ответ от класса User.";
-    }
-
-
-    /// <summary>
-    /// Обрабатывает входящее сообщение от пользователя.
-    /// </summary>
-    /// <param name="message">Текст сообщения от пользователя.</param>
-    /// <returns>Ответ на сообщение пользователя.</returns>
-    public virtual async Task<string> ProcessCallbackAsync(string callbackData)
-    {
-      // Базовая реализация
-      return "Это базовый ответ от класса User.";
-    }
-
-    /// <summary>
-    /// Обрабатывает входящее сообщение от пользователя.
-    /// </summary>
-    /// <param name="message">Текст сообщения от пользователя.</param>
-    /// <returns>Ответ на сообщение пользователя.</returns>
-    public virtual InlineKeyboardMarkup Start()
-    {
-      // Базовая реализация
-      return "Это базовый ответ от класса User.";
-    }
-
   }
 }

@@ -1,8 +1,6 @@
-﻿using System;
+﻿using Core;
+using Database;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using TelegramBot.Models;
-using TelegramBot.Data;
 
 namespace TelegramBot
 {
@@ -31,19 +29,12 @@ namespace TelegramBot
         dbManager.EnsureDatabaseCreated();
         dbManager.EnsureTablesCreated();
 
-        // Добавляем тестовые данные
-        TestData.SeedTestData(dbManager);
+        Console.WriteLine("База данных и таблицы успешно созданы");
 
-        Console.WriteLine("База данных и таблицы успешно созданы, тестовые данные добавлены");
-
-        // Проверка и добавление администратора
-        await EnsureAdminExistsAsync(dbManager, config.AdminId);
-
-        var botHandler = new TelegramBotHandler(dbManager, config.BotToken);
+        var botHandler = new TelegramBotHandler(config.BotToken);
         await botHandler.StartBotAsync();
 
-        // Здесь будет код для поддержания бота в рабочем состоянии
-        await Task.Delay(-1); // Бесконечное ожидание
+        await Task.Delay(-1);
       }
       catch (Exception ex)
       {
@@ -55,25 +46,6 @@ namespace TelegramBot
 
       Console.WriteLine("Нажмите любую клавишу для выхода...");
       Console.ReadKey();
-    }
-
-    /// <summary>
-    /// Проверяет наличие администратора в базе данных и добавляет его, если он отсутствует.
-    /// </summary>
-    /// <param name="dbManager">Менеджер базы данных.</param>
-    /// <param name="adminId">ID администратора из конфигурации.</param>
-    private static async Task EnsureAdminExistsAsync(DatabaseManager dbManager, long adminId)
-    {
-      if (!dbManager.HasAdministrators())
-      {
-        var admin = new User(adminId, "Admin", "User", "admin@example.com", UserRole.Administrator);
-        dbManager.AddUser(admin);
-        Console.WriteLine($"Администратор с ID {adminId} добавлен в базу данных.");
-      }
-      else
-      {
-        Console.WriteLine("Администратор уже существует в базе данных.");
-      }
     }
   }
 }
