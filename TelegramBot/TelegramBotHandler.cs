@@ -266,11 +266,15 @@ namespace TelegramBot
     /// <param name="message">Текст сообщения для отправки.</param>
     /// <param name="inlineKeyboardMarkup">Опциональная встроенная клавиатура.</param>
     /// <returns>Задача, представляющая асинхронную операцию отправки сообщения.</returns>
-    public static async Task SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null)
+    public static async Task SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
     {
       if (inlineKeyboardMarkup == null)
       {
         await botClient.SendTextMessageAsync(chatId, message);
+      }
+      else if (messageId.HasValue)
+      {
+        await botClient.EditMessageTextAsync(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
       }
       else
       {
