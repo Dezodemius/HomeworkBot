@@ -1,5 +1,6 @@
 using ModelInterfaceHub.Interfaces;
 using ModelInterfaceHub.Models;
+using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramBot.Roles
@@ -20,14 +21,11 @@ namespace TelegramBot.Roles
     public Student(long telegramChatId, string firstName, string lastName, string email)
         : base(telegramChatId, firstName, lastName, email, UserRole.Student) { }
 
-
-
     /// <summary>
     /// Обрабатывает входящее сообщение от студента.
     /// </summary>
     /// <param name="message">Текст сообщения от студента.</param>
-    /// <returns>Ответ на сообщение студента.</returns>
-    public async Task<string> ProcessMessageAsync(string message)
+    public async Task ProcessMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
       throw new NotImplementedException();
     }
@@ -36,9 +34,7 @@ namespace TelegramBot.Roles
     /// Обработка Callback запросов от студента.
     /// </summary>
     /// <param name="callbackData"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public async Task<string> ProcessCallbackAsync(string callbackData)
+    public Task ProcessCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData)
     {
       throw new NotImplementedException();
     }
