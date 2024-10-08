@@ -39,7 +39,7 @@ namespace TelegramBot.Roles
     /// <param name="callbackData"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public async Task ProcessCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData)
+    public async Task ProcessCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
       throw new NotImplementedException();
     }

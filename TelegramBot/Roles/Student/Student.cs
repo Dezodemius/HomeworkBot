@@ -34,7 +34,7 @@ namespace TelegramBot.Roles
     /// Обработка Callback запросов от студента.
     /// </summary>
     /// <param name="callbackData"></param>
-    public Task ProcessCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData)
+    public Task ProcessCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
       throw new NotImplementedException();
     }
