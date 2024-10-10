@@ -29,18 +29,17 @@ namespace Database
     /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public UserModel GetUserById(long userId)
+    public UserModel GetUserById(long userId) 
     {
       throw new NotImplementedException();
     }
 
     /// <summary>
-    /// Возвращает модель пользователя по уникальному идентификатору.
+    /// Возвращает все домашние работы.
     /// </summary>
-    /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public List<HomeWorkModel> GetAllHomeWorks(long userId)
+    public List<HomeWorkModel> GetAllHomeWorks()
     {
       throw new NotImplementedException();
     }
