@@ -35,8 +35,9 @@ namespace Database
     }
 
     /// <summary>
-    /// Возвращает список моделей выполненных пользователями домашних заданий.
+    /// Возвращает все домашние работы.
     /// </summary>
+    /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
     public List<StudentHomeWorkModel> GetAllHomeWorks()
     {
