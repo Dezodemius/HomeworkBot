@@ -22,7 +22,7 @@ namespace Core
     static public List<HomeWorkModel> GetTasksForHomework(int homeworkId, DatabaseManager dbManager)
     {
       List<HomeWorkModel>? tasks = new List<HomeWorkModel>();
-      var allTasks = dbManager.GetAllHomeWorks().FindAll(x=>x.Id==homeworkId);
+      var allTasks = dbManager.GetAllHomeWorks();
       if (allTasks.Any())
       {
         tasks = allTasks.FindAll(x => x.Id == homeworkId);
