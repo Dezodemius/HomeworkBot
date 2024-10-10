@@ -19,13 +19,13 @@ namespace Core
     /// <param name="dbManager">Менеджер базы данных.</param>
     /// <param name="homeworkId">Идентификатор домашнего задания.</param>
     /// <returns>Список моделей задач для домашнего задания.</returns>
-    static public List<HomeWorkModel> GetTasksForHomework(int homeworkId, DatabaseManager dbManager)
+    static public List<StudentHomeWorkModel> GetTasksForHomework(int homeworkId, DatabaseManager dbManager)
     {
-      List<HomeWorkModel>? tasks = new List<HomeWorkModel>();
-      var allTasks = dbManager.GetAllHomeWorks().FindAll(x=>x.Id==homeworkId);
+      List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
+      var allTasks = dbManager.GetAllHomeWorks();
       if (allTasks.Any())
       {
-        tasks = allTasks.FindAll(x => x.Id == homeworkId);
+        tasks = allTasks.FindAll(x => x.IdHomeWork == homeworkId);
       }
       return tasks;
     }
