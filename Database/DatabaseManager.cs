@@ -35,12 +35,10 @@ namespace Database
     }
 
     /// <summary>
-    /// Возвращает модель пользователя по уникальному идентификатору.
+    /// Возвращает список моделей выполненных пользователями домашних заданий.
     /// </summary>
-    /// <param name="userId">Уникальный идентификатор.</param>
-    /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public List<HomeWorkModel> GetAllHomeWorks(long userId)
+    public List<StudentHomeWorkModel> GetAllHomeWorks()
     {
       throw new NotImplementedException();
     }
