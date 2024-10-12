@@ -1,6 +1,5 @@
 using ModelInterfaceHub.Models;
 using System.Data.SQLite;
-using System.IO;
 
 namespace Database
 {
@@ -44,5 +43,53 @@ namespace Database
     {
       throw new NotImplementedException();
     }
+
+    /// <summary>
+    /// Возвращает список студентов, выполнивших конкретное домашнее задание.
+    /// </summary>
+    /// <param name="title">Название домашнего задания.</param>
+    /// <returns>Список студентов.</returns>
+    public List<string> GetStudentName(string title)
+    {
+      var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+      var command = connection.CreateCommand();
+      command.CommandText = @"
+     SELECT 
+         U.FirstName, 
+         U.LastName
+     FROM 
+         Users U
+     JOIN 
+         Submissions S ON U.UserId = S.StudentId
+     JOIN 
+         Assignments A ON S.AssignmentId = A.AssignmentId
+     WHERE 
+         S.Status = 'Approved' 
+         AND A.Title = @title;";
+
+      command.Parameters.AddWithValue("@title", title);
+
+      var studentNames = new List<string>();
+
+      using (var reader = command.ExecuteReader())
+      {
+        while (reader.Read())
+        {
+          var fullName = $"{reader.GetString(0)} {reader.GetString(1)}";
+          studentNames.Add(fullName);
+        }
+      }
+
+      if (studentNames.Capacity != 0)
+      {
+        foreach (var studentname in studentNames)
+        Console.WriteLine(studentname);
+        
+        return studentNames;
+      }
+      else throw new SystemException();
+    }
+
   }
 }
