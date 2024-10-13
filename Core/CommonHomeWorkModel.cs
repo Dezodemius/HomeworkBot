@@ -51,7 +51,7 @@ namespace Core
   /// <exception cref="Exception">Другие исключения, которые могут возникнуть.</exception>
     static public List<string> GetStudentsCompletedHomework(string title)
     {
-      string connectionString = "Data Source=C:\\Users\\Алина\\source\\repos\\HomeworkBot\\Database\\Users.db";
+      //string connectionString = "Data Source=C:\\Users\\Алина\\source\\repos\\HomeworkBot\\Database\\Users.db";
       DatabaseManager databaseManager = new DatabaseManager(connectionString);
 
       try
