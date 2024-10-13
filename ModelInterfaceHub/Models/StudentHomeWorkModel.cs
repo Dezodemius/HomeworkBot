@@ -37,14 +37,19 @@ namespace ModelInterfaceHub.Models
   public class StudentHomeWorkModel
   {
     /// <summary>
-    /// Уникальный идентификатор выполненного домашнего задания.
+    /// Уникальный идентификатор выданного домашнего задания.
     /// </summary>
-    public int IdHomeWork {  get; set; }
+    public int IdSubmissions { get; set; }
+
+    /// <summary>
+    /// Уникальный идентификатор домашнего задания.
+    /// </summary>
+    public int IdHomeWork { get; set; }
 
     /// <summary>
     /// Уникальный идентификатор студента.
     /// </summary>
-    public int IdStudent {  get; set; }
+    public int IdStudent { get; set; }
 
     /// <summary>
     /// Ссылка на GitHub с выполненным заданием.
@@ -54,7 +59,7 @@ namespace ModelInterfaceHub.Models
     /// <summary>
     /// Статус домашнего задания.
     /// </summary>
-    public StatusWork Status {  get; set; }
+    public StatusWork Status { get; set; }
 
     /// <summary>
     /// Комментарий преподавателя к домашнему заданию.
@@ -64,15 +69,17 @@ namespace ModelInterfaceHub.Models
     /// <summary>
     /// Конструктор класса StudentHomeWorkModel.
     /// </summary>
+    /// <param name="idSubmissions">Уникальный идентификатор выданного домашнего задания.</param>
     /// <param name="idHomeWork">Уникальный идентификатор домашнего задания.</param>
     /// <param name="idStudent">Уникальный идентификатор студента.</param>
     /// <param name="githubLink">Ссылка на GitHub с выполненным заданием.</param>
     /// <param name="status">Статус домашнего задания.</param>
     /// <param name="teacherComment">Комментарий преподавателя к домашнему заданию.</param>
-    public StudentHomeWorkModel(int idHomeWork, int idStudent, string githubLink, StatusWork status, string teacherComment)
+    public StudentHomeWorkModel(int idHomeWork, int idSubmissions, int idStudent, string githubLink, StatusWork status, string teacherComment)
     {
+      this.IdSubmissions = idSubmissions;
       this.IdHomeWork = idHomeWork;
-      this.IdStudent = idStudent; 
+      this.IdStudent = idStudent;
       this.GithubLink = githubLink;
       this.Status = status;
       this.TeacherComment = teacherComment;
