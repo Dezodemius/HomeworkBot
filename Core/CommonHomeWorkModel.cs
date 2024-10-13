@@ -1,5 +1,10 @@
 ﻿using Database;
 using ModelInterfaceHub.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Core
 {
@@ -11,11 +16,20 @@ namespace Core
     /// <summary>
     /// Получает список задач для указанного домашнего задания.
     /// </summary>
+    /// <param name="dbManager">Менеджер базы данных.</param>
     /// <param name="homeworkId">Идентификатор домашнего задания.</param>
     /// <returns>Список моделей задач для домашнего задания.</returns>
-    static public List<HomeWorkModel> GetTasksForHomework(int homeworkId)
+
+   
+    static public List<StudentHomeWorkModel> GetTasksForHomework(int homeworkId, DatabaseManager dbManager)
     {
-      throw new NotImplementedException();
+      List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
+      var allTasks = dbManager.GetAllHomeWorks();
+      if (allTasks.Any())
+      {
+        tasks = allTasks.FindAll(x => x.IdHomeWork == homeworkId);
+      }
+      return tasks;
     }
 
     /// <summary>
