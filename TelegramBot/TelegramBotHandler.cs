@@ -1,14 +1,12 @@
-using System.Data.SQLite;
-using TelegramBot.Roles;
+using Core;
+using ModelInterfaceHub.Models;
 using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using System.Collections.Concurrent;
-using ModelInterfaceHub.Models;
-using Core;
+using TelegramBot.Roles;
 
 namespace TelegramBot
 {
@@ -75,24 +73,27 @@ namespace TelegramBot
 
     #region Обработка сообщений.
 
-    /// <summary>
-    /// Обрабатывает входящие сообщения от пользователей.
-    /// </summary>
-    /// <param name="message">Сообщение от пользователя.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
     private async Task HandleMessageAsync(Message message, CancellationToken cancellationToken)
     {
       var chatId = message.Chat.Id;
       var messageText = message.Text;
-      UserRole? userRole = CommonDataModel.GetUserRoleById(chatId);
 
-      string responseMessage = userRole switch
+      //TODO : Позже раскоментить
+      //UserRole? userRole = CommonDataModel.GetUserRoleById(chatId);
+      UserRole userRole = UserRole.Student;
+
+      bool responseMessage = userRole switch
       {
         UserRole.Administrator => await HandleAdministratorMessageAsync(chatId, messageText),
         UserRole.Teacher => await HandleTeacherMessageAsync(chatId, messageText),
         UserRole.Student => await HandleStudentMessageAsync(chatId, messageText),
-        _ => "Извините, произошла ошибка при определении вашей роли."
+        _ => false
       };
+
+      if (!responseMessage)
+      {
+        await _botClient.SendTextMessageAsync(chatId, "Ошибка: Данные пользователя не найдены!");
+      }
     }
 
     /// <summary>
@@ -101,15 +102,16 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата администратора.</param>
     /// <param name="message">Текст сообщения.</param>
     /// <returns>Ответ на сообщение администратора.</returns>
-    private async Task<string> HandleAdministratorMessageAsync(long chatId, string message)
+    private async Task<bool> HandleAdministratorMessageAsync(long chatId, string message)
     {
-      var userData =  CommonDataModel.GetUserById(chatId);
+      var userData = CommonDataModel.GetUserById(chatId);
       if (userData != null)
       {
         var admin = new Administrator(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        return await admin.ProcessMessageAsync(message);
+        await admin.ProcessMessageAsync(_botClient, chatId, message);
+        return true;
       }
-      return "Ошибка: данные администратора не найдены.";
+      return false;
     }
 
     /// <summary>
@@ -118,15 +120,16 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата учителя.</param>
     /// <param name="message">Текст сообщения.</param>
     /// <returns>Ответ на сообщение учителя.</returns>
-    private async Task<string> HandleTeacherMessageAsync(long chatId, string message)
+    private async Task<bool> HandleTeacherMessageAsync(long chatId, string message)
     {
       var userData = CommonDataModel.GetUserById(chatId);
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        return await teacher.ProcessMessageAsync(message);
+        await teacher.ProcessMessageAsync(_botClient, chatId, message);
+        return true;
       }
-      return "Ошибка: данные учителя не найдены.";
+      return false;
     }
 
     /// <summary>
@@ -135,16 +138,20 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата студента.</param>
     /// <param name="message">Текст сообщения.</param>
     /// <returns>Ответ на сообщение студента.</returns>
-    private async Task<string> HandleStudentMessageAsync(long chatId, string message)
+    private async Task<bool> HandleStudentMessageAsync(long chatId, string message)
     {
-      var userData = CommonDataModel.GetUserById(chatId);
+      //TODO : Позже раскоментить
+      // var userData = CommonDataModel.GetUserById(chatId);
+      var userData = new UserModel(chatId, "TestName", "TestLastname", "email@mail.ru", UserRole.Student);
       if (userData != null)
       {
         var student = new Student(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        return await student.ProcessMessageAsync(message);
+        await student.ProcessMessageAsync(_botClient, chatId, message);
+        return true;
       }
-      return "Ошибка: данные студента не найдены.";
+      return false;
     }
+
 
     #endregion
 
@@ -158,16 +165,23 @@ namespace TelegramBot
     private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
     {
       var chatId = callbackQuery.From.Id;
-      UserRole? userRole = CommonDataModel.GetUserRoleById(chatId);
 
-      string responseMessage = string.Empty;
-      responseMessage = userRole switch
+      //TODO : Позже раскоментить
+      //UserRole? userRole = CommonDataModel.GetUserRoleById(chatId);
+      UserRole userRole = UserRole.Student;
+
+      bool responseMessage = userRole switch
       {
-        UserRole.Administrator => await HandleAdministratorCallbackAsync(chatId, callbackQuery.Data),
-        UserRole.Teacher => await HandleTeacherCallbackAsync(chatId, callbackQuery.Data),
-        UserRole.Student => await HandleStudentCallbackAsync(chatId, callbackQuery.Data),
-        _ => "Извините, произошла ошибка при определении вашей роли."
+        UserRole.Administrator => await HandleAdministratorCallbackAsync(chatId, callbackQuery.Data, callbackQuery.Message.MessageId),
+        UserRole.Teacher => await HandleTeacherCallbackAsync(chatId, callbackQuery.Data, callbackQuery.Message.MessageId),
+        UserRole.Student => await HandleStudentCallbackAsync(chatId, callbackQuery.Data, callbackQuery.Message.MessageId),
+        _ => false
       };
+
+      if (!responseMessage)
+      {
+        await _botClient.SendTextMessageAsync(chatId, "Ошибка: Данные пользователя не найдены!");
+      }
     }
 
     /// <summary>
@@ -176,15 +190,16 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата администратора.</param>
     /// <param name="callbackData">Данные callback-запроса.</param>
     /// <returns>Ответ на callback-запрос администратора.</returns>
-    private async Task<string> HandleAdministratorCallbackAsync(long chatId, string callbackData)
+    private async Task<bool> HandleAdministratorCallbackAsync(long chatId, string callbackData, int messageId)
     {
       var userData = CommonDataModel.GetUserById(chatId);
       if (userData != null)
       {
         var admin = new Administrator(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        return await admin.ProcessCallbackAsync(callbackData);
+        await admin.ProcessCallbackAsync(_botClient, chatId, callbackData, messageId);
+        return true;
       }
-      return "Ошибка: данные администратора не найдены.";
+      return false;
     }
 
     /// <summary>
@@ -193,15 +208,16 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата учителя.</param>
     /// <param name="callbackData">Данные callback-запроса.</param>
     /// <returns>Ответ на callback-запрос учителя.</returns>
-    private async Task<string> HandleTeacherCallbackAsync(long chatId, string callbackData)
+    private async Task<bool> HandleTeacherCallbackAsync(long chatId, string callbackData, int messageId)
     {
       var userData = CommonDataModel.GetUserById(chatId);
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        return await teacher.ProcessCallbackAsync(callbackData);
+        await teacher.ProcessCallbackAsync(_botClient, chatId, callbackData, messageId);
+        return true;
       }
-      return "Ошибка: данные учителя не найдены.";
+      return false;
     }
 
     /// <summary>
@@ -210,15 +226,18 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата студента.</param>
     /// <param name="callbackData">Данные callback-запроса.</param>
     /// <returns>Ответ на callback-запрос студента.</returns>
-    private async Task<string> HandleStudentCallbackAsync(long chatId, string callbackData)
+    private async Task<bool> HandleStudentCallbackAsync(long chatId, string callbackData, int messageId)
     {
-      var userData = CommonDataModel.GetUserById(chatId);
+      //TODO : Позже раскоментить
+      // var userData = CommonDataModel.GetUserById(chatId);
+      var userData = new UserModel(chatId, "TestName", "TestLastname", "email@mail.ru", UserRole.Student);
       if (userData != null)
       {
         var student = new Student(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        return await student.ProcessCallbackAsync(callbackData);
+        await student.ProcessCallbackAsync(_botClient, chatId, callbackData, messageId);
+        return true;
       }
-      return "Ошибка: данные студента не найдены.";
+      return false;
     }
 
     #endregion
@@ -242,6 +261,29 @@ namespace TelegramBot
       return Task.CompletedTask;
     }
 
-
+    /// <summary>
+    /// Асинхронно отправляет или редактирует сообщение пользователю через Telegram бота.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <param name="message">Текст сообщения для отправки или редактирования.</param>
+    /// <param name="inlineKeyboardMarkup">Опциональная встроенная клавиатура.</param>
+    /// <param name="messageId">Идентификатор сообщения для редактирования (если есть).</param>
+    /// <returns>Задача, представляющая асинхронную операцию отправки или редактирования сообщения.</returns>
+    public static async Task SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
+    {
+      if (inlineKeyboardMarkup == null)
+      {
+        await botClient.SendTextMessageAsync(chatId, message);
+      }
+      else if (messageId.HasValue)
+      {
+        await botClient.EditMessageTextAsync(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
+      }
+      else
+      {
+        await botClient.SendTextMessageAsync(chatId, message, replyMarkup: inlineKeyboardMarkup);
+      }
+    }
   }
 }
