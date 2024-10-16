@@ -25,12 +25,14 @@ namespace TelegramBot
         Console.WriteLine($"Токен бота: {config.BotToken}");
         Console.WriteLine($"ID администратора: {config.AdminId}");
 
+        
         var dbManager = new DatabaseManager(config.DatabaseConnectionString);
         dbManager.EnsureDatabaseCreated();
         dbManager.EnsureTablesCreated();
 
         Console.WriteLine("База данных и таблицы успешно созданы");
 
+        
         var botHandler = new TelegramBotHandler(config.BotToken);
         await botHandler.StartBotAsync();
 

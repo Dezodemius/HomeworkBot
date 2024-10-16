@@ -85,7 +85,9 @@ namespace TelegramBot
       var chatId = message.Chat.Id;
       var messageText = message.Text;
 
+       //TODO : Позже раскоментить
       UserRole? userRole = CommonDataModel.GetUserRoleById(chatId);
+      //UserRole userRole = UserRole.Teacher;
 
       bool responseMessage = userRole switch
       {
@@ -94,6 +96,7 @@ namespace TelegramBot
         UserRole.Student => await HandleStudentMessageAsync(chatId, messageText),
         _ => false
       };
+      //await HandleTeacherMessageAsync(chatId, messageText);
 
       if (!responseMessage)
       {
@@ -171,9 +174,9 @@ namespace TelegramBot
 
       bool responseMessage = userRole switch
       {
-        UserRole.Administrator => await HandleAdministratorCallbackAsync(chatId, callbackQuery.Data),
-        UserRole.Teacher => await HandleTeacherCallbackAsync(chatId, callbackQuery.Data),
-        UserRole.Student => await HandleStudentCallbackAsync(chatId, callbackQuery.Data),
+        UserRole.Administrator => await HandleAdministratorCallbackAsync(chatId, callbackQuery.Data, callbackQuery.Message.MessageId),
+        UserRole.Teacher => await HandleTeacherCallbackAsync(chatId, callbackQuery.Data, callbackQuery.Message.MessageId),
+        UserRole.Student => await HandleStudentCallbackAsync(chatId, callbackQuery.Data, callbackQuery.Message.MessageId),
         _ => false
       };
 
@@ -189,13 +192,13 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата администратора.</param>
     /// <param name="callbackData">Данные callback-запроса.</param>
     /// <returns>Ответ на callback-запрос администратора.</returns>
-    private async Task<bool> HandleAdministratorCallbackAsync(long chatId, string callbackData)
+    private async Task<bool> HandleAdministratorCallbackAsync(long chatId, string callbackData, int messageId)
     {
       var userData = CommonDataModel.GetUserById(chatId);
       if (userData != null)
       {
         var admin = new Administrator(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        await admin.ProcessCallbackAsync(_botClient, chatId, callbackData);
+        await admin.ProcessCallbackAsync(_botClient, chatId, callbackData, messageId);
         return true;
       }
       return false;
@@ -207,13 +210,13 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата учителя.</param>
     /// <param name="callbackData">Данные callback-запроса.</param>
     /// <returns>Ответ на callback-запрос учителя.</returns>
-    private async Task<bool> HandleTeacherCallbackAsync(long chatId, string callbackData)
+    private async Task<bool> HandleTeacherCallbackAsync(long chatId, string callbackData, int messageId)
     {
       var userData = CommonDataModel.GetUserById(chatId);
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        await teacher.ProcessCallbackAsync(_botClient, chatId, callbackData);
+        await teacher.ProcessCallbackAsync(_botClient, chatId, callbackData, messageId);
         return true;
       }
       return false;
@@ -225,13 +228,13 @@ namespace TelegramBot
     /// <param name="chatId">Идентификатор чата студента.</param>
     /// <param name="callbackData">Данные callback-запроса.</param>
     /// <returns>Ответ на callback-запрос студента.</returns>
-    private async Task<bool> HandleStudentCallbackAsync(long chatId, string callbackData)
+    private async Task<bool> HandleStudentCallbackAsync(long chatId, string callbackData, int messageId)
     {
       var userData = CommonDataModel.GetUserById(chatId);
       if (userData != null)
       {
         var student = new Student(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        await student.ProcessCallbackAsync(_botClient, chatId, callbackData);
+        await student.ProcessCallbackAsync(_botClient, chatId, callbackData, messageId);
         return true;
       }
       return false;
