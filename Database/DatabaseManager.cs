@@ -173,11 +173,18 @@ namespace Database
     }
 
     /// <summary>
-    /// Возвращает список студентов, выполнивших конкретное домашнее задание.
+    /// Получает список студентов, выполнивших определенное домашнее задание.
     /// </summary>
+<<<<<<< Updated upstream
     /// <param name="title">Название домашнего задания.</param>
     /// <returns>Список студентов.</returns>
     public List<string> GetStudentName(string title)
+=======
+    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
+    /// <returns>Список студентов, выполнивших конкретное домашнее задание.</returns>
+    /// <exception cref="SystemException">Исключение, которое возникает, если таких студентов нет.</exception>
+    public List<string> GetStudentName(int homeworkId)
+>>>>>>> Stashed changes
     {
       var connection = new SQLiteConnection(_connectionString);
       connection.Open();
@@ -190,13 +197,17 @@ namespace Database
          Users U
      JOIN 
          Submissions S ON U.UserId = S.StudentId
-     JOIN 
-         Assignments A ON S.AssignmentId = A.AssignmentId
      WHERE 
          S.Status = 'Approved' 
+<<<<<<< Updated upstream
          AND A.Title = @title;";
 
       command.Parameters.AddWithValue("@title", title);
+=======
+         AND S.AssignmentId = @homewokrId;";
+
+      command.Parameters.AddWithValue("@homewokrId", homeworkId);
+>>>>>>> Stashed changes
 
       var studentNames = new List<string>();
 
