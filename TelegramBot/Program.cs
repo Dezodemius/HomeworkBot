@@ -1,5 +1,6 @@
-﻿using Core;
-using Database;
+﻿using Database;
+using ModelInterfaceHub;
+using ModelInterfaceHub.Data;
 using System.Diagnostics;
 
 namespace TelegramBot
@@ -18,7 +19,7 @@ namespace TelegramBot
 
       try
       {
-        var config = Config.LoadFromFile("config.yaml");
+        var config = ApplicationData.ConfigApp;
 
         Console.WriteLine("Конфигурация успешно загружена");
         Console.WriteLine($"Строка подключения к базе данных: {config.DatabaseConnectionString}");
@@ -30,7 +31,7 @@ namespace TelegramBot
         dbManager.EnsureTablesCreated();
 
         Console.WriteLine("База данных и таблицы успешно созданы");
-
+        Core.CommonDataModel.SeedTestData();
         var botHandler = new TelegramBotHandler(config.BotToken);
         await botHandler.StartBotAsync();
 

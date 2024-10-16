@@ -31,6 +31,7 @@ namespace ModelInterfaceHub.Models
     /// </summary>
     Unfulfilled
   }
+
   /// <summary>
   /// Модель, представляющая 
   /// </summary>

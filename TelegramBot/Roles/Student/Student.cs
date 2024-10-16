@@ -1,5 +1,6 @@
 using ModelInterfaceHub.Interfaces;
 using ModelInterfaceHub.Models;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -11,7 +12,7 @@ namespace TelegramBot.Roles
   public class Student : UserModel, IMessageHandler
   {
 
-    private List<HomeWorkModel> homeWorkModels;
+    private readonly List<StudentHomeWorkModel> homeWorkModels;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса Student.
@@ -24,17 +25,7 @@ namespace TelegramBot.Roles
     public Student(long telegramChatId, string firstName, string lastName, string email)
         : base(telegramChatId, firstName, lastName, email, UserRole.Student)
     {
-      homeWorkModels = new List<HomeWorkModel>()
-      {
-        new HomeWorkModel(1, "Тест1", "Описание1", HomeWorkModel.StatusWork.Unread),
-        new HomeWorkModel(2, "Тест2", "Описание2", HomeWorkModel.StatusWork.Unread),
-        new HomeWorkModel(3, "Тест3", "Описание3", HomeWorkModel.StatusWork.NeedsRevision),
-        new HomeWorkModel(4, "Тест4", "Описание4", HomeWorkModel.StatusWork.NeedsRevision),
-        new HomeWorkModel(5, "Тест5", "Описание5", HomeWorkModel.StatusWork.Checked),
-        new HomeWorkModel(6, "Тест6", "Описание6", HomeWorkModel.StatusWork.Checked),
-        new HomeWorkModel(6, "Тест7", "Описание7", HomeWorkModel.StatusWork.Unchecked),
-        new HomeWorkModel(6, "Тест8", "Описание8", HomeWorkModel.StatusWork.Unchecked),
-      };
+      homeWorkModels = Core.CommonHomeWorkModel.GetHomeworkForStudent(telegramChatId);
     }
 
     /// <summary>
@@ -119,15 +110,15 @@ namespace TelegramBot.Roles
     /// <exception cref="NotImplementedException"></exception>
     private async Task CheckStatusHomeWork(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      HomeWorkModel.StatusWork statusWork = callbackData switch
+      StatusWork statusWork = callbackData switch
       {
-        "/homeWorkStatus_unchecked" => HomeWorkModel.StatusWork.Unchecked,
-        "/homeWorkStatus_checked" => HomeWorkModel.StatusWork.Checked,
-        "/homeWorkStatus_needsRevision" => HomeWorkModel.StatusWork.NeedsRevision,
+        "/homeWorkStatus_unchecked" => StatusWork.Unchecked,
+        "/homeWorkStatus_checked" =>StatusWork.Checked,
+        "/homeWorkStatus_needsRevision" => StatusWork.NeedsRevision,
         _ => throw new NotImplementedException(),
       };
 
-      var message = await DisplayHomeWorkStatuses(statusWork);
+      var message = await DisplayHomeWorkStatuses(statusWork, chatId);
       var keyboard = new InlineKeyboardMarkup(new[]
        {
           new []
@@ -139,15 +130,37 @@ namespace TelegramBot.Roles
     }
 
     /// <summary>
-    /// Отображает список домашних заданий с их статусами.
+    /// Отображает список домашних заданий с их статусами для конкретного пользователя.
     /// </summary>
     /// <param name="status">Статус домашних заданий для отображения.</param>
-    /// <returns>Строка с списком домашних заданий и их статусами.</returns>
-    private async Task<string> DisplayHomeWorkStatuses(HomeWorkModel.StatusWork status)
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Строка с списком домашних заданий и их статусами для конкретного пользователя.</returns>
+    /// <summary>
+    /// Отображает список домашних заданий с их статусами для конкретного пользователя.
+    /// </summary>
+    /// <param name="status">Статус домашних заданий для отображения.</param>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Строка с списком домашних заданий и их статусами для конкретного пользователя.</returns>
+    private async Task<string> DisplayHomeWorkStatuses(StatusWork status, long userId)
     {
-      var filteredHomeworks = homeWorkModels.Where(hw => hw.Status == status);
-      var result = string.Join("\n", filteredHomeworks.Select(hw => $"Домашняя работа \"{hw.Title}\" - \"{hw.Status}\""));
-      return result;
+      var filteredHomeWorks = homeWorkModels
+          .Where(hw => hw.IdStudent == userId && hw.Status == status)
+          .ToList();
+
+      if (!filteredHomeWorks.Any())
+      {
+        return $"Нет домашних заданий со статусом '{status}' для пользователя с ID {userId}.";
+      }
+
+      var sb = new StringBuilder();
+      sb.AppendLine($"Домашние задания со статусом '{status}' для пользователя с ID {userId}:");
+
+      foreach (var hw in filteredHomeWorks)
+      {
+        sb.AppendLine($"ID задания: {hw.IdHomeWork}, GitHub: {hw.GithubLink}");
+      }
+
+      return sb.ToString();
     }
   }
 }

@@ -1,4 +1,7 @@
-﻿using ModelInterfaceHub.Models;
+﻿using Database;
+using ModelInterfaceHub;
+using ModelInterfaceHub.Data;
+using ModelInterfaceHub.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +12,9 @@ namespace Core
 {
   static public class CommonDataModel
   {
+
+    static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
+
     /// <summary>
     /// Возвращает модель пользователя по уникальному идентификатору.
     /// </summary>
@@ -29,6 +35,11 @@ namespace Core
     static public UserRole GetUserRoleById(long userId)
     {
       throw new NotImplementedException();
+    }
+
+    static public void SeedTestData()
+    { 
+      dbManager.SeedTestData();
     }
   }
 }

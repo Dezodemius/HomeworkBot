@@ -29,7 +29,7 @@ namespace Database
     /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public UserModel GetUserById(long userId) 
+    public UserModel GetUserById(long userId)
     {
       using var connection = new SQLiteConnection(_connectionString);
       connection.Open();
@@ -58,30 +58,34 @@ namespace Database
     /// </summary>
     /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
-    public List<HomeWorkModel> GetAllUserHomeWorks(long userId)
+    public List<StudentHomeWorkModel> GetAllUserHomeWorks(long userId)
     {
-      var homeWorks = new List<HomeWorkModel>();
+      var homeWorks = new List<StudentHomeWorkModel>();
 
       using var connection = new SQLiteConnection(_connectionString);
       connection.Open();
 
       using var command = connection.CreateCommand();
       command.CommandText = @"
-        SELECT a.AssignmentId, a.Title, a.Description
-        FROM Assignments a
-        JOIN Submissions s ON a.AssignmentId = s.AssignmentId
-        WHERE s.StudentId = @userId";
+     SELECT s.SubmissionId, a.AssignmentId, a.Title, a.Description, s.GithubLink, s.Status, s.TeacherComment
+     FROM Assignments a
+     JOIN Submissions s ON a.AssignmentId = s.AssignmentId
+     WHERE s.StudentId = @userId";
 
       command.Parameters.AddWithValue("@userId", userId);
 
       using var reader = command.ExecuteReader();
       while (reader.Read())
       {
-        int assignmentId = reader.GetInt32(0);
-        string title = reader.GetString(1);
-        string description = reader.IsDBNull(2) ? null : reader.GetString(2);
+        int submissionId = reader.GetInt32(0);
+        int assignmentId = reader.GetInt32(1);
+        string title = reader.GetString(2);
+        string description = reader.IsDBNull(3) ? null : reader.GetString(3);
+        string githubLink = reader.GetString(4);
+        StatusWork status = (StatusWork)Enum.Parse(typeof(StatusWork), reader.GetString(5));
+        string teacherComment = reader.IsDBNull(6) ? null : reader.GetString(6);
 
-        homeWorks.Add(new HomeWorkModel(assignmentId, title, description));
+        homeWorks.Add(new StudentHomeWorkModel(assignmentId, submissionId, (int)userId, githubLink, status, teacherComment));
       }
 
       return homeWorks;
@@ -108,8 +112,7 @@ namespace Database
             GithubLink, 
             Status, 
             TeacherComment 
-        FROM Submissions
-        WHERE Status NOT IN ('Unfulfilled', 'NeedsRevision');";
+        FROM Submissions";
 
       using var reader = command.ExecuteReader();
       while (reader.Read())
@@ -207,12 +210,52 @@ namespace Database
       if (studentNames.Capacity != 0)
       {
         foreach (var studentname in studentNames)
-        Console.WriteLine(studentname);
-        
+          Console.WriteLine(studentname);
+
         return studentNames;
       }
       else throw new SystemException();
     }
 
+    public void SeedTestData()
+    {
+      var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+      var clearTablesCommand = connection.CreateCommand();
+      clearTablesCommand.CommandText = @"
+        DELETE FROM Submissions;
+        DELETE FROM Assignments;
+        DELETE FROM Users;";
+      clearTablesCommand.ExecuteNonQuery();
+
+      var insertUserCommand = connection.CreateCommand();
+      insertUserCommand.CommandText = @"
+        INSERT OR IGNORE INTO Users (TelegramChatId, FirstName, LastName, Email, Role)
+        VALUES (467266623, 'Daniil', 'Ivanov', 'daniil@example.com', 'Student');";
+      insertUserCommand.ExecuteNonQuery();
+
+      // Добавляем домашние задания
+      var insertAssignmentCommand = connection.CreateCommand();
+      for (int i = 1; i <= 8; i++)
+      {
+        insertAssignmentCommand.CommandText = $@"
+            INSERT INTO Assignments (Title, Description)
+            VALUES ('Домашнее задание №{i}', 'Описание задания {i}');";
+        insertAssignmentCommand.ExecuteNonQuery();
+      }
+
+      // Добавляем отправленные домашние задания с разными статусами
+      var insertSubmissionCommand = connection.CreateCommand();
+      var statuses = new[] { "Checked", "Unchecked", "NeedsRevision", "Unfulfilled" };
+
+      for (int i = 1; i <= 8; i++)
+      {
+        var status = statuses[(i - 1) / 2]; // 2 задания на каждый статус
+        insertSubmissionCommand.CommandText = $@"
+            INSERT INTO Submissions (AssignmentId, StudentId, GithubLink, Status, TeacherComment)
+            VALUES ({i}, 467266623, 'https://github.com/daniil/hw{i}', '{status}', 'Комментарий к заданию {i}');";
+        insertSubmissionCommand.ExecuteNonQuery();
+      }
+    }
   }
 }

@@ -1,7 +1,7 @@
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Core
+namespace ModelInterfaceHub
 {
   /// <summary>
   /// Представляет конфигурацию приложения, загружаемую из YAML файла.

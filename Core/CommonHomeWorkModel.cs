@@ -1,4 +1,5 @@
 ﻿using Database;
+using ModelInterfaceHub.Data;
 using ModelInterfaceHub.Models;
 using System;
 using System.Collections.Generic;
@@ -13,21 +14,37 @@ namespace Core
   /// </summary>
   static public class CommonHomeWorkModel
   {
+
+    static readonly DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
+
     /// <summary>
     /// Получает список задач для указанного домашнего задания.
     /// </summary>
-    /// <param name="dbManager">Менеджер базы данных.</param>
     /// <param name="homeworkId">Идентификатор домашнего задания.</param>
     /// <returns>Список моделей задач для домашнего задания.</returns>
-
-   
-    static public List<StudentHomeWorkModel> GetTasksForHomework(int homeworkId, DatabaseManager dbManager)
+    static public List<StudentHomeWorkModel> GetTasksForHomework(int homeworkId)
     {
       List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
       var allTasks = dbManager.GetAllHomeWorks();
       if (allTasks.Any())
       {
         tasks = allTasks.FindAll(x => x.IdHomeWork == homeworkId);
+      }
+      return tasks;
+    }
+
+    /// <summary>
+    /// Получает список домашних работ для указанного студента.
+    /// </summary>
+    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
+    /// <returns>Список моделей задач для домашнего задания.</returns>
+    static public List<StudentHomeWorkModel> GetHomeworkForStudent(long userId)
+    {
+      List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
+      var allTasks = dbManager.GetAllHomeWorks();
+      if (allTasks.Any())
+      {
+        tasks = allTasks.FindAll(x => x.IdStudent == userId);
       }
       return tasks;
     }
@@ -42,21 +59,18 @@ namespace Core
       throw new NotImplementedException();
     }
 
-  /// <summary>
-  /// Получает список студентов, выполнивших конкретное домашнее задание.
-  /// </summary>
-  /// <param name="title">Домашнее задание.</param>
-  /// <returns></returns>
-  /// <exception cref="SystemException">Исключение, которое возникает, если список пуст.</exception>
-  /// <exception cref="Exception">Другие исключения, которые могут возникнуть.</exception>
+    /// <summary>
+    /// Получает список студентов, выполнивших конкретное домашнее задание.
+    /// </summary>
+    /// <param name="title">Домашнее задание.</param>
+    /// <returns></returns>
+    /// <exception cref="SystemException">Исключение, которое возникает, если список пуст.</exception>
+    /// <exception cref="Exception">Другие исключения, которые могут возникнуть.</exception>
     static public List<string> GetStudentsCompletedHomework(string title)
     {
-      //string connectionString = "Data Source=C:\\Users\\Алина\\source\\repos\\HomeworkBot\\Database\\Users.db";
-      DatabaseManager databaseManager = new DatabaseManager(connectionString);
-
       try
       {
-        return databaseManager.GetStudentName(title);
+        return dbManager.GetStudentName(title);
       }
       catch (SystemException)
       {
@@ -69,5 +83,7 @@ namespace Core
         throw new Exception();
       }
     }
+
+
   }
 }

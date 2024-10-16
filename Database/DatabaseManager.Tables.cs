@@ -73,16 +73,16 @@ namespace Database
     {
       var command = connection.CreateCommand();
       command.CommandText = @"
-                CREATE TABLE IF NOT EXISTS Submissions (
-                    SubmissionId INTEGER PRIMARY KEY AUTOINCREMENT,
-                    AssignmentId INTEGER NOT NULL,
-                    StudentId INTEGER NOT NULL,
-                    GithubLink TEXT NOT NULL,
-                    Status TEXT DEFAULT 'Submitted' CHECK(Status IN ('Checked', 'Unchecked', 'NeedsRevision', 'Unfulfilled')),
-                    TeacherComment TEXT,
-                    FOREIGN KEY (AssignmentId) REFERENCES Assignments(AssignmentId),
-                    FOREIGN KEY (StudentId) REFERENCES Users(UserId)
-                );";
+    CREATE TABLE IF NOT EXISTS Submissions (
+        SubmissionId INTEGER PRIMARY KEY AUTOINCREMENT,
+        AssignmentId INTEGER NOT NULL,
+        StudentId INTEGER NOT NULL,
+        GithubLink TEXT NOT NULL,
+        Status TEXT DEFAULT 'Unfulfilled' CHECK(Status IN ('Checked', 'Unchecked', 'NeedsRevision', 'Unfulfilled')),
+        TeacherComment TEXT,
+        FOREIGN KEY (AssignmentId) REFERENCES Assignments(AssignmentId),
+        FOREIGN KEY (StudentId) REFERENCES Users(UserId)
+    );";
       command.ExecuteNonQuery();
     }
   }
