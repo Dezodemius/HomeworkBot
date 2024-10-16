@@ -31,7 +31,7 @@ namespace TelegramBot
         dbManager.EnsureTablesCreated();
 
         Console.WriteLine("База данных и таблицы успешно созданы");
-        Core.CommonDataModel.SeedTestData();
+        // Core.CommonDataModel.SeedTestData();
         var botHandler = new TelegramBotHandler(config.BotToken);
         await botHandler.StartBotAsync();
 

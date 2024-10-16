@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Telegram.Bot.Types;
 
 namespace Core
 {
@@ -18,25 +19,9 @@ namespace Core
     static readonly DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
     /// <summary>
-    /// Получает список задач для указанного домашнего задания.
-    /// </summary>
-    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
-    /// <returns>Список моделей задач для домашнего задания.</returns>
-    static public List<StudentHomeWorkModel> GetTasksForHomework(int homeworkId)
-    {
-      List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
-      var allTasks = dbManager.GetAllHomeWorks();
-      if (allTasks.Any())
-      {
-        tasks = allTasks.FindAll(x => x.IdHomeWork == homeworkId);
-      }
-      return tasks;
-    }
-
-    /// <summary>
     /// Получает список домашних работ для указанного студента.
     /// </summary>
-    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
+    /// <param name="userId">Идентификатор студента.</param>
     /// <returns>Список моделей задач для домашнего задания.</returns>
     static public List<StudentHomeWorkModel> GetHomeworkForStudent(long userId)
     {
@@ -50,13 +35,30 @@ namespace Core
     }
 
     /// <summary>
-    /// Получает список непроверенных задач для указанного домашнего задания.
+    /// Получает список задач для указанного домашнего задания или для всех дз.
     /// </summary>
+    /// <param name="statusWork">Статус задания.</param>
     /// <param name="homeworkId">Идентификатор домашнего задания.</param>
     /// <returns>Список моделей непроверенных задач для домашнего задания.</returns>
-    static public List<HomeWorkModel> GetUncheckedTasksForHomework(int homeworkId)
+    static public List<StudentHomeWorkModel> GetTasksForHomework(StatusWork statusWork, int homeworkId = -1)
     {
-      throw new NotImplementedException();
+      List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
+      var allTasks = dbManager.GetAllHomeWorks();
+      if (homeworkId != -1)
+      {
+        if (allTasks.Any())
+        {
+          tasks = allTasks.FindAll(x => x.IdHomeWork == homeworkId && x.Status == statusWork);
+        }
+      }
+      else
+      {
+        if (allTasks.Any())
+        {
+          tasks = allTasks.FindAll(x => x.Status == statusWork);
+        }
+      }
+      return tasks;
     }
 
     /// <summary>
@@ -83,7 +85,6 @@ namespace Core
         throw new Exception();
       }
     }
-
 
   }
 }

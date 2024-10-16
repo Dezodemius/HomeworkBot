@@ -80,7 +80,7 @@ namespace TelegramBot
 
       //TODO : Позже раскоментить
       //UserRole? userRole = CommonDataModel.GetUserRoleById(chatId);
-      UserRole userRole = UserRole.Student;
+      UserRole userRole = UserRole.Teacher;
 
       bool responseMessage = userRole switch
       {
@@ -122,7 +122,9 @@ namespace TelegramBot
     /// <returns>Ответ на сообщение учителя.</returns>
     private async Task<bool> HandleTeacherMessageAsync(long chatId, string message)
     {
-      var userData = CommonDataModel.GetUserById(chatId);
+      //TODO : Позже раскоментить
+      //var userData = CommonDataModel.GetUserById(chatId);
+      var userData = new UserModel(chatId, "TestName", "TestLastname", "email@mail.ru", UserRole.Teacher);
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
@@ -168,7 +170,7 @@ namespace TelegramBot
 
       //TODO : Позже раскоментить
       //UserRole? userRole = CommonDataModel.GetUserRoleById(chatId);
-      UserRole userRole = UserRole.Student;
+      UserRole userRole = UserRole.Teacher;
 
       bool responseMessage = userRole switch
       {
@@ -210,7 +212,9 @@ namespace TelegramBot
     /// <returns>Ответ на callback-запрос учителя.</returns>
     private async Task<bool> HandleTeacherCallbackAsync(long chatId, string callbackData, int messageId)
     {
-      var userData = CommonDataModel.GetUserById(chatId);
+      //TODO : Позже раскоментить
+      //var userData = CommonDataModel.GetUserById(chatId);
+      var userData = new UserModel(chatId, "TestName", "TestLastname", "email@mail.ru", UserRole.Teacher);
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);

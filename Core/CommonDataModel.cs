@@ -23,7 +23,18 @@ namespace Core
     /// <exception cref="NotImplementedException"></exception>
     static public UserModel GetUserById(long userId)
     {
-      throw new NotImplementedException();
+      return dbManager.GetUserById(userId);
+    }
+
+    /// <summary>
+    /// Возвращает модель пользователя по уникальному идентификатору.
+    /// </summary>
+    /// <param name="userId">Уникальный идентификатор.</param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    static public HomeWorkModel GetHomrWorkById(int homeId)
+    {
+      return dbManager.GetAssignmentById(homeId);
     }
 
     /// <summary>
@@ -36,6 +47,7 @@ namespace Core
     {
       throw new NotImplementedException();
     }
+
 
     static public void SeedTestData()
     { 

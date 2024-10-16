@@ -26,7 +26,7 @@ namespace Database
     /// <summary>
     /// Возвращает модель пользователя по уникальному идентификатору.
     /// </summary>
-    /// <param name="userId">Уникальный идентификатор.</param>
+    /// <param name="userId">Уникальный идентификатор чата ТГ.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
     public UserModel GetUserById(long userId)
@@ -35,8 +35,10 @@ namespace Database
       connection.Open();
 
       using var command = connection.CreateCommand();
-      command.CommandText = "SELECT UserId, TelegramChatId, FirstName, LastName, Email, Role FROM Users WHERE UserId = @userId";
-      command.Parameters.AddWithValue("@userId", userId);
+      command.CommandText = 
+        $"SELECT UserId, TelegramChatId, FirstName, LastName, Email, Role " +
+        $"FROM Users " +
+        $"WHERE TelegramChatId = {userId}";
 
       using var reader = command.ExecuteReader();
       if (reader.Read())
@@ -176,10 +178,6 @@ namespace Database
     /// <param name="title">Название домашнего задания.</param>
     /// <returns>Список студентов.</returns>
     public List<string> GetStudentName(string title)
-    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
-    /// <returns>Список студентов, выполнивших конкретное домашнее задание.</returns>
-    /// <exception cref="SystemException">Исключение, которое возникает, если таких студентов нет.</exception>
-    public List<string> GetStudentName(int homeworkId)
     {
       var connection = new SQLiteConnection(_connectionString);
       connection.Open();
@@ -197,10 +195,8 @@ namespace Database
      WHERE 
          S.Status = 'Approved' 
          AND A.Title = @title;";
-         AND S.AssignmentId = @homewokrId;";
 
       command.Parameters.AddWithValue("@title", title);
-      command.Parameters.AddWithValue("@homewokrId", homeworkId);
 
       var studentNames = new List<string>();
 
@@ -223,6 +219,39 @@ namespace Database
       else throw new SystemException();
     }
 
+    /// <summary>
+    /// Возвращает домашнее задание по его уникальному идентификатору.
+    /// </summary>
+    /// <param name="id">Уникальный идентификатор домашнего задания.</param>
+    /// <returns>Объект HomeWorkModel с данными о домашнем задании.</returns>
+    public HomeWorkModel GetAssignmentById(int id)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      var command = connection.CreateCommand();
+      command.CommandText = @"
+            SELECT AssignmentId, Title, Description
+            FROM Assignments
+            WHERE AssignmentId = @id";
+
+      command.Parameters.AddWithValue("@id", id);
+
+      using var reader = command.ExecuteReader();
+
+      if (reader.Read())
+      {
+        var assignmentId = reader.GetInt32(0);
+        var title = reader.GetString(1);
+        var description = reader.IsDBNull(2) ? null : reader.GetString(2); 
+
+        return new HomeWorkModel(title, description) { Id = assignmentId };
+      }
+      else
+      {
+        throw new Exception($"Домашнее задание с ID {id} не найдено.");
+      }
+    }
     public void SeedTestData()
     {
       var connection = new SQLiteConnection(_connectionString);
@@ -240,7 +269,6 @@ namespace Database
         VALUES (467266623, 'Daniil', 'Ivanov', 'daniil@example.com', 'Student');";
       insertUserCommand.ExecuteNonQuery();
 
-      // Добавляем домашние задания
       var insertAssignmentCommand = connection.CreateCommand();
       for (int i = 1; i <= 8; i++)
       {
@@ -250,13 +278,12 @@ namespace Database
         insertAssignmentCommand.ExecuteNonQuery();
       }
 
-      // Добавляем отправленные домашние задания с разными статусами
       var insertSubmissionCommand = connection.CreateCommand();
       var statuses = new[] { "Checked", "Unchecked", "NeedsRevision", "Unfulfilled" };
 
       for (int i = 1; i <= 8; i++)
       {
-        var status = statuses[(i - 1) / 2]; // 2 задания на каждый статус
+        var status = statuses[(i - 1) / 2];
         insertSubmissionCommand.CommandText = $@"
             INSERT INTO Submissions (AssignmentId, StudentId, GithubLink, Status, TeacherComment)
             VALUES ({i}, 467266623, 'https://github.com/daniil/hw{i}', '{status}', 'Комментарий к заданию {i}');";
