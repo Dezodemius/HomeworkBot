@@ -42,25 +42,24 @@ namespace Core
       throw new NotImplementedException();
     }
 
-  /// <summary>
-  /// Получает список студентов, выполнивших конкретное домашнее задание.
-  /// </summary>
-  /// <param name="title">Домашнее задание.</param>
-  /// <returns></returns>
-  /// <exception cref="SystemException">Исключение, которое возникает, если список пуст.</exception>
-  /// <exception cref="Exception">Другие исключения, которые могут возникнуть.</exception>
-    static public List<string> GetStudentsCompletedHomework(string title)
+    /// <summary>
+    /// Получает список студентов, выполнивших конкретное домашнее задание.
+    /// </summary>
+    /// <param name="homewokrId">Идентификатор домашнего задания.</param>
+    /// <returns></returns>
+    /// <exception cref="SystemException">Исключение, которое возникает, если таких студентов нет.</exception>
+    /// <exception cref="Exception">Другие исклбчения, которые могут возникнуть.</exception>
+    static public List<string> GetStudentsCompletedHomework(int homewokrId)
     {
-      //string connectionString = "Data Source=C:\\Users\\Алина\\source\\repos\\HomeworkBot\\Database\\Users.db";
       DatabaseManager databaseManager = new DatabaseManager(connectionString);
 
       try
       {
-        return databaseManager.GetStudentName(title);
+        return databaseManager.GetStudentName(homewokrId);
       }
       catch (SystemException)
       {
-        Console.WriteLine($"Нет студентов с выполненным домашним заданием " + title);
+        Console.WriteLine($"Нет студентов с таким выполненным домашним заданием ");
         throw new SystemException();
       }
       catch (Exception ex)

@@ -168,11 +168,12 @@ namespace Database
     }
 
     /// <summary>
-    /// Возвращает список студентов, выполнивших конкретное домашнее задание.
+    /// Получает список студентов, выполнивших определенное домашнее задание.
     /// </summary>
-    /// <param name="title">Название домашнего задания.</param>
-    /// <returns>Список студентов.</returns>
-    public List<string> GetStudentName(string title)
+    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
+    /// <returns>Список студентов, выполнивших конкретное домашнее задание.</returns>
+    /// <exception cref="SystemException">Исключение, которое возникает, если таких студентов нет.</exception>
+    public List<string> GetStudentName(int homeworkId)
     {
       var connection = new SQLiteConnection(_connectionString);
       connection.Open();
@@ -185,13 +186,11 @@ namespace Database
          Users U
      JOIN 
          Submissions S ON U.UserId = S.StudentId
-     JOIN 
-         Assignments A ON S.AssignmentId = A.AssignmentId
      WHERE 
          S.Status = 'Approved' 
-         AND A.Title = @title;";
+         AND S.AssignmentId = @homewokrId;";
 
-      command.Parameters.AddWithValue("@title", title);
+      command.Parameters.AddWithValue("@homewokrId", homeworkId);
 
       var studentNames = new List<string>();
 
