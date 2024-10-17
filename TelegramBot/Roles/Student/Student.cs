@@ -135,12 +135,6 @@ namespace TelegramBot.Roles
     /// <param name="status">Статус домашних заданий для отображения.</param>
     /// <param name="userId">Идентификатор пользователя.</param>
     /// <returns>Строка с списком домашних заданий и их статусами для конкретного пользователя.</returns>
-    /// <summary>
-    /// Отображает список домашних заданий с их статусами для конкретного пользователя.
-    /// </summary>
-    /// <param name="status">Статус домашних заданий для отображения.</param>
-    /// <param name="userId">Идентификатор пользователя.</param>
-    /// <returns>Строка с списком домашних заданий и их статусами для конкретного пользователя.</returns>
     private async Task<string> DisplayHomeWorkStatuses(StatusWork status, long userId)
     {
       var filteredHomeWorks = homeWorkModels

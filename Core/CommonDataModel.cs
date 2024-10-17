@@ -48,6 +48,10 @@ namespace Core
       throw new NotImplementedException();
     }
 
+    static public void CreateHomework(HomeWorkModel homework)
+    {
+      dbManager.CreateHomeWork(homework);
+    }
 
     static public void SeedTestData()
     { 
