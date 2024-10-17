@@ -27,12 +27,12 @@ namespace Core
     }
 
     /// <summary>
-    /// Возвращает модель пользователя по уникальному идентификатору.
+    /// Возвращает модель домашней работы по уникальному идентификатору.
     /// </summary>
     /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    static public HomeWorkModel GetHomrWorkById(int homeId)
+    static public HomeWorkModel GetHomeWorkById(int homeId)
     {
       return dbManager.GetAssignmentById(homeId);
     }

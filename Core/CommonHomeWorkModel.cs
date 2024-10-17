@@ -18,6 +18,11 @@ namespace Core
 
     static readonly DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
+    static public List<HomeWorkModel> GetHomeWork()
+    {
+      return dbManager.GetAllHomeWork();
+    }
+
     /// <summary>
     /// Получает список домашних работ для указанного студента.
     /// </summary>
@@ -26,7 +31,7 @@ namespace Core
     static public List<StudentHomeWorkModel> GetHomeworkForStudent(long userId)
     {
       List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
-      var allTasks = dbManager.GetAllHomeWorks();
+      var allTasks = dbManager.GetAllHomeWorksForStudents();
       if (allTasks.Any())
       {
         tasks = allTasks.FindAll(x => x.IdStudent == userId);
@@ -43,7 +48,7 @@ namespace Core
     static public List<StudentHomeWorkModel> GetTasksForHomework(StatusWork statusWork, int homeworkId = -1)
     {
       List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
-      var allTasks = dbManager.GetAllHomeWorks();
+      var allTasks = dbManager.GetAllHomeWorksForStudents();
       if (homeworkId != -1)
       {
         if (allTasks.Any())
@@ -70,11 +75,9 @@ namespace Core
     /// <exception cref="Exception">Другие исклбчения, которые могут возникнуть.</exception>
     static public List<string> GetStudentsCompletedHomework(int homewokrId)
     {
-      DatabaseManager databaseManager = new DatabaseManager(connectionString);
-
       try
       {
-        return databaseManager.GetStudentName(homewokrId);
+        return dbManager.GetStudentName(homewokrId);
       }
       catch (SystemException)
       {

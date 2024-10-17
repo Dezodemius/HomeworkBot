@@ -1,6 +1,7 @@
 using ModelInterfaceHub.Interfaces;
 using ModelInterfaceHub.Models;
 using System.Text;
+using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -44,7 +45,11 @@ namespace TelegramBot.Roles
           },
           new[]
           {
-            InlineKeyboardButton.WithCallbackData("домашние задание", "/get_homework")
+            InlineKeyboardButton.WithCallbackData("Не проверенные домашние задание", "/get_uncheckedHomework")
+          },
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("Сданные домашние задание", "/get_checkedHomework")
           },
           new[]
           {
@@ -74,9 +79,27 @@ namespace TelegramBot.Roles
         {
           await ShowHomeWork(botClient, chatId, messageId, StatusWork.Unchecked);
         }
-        else if (callbackData.Contains("/get_homework"))
+        else if (callbackData.Contains("/get_uncheckedHomework"))
         {
-          await DisplayHomeworkButtons(botClient, chatId, callbackData, messageId);
+          if (callbackData.Contains("homework_"))
+          {
+            await ShowHomeWorkForStatus(botClient, chatId, callbackData, messageId, StatusWork.Unchecked);
+          }
+          else
+          {
+            await DisplayHomeworkButtons(botClient, chatId, callbackData, messageId);
+          }
+        }
+        else if (callbackData.Contains("/get_checkedHomework"))
+        {
+          if (callbackData.Contains("homework_"))
+          {
+            await ShowHomeWorkForStatus(botClient, chatId, callbackData, messageId, StatusWork.Checked);
+          }
+          else
+          {
+            await DisplayHomeworkButtons(botClient, chatId, callbackData, messageId);
+          }
         }
         else if (callbackData.Contains("/get_completedhomework"))
         {
@@ -116,7 +139,7 @@ namespace TelegramBot.Roles
       messageBuilder.AppendLine($"Домашние работы со статусом: {statusWork.ToString()}");
       foreach (var task in homeWork)
       {
-        var homeData = Core.CommonDataModel.GetHomrWorkById(task.Item1);
+        var homeData = Core.CommonDataModel.GetHomeWorkById(task.Item1);
         messageBuilder.AppendLine($"\tЗадание: {homeData.Title} ");
         foreach (var student in task.Item2)
         {
@@ -142,7 +165,56 @@ namespace TelegramBot.Roles
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task DisplayHomeworkButtons(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      return;
+      var homeWork = Core.CommonHomeWorkModel.GetHomeWork();
+      var buttons = new List<InlineKeyboardButton[]>();
+
+      foreach (var item in homeWork)
+      {
+        var homeData = Core.CommonDataModel.GetHomeWorkById(item.Id);
+
+        
+        var button = InlineKeyboardButton.WithCallbackData(
+            text: homeData.Title,
+            callbackData: $"{callbackData}_homework_{homeData.Id}"
+        );
+
+        buttons.Add(new[] { button });
+      }
+
+      var inlineKeyboard = new InlineKeyboardMarkup(buttons);
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите домашнее задание", inlineKeyboard, messageId);
+    }
+
+    public async Task ShowHomeWorkForStatus(ITelegramBotClient botClient, long chatId, string callbackData, int messageId, StatusWork status)
+    {
+      var id = callbackData.Split('_');
+      var homeWorkDescription = Core.CommonDataModel.GetHomeWorkById(Convert.ToInt32(id.Last()));
+      var messageBuilder = new StringBuilder();
+
+
+      messageBuilder.AppendLine("Заголовок: " + homeWorkDescription.Title);
+      messageBuilder.AppendLine("Описание: " + homeWorkDescription.Description);
+
+      var homeWork = Core.CommonHomeWorkModel.
+      GetTasksForHomework(status).
+      Where(x => x.IdHomeWork == Convert.ToInt32(id.Last())).ToList();
+
+
+      foreach (var task in homeWork)
+      {
+        var userData = Core.CommonDataModel.GetUserById(task.IdStudent);
+        messageBuilder.AppendLine($"\t\tСтудент: {userData.LastName} {userData.FirstName}");
+      }
+
+      var keyboard = new InlineKeyboardMarkup(new[]
+      {
+          new[]
+          {
+            InlineKeyboardButton.WithCallbackData("На главную", "/start")
+          },
+        });
+      await TelegramBot.TelegramBotHandler.SendMessageAsync(botClient, chatId, messageBuilder.ToString(), keyboard, messageId);
     }
   }
 }

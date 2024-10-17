@@ -35,7 +35,7 @@ namespace Database
       connection.Open();
 
       using var command = connection.CreateCommand();
-      command.CommandText = 
+      command.CommandText =
         $"SELECT UserId, TelegramChatId, FirstName, LastName, Email, Role " +
         $"FROM Users " +
         $"WHERE TelegramChatId = {userId}";
@@ -94,11 +94,11 @@ namespace Database
     }
 
     /// <summary>
-    /// Возвращает все домашние работы.
+    /// Возвращает все домашние работы .
     /// </summary>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public List<StudentHomeWorkModel> GetAllHomeWorks()
+    public List<StudentHomeWorkModel> GetAllHomeWorksForStudents()
     {
       var homeWorks = new List<StudentHomeWorkModel>();
 
@@ -172,19 +172,10 @@ namespace Database
       }
     }
 
-    /// <summary>
-    /// Получает список студентов, выполнивших определенное домашнее задание.
-    /// </summary>
-<<<<<<< Updated upstream
-    /// <param name="title">Название домашнего задания.</param>
-    /// <returns>Список студентов.</returns>
-    public List<string> GetStudentName(string title)
-=======
     /// <param name="homeworkId">Идентификатор домашнего задания.</param>
     /// <returns>Список студентов, выполнивших конкретное домашнее задание.</returns>
     /// <exception cref="SystemException">Исключение, которое возникает, если таких студентов нет.</exception>
     public List<string> GetStudentName(int homeworkId)
->>>>>>> Stashed changes
     {
       var connection = new SQLiteConnection(_connectionString);
       connection.Open();
@@ -199,15 +190,9 @@ namespace Database
          Submissions S ON U.UserId = S.StudentId
      WHERE 
          S.Status = 'Approved' 
-<<<<<<< Updated upstream
-         AND A.Title = @title;";
-
-      command.Parameters.AddWithValue("@title", title);
-=======
          AND S.AssignmentId = @homewokrId;";
 
       command.Parameters.AddWithValue("@homewokrId", homeworkId);
->>>>>>> Stashed changes
 
       var studentNames = new List<string>();
 
@@ -254,7 +239,7 @@ namespace Database
       {
         var assignmentId = reader.GetInt32(0);
         var title = reader.GetString(1);
-        var description = reader.IsDBNull(2) ? null : reader.GetString(2); 
+        var description = reader.IsDBNull(2) ? null : reader.GetString(2);
 
         return new HomeWorkModel(title, description) { Id = assignmentId };
       }
@@ -262,6 +247,35 @@ namespace Database
       {
         throw new Exception($"Домашнее задание с ID {id} не найдено.");
       }
+    }
+
+    /// <summary>
+    /// Возвращает все домашние задания.
+    /// </summary>
+    /// <param name="id">Уникальный идентификатор домашнего задания.</param>
+    /// <returns>Объект HomeWorkModel с данными о домашнем задании.</returns>
+    public List<HomeWorkModel> GetAllHomeWork()
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      var command = connection.CreateCommand();
+      command.CommandText = @"
+            SELECT AssignmentId, Title, Description
+            FROM Assignments";
+
+
+      using var reader = command.ExecuteReader();
+      var result = new List<HomeWorkModel>();
+      while (reader.Read())
+      {
+        var assignmentId = reader.GetInt32(0);
+        var title = reader.GetString(1);
+        var description = reader.IsDBNull(2) ? null : reader.GetString(2);
+        result.Add(new HomeWorkModel(title, description) { Id = assignmentId });
+      }
+
+      return result;
     }
     public void SeedTestData()
     {

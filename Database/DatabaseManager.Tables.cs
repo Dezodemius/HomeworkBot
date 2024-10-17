@@ -58,9 +58,9 @@ namespace Database
       var command = connection.CreateCommand();
       command.CommandText = @"
                 CREATE TABLE IF NOT EXISTS Assignments (
-                    AssignmentId INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Title TEXT NOT NULL,
-                    Description TEXT
+                AssignmentId INTEGER PRIMARY KEY AUTOINCREMENT,
+                Title TEXT NOT NULL,
+                Description TEXT
                 );";
       command.ExecuteNonQuery();
     }
