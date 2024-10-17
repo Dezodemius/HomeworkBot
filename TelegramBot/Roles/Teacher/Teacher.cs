@@ -1,8 +1,10 @@
 using ModelInterfaceHub.Interfaces;
 using ModelInterfaceHub.Models;
+using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramBot.Roles
@@ -38,29 +40,18 @@ namespace TelegramBot.Roles
       if (message.ToLower().Contains("/start"))
       {
         var keyboard = new InlineKeyboardMarkup(new[]
-        {
-          new[]
-          {
-            InlineKeyboardButton.WithCallbackData("задания на проверку", "/get_jobhomework")
-          },
-          new[]
-          {
-            InlineKeyboardButton.WithCallbackData("Не проверенные домашние задание", "/get_uncheckedHomework")
-          },
-          new[]
-          {
-            InlineKeyboardButton.WithCallbackData("Сданные домашние задание", "/get_checkedHomework")
-          },
-          new[]
-          {
-            InlineKeyboardButton.WithCallbackData("выполненые ДЗ", "/get_completedhomework")
-          },
-          new[]
-          {
-            InlineKeyboardButton.WithCallbackData("невыполненые ДЗ", "/get_uncompletedhomework")
-          },
-        });
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "выберите действие: ", keyboard);
+         {
+            new[]
+            {
+              InlineKeyboardButton.WithCallbackData("Просмотр дз", "/helpHomework")
+            },
+            new[]
+            {
+              InlineKeyboardButton.WithCallbackData("Создать дз", "/addHomeWork")
+            },
+
+          });
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите действие: ", keyboard);
       }
     }
 
@@ -75,7 +66,38 @@ namespace TelegramBot.Roles
       if (string.IsNullOrEmpty(callbackData)) return;
       else
       {
-        if (callbackData.Contains("/get_jobhomework"))
+        if (callbackData.ToLower(CultureInfo.CurrentCulture).Contains("/helphomework"))
+        {
+          var keyboard = new InlineKeyboardMarkup(new[]
+          {
+            new[]
+            {
+              InlineKeyboardButton.WithCallbackData("задания на проверку", "/get_jobhomework")
+            },
+            new[]
+            {
+              InlineKeyboardButton.WithCallbackData("Не проверенные домашние задание", "/get_uncheckedHomework")
+            },
+            new[]
+            {
+              InlineKeyboardButton.WithCallbackData("Сданные домашние задание", "/get_checkedHomework")
+            },
+            new[]
+            {
+              InlineKeyboardButton.WithCallbackData("выполненые ДЗ", "/get_completedhomework")
+            },
+            new[]
+            {
+              InlineKeyboardButton.WithCallbackData("невыполненые ДЗ", "/get_uncompletedhomework")
+            },
+          });
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите действие: ", keyboard, messageId);
+        }
+        else if (callbackData.ToLower(CultureInfo.CurrentCulture).Contains("/addhomework"))
+        {
+          // TODO : Реализация
+        }
+        else if (callbackData.Contains("/get_jobhomework"))
         {
           await ShowHomeWork(botClient, chatId, messageId, StatusWork.Unchecked);
         }
@@ -172,7 +194,7 @@ namespace TelegramBot.Roles
       {
         var homeData = Core.CommonDataModel.GetHomeWorkById(item.Id);
 
-        
+
         var button = InlineKeyboardButton.WithCallbackData(
             text: homeData.Title,
             callbackData: $"{callbackData}_homework_{homeData.Id}"
