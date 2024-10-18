@@ -9,6 +9,8 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Args;
+using System.Diagnostics;
+using Telegram.Bot.Types.Enums;
 
 namespace TelegramBot.Roles
 {
@@ -17,7 +19,7 @@ namespace TelegramBot.Roles
   /// </summary>
   public class Teacher : UserModel, IMessageHandler
   {
-
+    private bool flag;  
     /// <summary>
     /// Инициализирует новый экземпляр класса Teacher.
     /// </summary>
@@ -56,6 +58,7 @@ namespace TelegramBot.Roles
           });
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите действие: ", keyboard);
       }
+
     }
 
     /// <summary>
@@ -100,9 +103,7 @@ namespace TelegramBot.Roles
         {
           // TODO : Реализация
           // тут надо принять в двух сообщениях название домашки и ее описание
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите название домашней работы: ", null, messageId);
-          await ProcessCreatingNewHomeworkStepAsync(messageId, chatId);
-         // await ProcessCreationgNewHomeworkStepAsync(message, chatId);
+          await ProcessCreatingHomeworkAsync(botClient, chatId, "/addhomework");
         }
         else if (callbackData.Contains("/get_jobhomework"))
         {
@@ -246,87 +247,30 @@ namespace TelegramBot.Roles
       await TelegramBot.TelegramBotHandler.SendMessageAsync(botClient, chatId, messageBuilder.ToString(), keyboard, messageId);
     }
 
-    private static Dictionary<long, string> homeworkStates = new Dictionary<long, string>();
-    private string title = string.Empty;
-    private string homeworkDescription = string.Empty;
-
-    /// <summary>
-    /// Позволяет преподавателю создавать новые домашки.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    /*private static async void CreateNewHomeWork(object sender, MessageEventArgs e)
+    private async Task ProcessCreatingHomeworkAsync(ITelegramBotClient botClient,long chatId, string message)
     {
-      if (e.Message.Text != null)
+      var request = new CreatingRequest();
+
+      if (message == "/addhomework")
       {
-        if (!userStates.ContainsKey(e.Message.Chat.Id))
-        {
-          userStates[e.Message.Chat.Id] = "начало";
-        }
-        var state = userStates[e.Message.Chat.Id];
-        if (state == "начало")
-        {
-          await TelegramBotHandler.SendMessageAsync(
-              chatId: e.Message.Chat,
-              text: "Привет! Как тебя зовут?"
-          );
-          userStates[e.Message.Chat.Id] = "ожидание имени";
-        }
-        else if (state == "ожидание имени")
-        {
-          await TelegramBotHandler.SendMessageAsync(
-              chatId: e.Message.Chat,
-              text: $"Приятно познакомиться, {e.Message.Text}!"
-          );
-          userStates[e.Message.Chat.Id] = "начало";
-        }
-      }
-    }*/
-    public async Task<string> ProcessCreatingNewHomeworkStepAsync(int message, long chatID)
-    {
-      message.ToString();
-      if (!homeworkStates.ContainsKey(chatID))
-      {
-        homeworkStates[chatID] = "title";
+        await TelegramBotHandler.SendMessageAsync(
+          botClient,
+          chatId: chatId,
+          message: "Введите название домашней работы.");
       }
 
-      switch (homeworkStates[chatID])
+      var response = await request.ProcessCreatingNewHomeworkStepAsync(botClient);
+
+      if (request.Step == CreatingStep.Description)
       {
-        case ("title"):
-          if(!string.IsNullOrEmpty(message.ToString()))
-          {
-            title = message.ToString();
-            homeworkStates[chatID] = "description";
-            return "Отлично! Теперь введите описание курса:";
-          }
-          else
-          {
-            return "Название домашнего задания не может быть пустой строкой. " +
-              "\nПожалуйста, введите название домашнего задания.";
-          }
-
-        case ("description"):
-          if (!string.IsNullOrEmpty(message.ToString()))
-          {
-            homeworkDescription = message.ToString();
-            homeworkStates[chatID] = "completed";
-            //на async менять или просто так оставить???
-            CommonDataModel.CreateHomework(new HomeWorkModel(title, homeworkDescription));
-            return "Домашнее задание успешно добавлено.";
-          }
-          else
-          {
-            return "Описание домашнего задания не может быть пустой строкой. " +
-              "\nПожалуйста, введите описание домашнего задания.";
-          }
-
-        case ("completed"):
-          return "Домашнее задание успешно добавлено в базу данных.";
-
-        default:
-          return "Неизвестный шаг при добавлении домашнего задания.";
+        await TelegramBotHandler.SendMessageAsync(
+          botClient,
+          chatId: chatId,
+          message: response);
       }
+      response = await request.ProcessCreatingNewHomeworkStepAsync(botClient);
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "дз добавлено");
     }
   }
-  
 }

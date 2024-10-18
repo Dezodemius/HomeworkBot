@@ -48,6 +48,6 @@ namespace ModelInterfaceHub.Models
       Id = id;
       Title = title;
       Description = description;
-    }
+    }    
   }
 }

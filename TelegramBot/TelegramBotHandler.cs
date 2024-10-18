@@ -128,7 +128,7 @@ namespace TelegramBot
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
-        await teacher.ProcessMessageAsync(_botClient, chatId, message);//тут передает сообщение в класс Teacher, где оно обрабатывается
+        await teacher.ProcessMessageAsync(_botClient, chatId, message);
         return true;
       }
       return false;
@@ -289,5 +289,6 @@ namespace TelegramBot
         await botClient.SendTextMessageAsync(chatId, message, replyMarkup: inlineKeyboardMarkup);
       }
     }
+
   }
 }
