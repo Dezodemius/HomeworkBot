@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using TelegramBot.Model;
 
 namespace TelegramBot.Roles
 {
@@ -53,6 +54,10 @@ namespace TelegramBot.Roles
           });
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите действие: ", keyboard);
       }
+      else if (!string.IsNullOrEmpty(UserStateTracker.GetUserState(chatId)))
+      {
+        await ProcessCreatingHomeWorkAsync(botClient, chatId, message);
+      }
     }
 
     /// <summary>
@@ -95,7 +100,7 @@ namespace TelegramBot.Roles
         }
         else if (callbackData.ToLower(CultureInfo.CurrentCulture).Contains("/addhomework"))
         {
-          // TODO : Реализация
+          await CreateHomeWorkAsync(botClient, chatId);
         }
         else if (callbackData.Contains("/get_jobhomework"))
         {
@@ -194,7 +199,6 @@ namespace TelegramBot.Roles
       {
         var homeData = Core.CommonDataModel.GetHomeWorkById(item.Id);
 
-
         var button = InlineKeyboardButton.WithCallbackData(
             text: homeData.Title,
             callbackData: $"{callbackData}_homework_{homeData.Id}"
@@ -208,12 +212,20 @@ namespace TelegramBot.Roles
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите домашнее задание", inlineKeyboard, messageId);
     }
 
+    /// <summary>
+    /// Показывает домашние задания по статусу.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <param name="callbackData">Данные обратного вызова.</param>
+    /// <param name="messageId">Идентификатор сообщения.</param>
+    /// <param name="status">Статус домашнего задания.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
     public async Task ShowHomeWorkForStatus(ITelegramBotClient botClient, long chatId, string callbackData, int messageId, StatusWork status)
     {
       var id = callbackData.Split('_');
       var homeWorkDescription = Core.CommonDataModel.GetHomeWorkById(Convert.ToInt32(id.Last()));
       var messageBuilder = new StringBuilder();
-
 
       messageBuilder.AppendLine("Заголовок: " + homeWorkDescription.Title);
       messageBuilder.AppendLine("Описание: " + homeWorkDescription.Description);
@@ -221,7 +233,6 @@ namespace TelegramBot.Roles
       var homeWork = Core.CommonHomeWorkModel.
       GetTasksForHomework(status).
       Where(x => x.IdHomeWork == Convert.ToInt32(id.Last())).ToList();
-
 
       foreach (var task in homeWork)
       {
@@ -237,6 +248,48 @@ namespace TelegramBot.Roles
           },
         });
       await TelegramBot.TelegramBotHandler.SendMessageAsync(botClient, chatId, messageBuilder.ToString(), keyboard, messageId);
+    }
+
+    /// <summary>
+    /// Создает новое домашнее задание.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task CreateHomeWorkAsync(ITelegramBotClient botClient, long chatId)
+    {
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите название домашней работы:");
+      UserStateTracker.SetUserState(chatId, "awaiting_homework_title");
+    }
+
+    /// <summary>
+    /// Обрабатывает создание домашнего задания.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <param name="message">Текст сообщения от учителя.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task ProcessCreatingHomeWorkAsync(ITelegramBotClient botClient, long chatId, string message)
+    {
+      var state = UserStateTracker.GetUserState(chatId);
+
+      if (state == "awaiting_homework_title")
+      {
+        UserStateTracker.SetTemporaryData(chatId, "homework_title", message);
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Введите описание домашней работы:");
+        UserStateTracker.SetUserState(chatId, "awaiting_homework_description");
+      }
+      else if (state == "awaiting_homework_description")
+      {
+        var title = UserStateTracker.GetTemporaryData(chatId, "homework_title");
+        var description = message;
+
+        Core.CommonHomeWorkModel.AddHomeWork(title, description);
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Домашняя работа успешно создана!");
+
+        UserStateTracker.ClearTemporaryData(chatId);
+        UserStateTracker.SetUserState(chatId, null);
+      }
     }
   }
 }

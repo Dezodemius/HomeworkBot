@@ -91,5 +91,14 @@ namespace Core
       }
     }
 
+    /// <summary>
+    /// Создаёт домашнюю работу по названию и описанию
+    /// </summary>
+    /// <param name="homeWorkModel"></param>
+    static public void AddHomeWork(string title, string description)
+    {
+      var homeWorkModel = new HomeWorkModel(title, description);
+      dbManager.CreateHomeWork(homeWorkModel);
+    }
   }
 }
