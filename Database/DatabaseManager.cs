@@ -136,19 +136,20 @@ namespace Database
     /// <summary>
     /// Добавляет запись о домашней работе в базу данных.
     /// </summary>
+    /// <param name="homeWorkModel">Модель домашней работы, которую нужно добавить.</param>
     public void CreateHomeWork(HomeWorkModel homeWorkModel)
     {
-      string sqlExpression = $"INSERT INTO Assignments (Title, Description) VALUE (@Title, @Description)";
-      SqlConnection connection = new SqlConnection(@_connectionString);
-      SqlCommand command = new SqlCommand(sqlExpression, connection);
-      command.Parameters.AddWithValue("@Title", homeWorkModel.Title);
-      command.Parameters.AddWithValue("@Description", homeWorkModel.Description);
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
 
-      using (connection)
-      {
-        connection.Open();
-        command.ExecuteNonQuery();
-      }
+      var command = connection.CreateCommand();
+      command.CommandText = @"
+        INSERT INTO Assignments (Title, Description)
+        VALUES (@Title, @Description)";
+
+      command.Parameters.AddWithValue("@Title", homeWorkModel.Title);
+      command.Parameters.AddWithValue("@Description", homeWorkModel.Description ?? (object)DBNull.Value); // Если описание null
+      command.ExecuteNonQuery();
     }
 
     /// <summary>
