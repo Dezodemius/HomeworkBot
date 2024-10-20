@@ -13,15 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Database\Database.csproj" />
     <ProjectReference Include="..\DataContracts\DataContracts.csproj" />
-    <ProjectReference Include="..\RoleModels\RoleModels.csproj" />
-    <ProjectReference Include="..\SqlHelper\SqlHelper.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="BotCommon">
-      <HintPath>..\..\..\TelegramBots\BotCommon\bin\Debug\net7.0\BotCommon.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

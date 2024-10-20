@@ -2,6 +2,7 @@
 using System.Data.SQLite;
 using Telegram.Bot.Types;
 using static DataContracts.IParticipant;
+using static DataContracts.Models.StudentHomeWorkModel;
 
 namespace SqlHelper
 {
@@ -139,7 +140,7 @@ namespace SqlHelper
                 FullName TEXT NOT NULL,
                 HomeworkNumber TEXT NOT NULL,
                 Git TEXT NOT NULL,
-                HomeworkStatus TEXT NOT NULL
+                StatusWork TEXT NOT NULL
             );";
 
         using (var command = new SQLiteCommand(createTableQuery, connection))
@@ -161,8 +162,8 @@ namespace SqlHelper
           await connection.OpenAsync();
 
           string insertQuery = $@"
-                    INSERT INTO {HomeworkTableName} (UserId, FullName, HomeworkNumber, Git, HomeworkStatus)
-                    VALUES (@UserId, @FullName, @HomeworkNumber, @Git, @HomeworkStatus);";
+                    INSERT INTO {HomeworkTableName} (UserId, FullName, HomeworkNumber, Git, StatusWork)
+                    VALUES (@UserId, @FullName, @HomeworkNumber, @Git, @StatusWork);";
 
           using (var command = new SQLiteCommand(insertQuery, connection))
           {
@@ -170,7 +171,7 @@ namespace SqlHelper
             command.Parameters.AddWithValue("@FullName", student.FullName);
             command.Parameters.AddWithValue("@HomeworkNumber", homeworkNumber);
             command.Parameters.AddWithValue("@Git", git);
-            command.Parameters.AddWithValue("@HomeworkStatus", IParticipant.HomeworkStatus.NotReviewed);
+            command.Parameters.AddWithValue("@StatusWork", IParticipant.StatusWork.NotReviewed);
 
             await command.ExecuteNonQueryAsync();
           }
@@ -185,18 +186,18 @@ namespace SqlHelper
     }
 
     /// <summary>
-    /// Получает значение столбца HomeworkStatus из таблицы HomeWorkTable по идентификатору UserId и номеру домашнего задания HomeworkNumber.
+    /// Получает значение столбца StatusWork из таблицы HomeWorkTable по идентификатору UserId и номеру домашнего задания HomeworkNumber.
     /// </summary>
     /// <param name="userId">Идентификатор пользователя (UserId).</param>
     /// <param name="homeworkNumber">Номер домашнего задания (HomeworkNumber).</param>
-    /// <returns>Статус домашнего задания (HomeworkStatus) или null, если запись не найдена.</returns>
-    public async Task<HomeworkStatus?> GetHomeworkStatusAsync(string userId, string homeworkNumber)
+    /// <returns>Статус домашнего задания (StatusWork) или null, если запись не найдена.</returns>
+    public async Task<StatusWork?> GetStatusWorkAsync(string userId, string homeworkNumber)
     {
       using (var connection = new SQLiteConnection(ConnectionString))
       {
         await connection.OpenAsync();
 
-        string query = $"SELECT HomeworkStatus FROM {HomeworkTableName} WHERE UserId = @UserId AND HomeworkNumber = @HomeworkNumber;";
+        string query = $"SELECT StatusWork FROM {HomeworkTableName} WHERE UserId = @UserId AND HomeworkNumber = @HomeworkNumber;";
 
         using (var command = new SQLiteCommand(query, connection))
         {
@@ -205,7 +206,7 @@ namespace SqlHelper
 
           var result = await command.ExecuteScalarAsync();
 
-          if (result != null && Enum.TryParse(result.ToString(), out HomeworkStatus status))
+          if (result != null && Enum.TryParse(result.ToString(), out StatusWork status))
           {
             return status;
           }
@@ -221,42 +222,42 @@ namespace SqlHelper
     /// Получает список всех домашних заданий и их статусов для указанного пользователя.
     /// </summary>
     /// <param name="userId">Идентификатор пользователя (UserId).</param>
-    /// <returns>Список кортежей, содержащих номер домашнего задания (HomeworkNumber) и статус домашнего задания на русском языке (HomeworkStatus).</returns>
-    public async Task<List<Tuple<string, string>>> GetHomeworkStatusesAsync(string userId)
+    /// <returns>Список кортежей, содержащих номер домашнего задания (HomeworkNumber) и статус домашнего задания на русском языке (StatusWork).</returns>
+    public async Task<List<Tuple<string, string>>> GetStatusWorkesAsync(string userId)
     {
-      var statusTranslations = new Dictionary<HomeworkStatus, string>
+      var statusTranslations = new Dictionary<StatusWork, string>
     {
-        { HomeworkStatus.NotSubmitted, "Не сдано" },
-        { HomeworkStatus.NotReviewed, "Не проверено" },
-        { HomeworkStatus.RequiresRevision, "Требует доработки" },
-        { HomeworkStatus.Accepted, "Принято" }
+        { StatusWork.Unfulfilled, "Не сдано" },
+        { StatusWork.Unchecked, "Не проверено" },
+        { StatusWork.NeedsRevision, "Требует доработки" },
+        { StatusWork.Checked, "Принято" }
     };
 
       using (var connection = new SQLiteConnection(ConnectionString))
       {
         await connection.OpenAsync();
 
-        string query = $"SELECT HomeworkNumber, HomeworkStatus FROM {HomeworkTableName} WHERE UserId = @UserId;";
+        string query = $"SELECT HomeworkNumber, StatusWork FROM {HomeworkTableName} WHERE UserId = @UserId;";
 
         using (var command = new SQLiteCommand(query, connection))
         {
           command.Parameters.AddWithValue("@UserId", userId);
 
-          var homeworkStatuses = new List<Tuple<string, string>>();
+          var StatusWorkes = new List<Tuple<string, string>>();
           using (var reader = await command.ExecuteReaderAsync())
           {
             while (await reader.ReadAsync())
             {
               string homeworkNumber = reader["HomeworkNumber"].ToString();
-              if (Enum.TryParse(reader["HomeworkStatus"].ToString(), out HomeworkStatus homeworkStatus))
+              if (Enum.TryParse(reader["StatusWork"].ToString(), out StatusWork StatusWork))
               {
-                string statusInRussian = statusTranslations[homeworkStatus];
-                homeworkStatuses.Add(new Tuple<string, string>(homeworkNumber, statusInRussian));
+                string statusInRussian = statusTranslations[StatusWork];
+                StatusWorkes.Add(new Tuple<string, string>(homeworkNumber, statusInRussian));
               }
             }
           }
 
-          return homeworkStatuses;
+          return StatusWorkes;
         }
       }
     }
