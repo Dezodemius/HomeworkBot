@@ -23,6 +23,9 @@ namespace DataContracts.Data
     /// </summary>
     public long AdminId { get; set; }
 
+    // Параметрный конструктор без параметров
+    public Config() { }
+
     /// <summary>
     /// Загружает конфигурацию из указанного YAML файла.
     /// </summary>

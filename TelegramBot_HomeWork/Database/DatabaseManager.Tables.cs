@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using DataContracts; // Для использования Logger
 
 namespace Database
 {
@@ -45,15 +46,27 @@ namespace Database
     /// </summary>
     private void CreateTableFromModel<T>(SQLiteConnection connection, string tableName)
     {
-      var properties = typeof(T).GetProperties();
-      var columns = properties.Select(p => $"{p.Name} {GetSQLiteType(p.PropertyType)}").ToList();
-      columns.Insert(0, $"{tableName}Id INTEGER PRIMARY KEY AUTOINCREMENT");
+      try
+      {
+        var properties = typeof(T).GetProperties();
+        var columns = properties.Select(p => $"{p.Name} {GetSQLiteType(p.PropertyType)}").ToList();
+        columns.Insert(0, $"{tableName}Id INTEGER PRIMARY KEY AUTOINCREMENT");
 
-      var commandText = $"CREATE TABLE IF NOT EXISTS {tableName} ({string.Join(", ", columns)})";
-      using var command = new SQLiteCommand(commandText, connection);
-      command.ExecuteNonQuery();
+        var commandText = $"CREATE TABLE IF NOT EXISTS {tableName} ({string.Join(", ", columns)})";
+        using var command = new SQLiteCommand(commandText, connection);
+        command.ExecuteNonQuery();
 
-      VerifyTableStructure<T>(connection, tableName);
+        Logger.LogInfo($"Таблица {tableName} создана или уже существует.");
+
+        // Проверка структуры таблицы после её создания
+        VerifyTableStructure<T>(connection, tableName);
+        Logger.LogInfo($"Структура таблицы {tableName} успешно проверена.");
+      }
+      catch (Exception ex)
+      {
+        Logger.LogError($"Ошибка при создании или проверке таблицы {tableName}: {ex.Message}");
+        throw;
+      }
     }
 
     /// <summary>
@@ -61,14 +74,29 @@ namespace Database
     /// </summary>
     private string GetSQLiteType(Type type)
     {
-      if (type == typeof(int) || type == typeof(long))
-        return "INTEGER";
-      if (type == typeof(string))
-        return "TEXT";
-      if (type == typeof(DateTime))
-        return "DATETIME";
+      if (Nullable.GetUnderlyingType(type) != null)
+      {
+        type = Nullable.GetUnderlyingType(type);
+      }
 
-      throw new NotSupportedException($"Type {type.Name} is not supported.");
+      if (type == typeof(int) || type == typeof(long))
+      {
+        return "INTEGER";
+      }
+      else if (type == typeof(string))
+      {
+        return "TEXT";
+      }
+      else if (type == typeof(DateTime))
+      {
+        return "DATETIME";
+      }
+      else if (type.IsEnum)
+      { 
+        return "TEXT"; 
+      }
+
+      throw new NotSupportedException($"Тип {type.Name} не поддерживается.");
     }
 
     /// <summary>
@@ -94,7 +122,7 @@ namespace Database
       {
         if (!actualColumns.ContainsKey(expectedColumn.Key) || actualColumns[expectedColumn.Key] != expectedColumn.Value)
         {
-          throw new Exception($"Column {expectedColumn.Key} in table {tableName} is missing or has incorrect type.");
+          throw new Exception($"Столбец {expectedColumn.Key} в таблице {tableName} отсутствует или имеет неправильный тип.");
         }
       }
     }

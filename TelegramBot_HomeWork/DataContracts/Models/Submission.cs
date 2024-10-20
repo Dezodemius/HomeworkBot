@@ -17,7 +17,5 @@ namespace DataContracts.Models
     public string Status { get; set; }
     public string TeacherComment { get; set; }
 
-    public Assignment Assignment { get; set; }
-    public User Student { get; set; }
   }
 }

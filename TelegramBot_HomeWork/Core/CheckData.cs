@@ -15,6 +15,7 @@ namespace Core
     static public void CheckTables()
     {
       dbManager.EnsureDatabaseCreated();
+      dbManager.EnsureTablesCreated();
     }
 
   }
