@@ -31,9 +31,10 @@ namespace Core
     /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    static public UserRole GetUserRoleById(long userId)
+    public static UserRole? GetUserRoleById(long userId)
     {
-      throw new NotImplementedException();
+      var user = dbManager.GetAllUsers().FirstOrDefault(u => u.TelegramChatId == userId);
+      return user?.Role;
     }
 
     /// <summary>

@@ -38,7 +38,6 @@ namespace Database
       CreateTableFromModel<Submission>(connection, "Submissions");
       CreateTableFromModel<RegistrationRequest>(connection, "RegistrationRequests");
       CreateTableFromModel<UserCourse>(connection, "UserCourses");
-      CreateTableFromModel<HomeWork>(connection, "Homeworks");
     }
 
     /// <summary>
@@ -49,8 +48,21 @@ namespace Database
       try
       {
         var properties = typeof(T).GetProperties();
-        var columns = properties.Select(p => $"{p.Name} {GetSQLiteType(p.PropertyType)}").ToList();
-        columns.Insert(0, $"{tableName}Id INTEGER PRIMARY KEY AUTOINCREMENT");
+        if (properties.Length == 0)
+        {
+          throw new InvalidOperationException("Модель не содержит свойств.");
+        }
+
+        // Получаем первое свойство модели, которое будет первичным ключом
+        var firstProperty = properties[0];
+
+        // Создаем список столбцов, исключая первое свойство
+        var columns = properties
+            .Select(p => $"{p.Name} {GetSQLiteType(p.PropertyType)}")
+            .ToList();
+
+        columns.RemoveAt(0);
+        columns.Insert(0, $"{firstProperty.Name} INTEGER PRIMARY KEY AUTOINCREMENT");
 
         var commandText = $"CREATE TABLE IF NOT EXISTS {tableName} ({string.Join(", ", columns)})";
         using var command = new SQLiteCommand(commandText, connection);
@@ -58,7 +70,6 @@ namespace Database
 
         Logger.LogInfo($"Таблица {tableName} создана или уже существует.");
 
-        // Проверка структуры таблицы после её создания
         VerifyTableStructure<T>(connection, tableName);
         Logger.LogInfo($"Структура таблицы {tableName} успешно проверена.");
       }
@@ -68,6 +79,7 @@ namespace Database
         throw;
       }
     }
+
 
     /// <summary>
     /// Возвращает тип данных SQLite для указанного типа C#.

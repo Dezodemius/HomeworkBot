@@ -32,6 +32,12 @@ namespace DataContracts.Models
   /// </summary>
   public class UserModel
   {
+
+    /// <summary>
+    /// Получает или устанавливает идентификатор чата Telegram пользователя.
+    /// </summary>
+    public int UserId { get; set; }
+
     /// <summary>
     /// Получает или устанавливает идентификатор чата Telegram пользователя.
     /// </summary>
@@ -67,6 +73,24 @@ namespace DataContracts.Models
     /// <param name="role">Роль пользователя в системе.</param>
     public UserModel(long telegramChatId, string firstName, string lastName, string email, UserRole role)
     {
+      TelegramChatId = telegramChatId;
+      FirstName = firstName;
+      LastName = lastName;
+      Email = email;
+      Role = role;
+    }
+
+    /// <summary>
+    /// Инициализирует новый экземпляр класса User с указанными параметрами.
+    /// </summary>
+    /// <param name="telegramChatId">Идентификатор чата Telegram.</param>
+    /// <param name="firstName">Имя пользователя.</param>
+    /// <param name="lastName">Фамилия пользователя.</param>
+    /// <param name="email">Адрес электронной почты пользователя.</param>
+    /// <param name="role">Роль пользователя в системе.</param>
+    public UserModel(int userId, long telegramChatId, string firstName, string lastName, string email, UserRole role)
+    {
+      UserId = userId;
       TelegramChatId = telegramChatId;
       FirstName = firstName;
       LastName = lastName;

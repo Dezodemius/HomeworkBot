@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DataContracts.Models.StudentHomeWorkModel;
+using static DataContracts.Models.Submission;
 
 namespace Core
 {
@@ -14,10 +14,9 @@ namespace Core
   {
     static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
-    static public List<HomeWork> GetHomeWork()
+    static public List<Assignment> GetHomeWork(int courseId)
     {
-      // return dbManager.GetAllHomeWork();
-      throw new NotImplementedException();
+      return dbManager.GetAssignmentsByCourse(courseId);
     }
 
     /// <summary>
@@ -26,10 +25,9 @@ namespace Core
     /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    static public HomeWork GetHomeWorkById(int homeId)
+    static public Assignment GetHomeWorkById(int courseId, int homeId)
     {
-      // return dbManager.GetAssignmentById(homeId);
-      throw new NotImplementedException();
+      return (Assignment)(dbManager.GetAssignmentsByCourse(courseId).Where(x=>x.AssignmentId == homeId));
     }
 
     /// <summary>
@@ -37,7 +35,7 @@ namespace Core
     /// </summary>
     /// <param name="userId">Идентификатор студента.</param>
     /// <returns>Список моделей задач для домашнего задания.</returns>
-    static public List<StudentHomeWorkModel> GetHomeworkForStudent(long userId)
+    static public List<Submission> GetHomeworkForStudent(long userId)
     {
       // List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
       // var allTasks = dbManager.GetAllHomeWorksForStudents();
@@ -56,7 +54,7 @@ namespace Core
     /// <param name="statusWork">Статус задания.</param>
     /// <param name="homeworkId">Идентификатор домашнего задания.</param>
     /// <returns>Список моделей непроверенных задач для домашнего задания.</returns>
-    static public List<StudentHomeWorkModel> GetTasksForHomework(StatusWork statusWork, int homeworkId = -1)
+    static public List<Submission> GetTasksForHomework(StatusWork statusWork, int homeworkId = -1)
     {
       // List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
       // var allTasks = dbManager.GetAllHomeWorksForStudents();

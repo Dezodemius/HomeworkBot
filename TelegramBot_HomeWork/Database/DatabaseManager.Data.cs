@@ -1,7 +1,6 @@
 ﻿using DataContracts.Models;
 using System.Data.SqlClient;
 using System.Data.SQLite;
-using static DataContracts.Models.StudentHomeWorkModel;
 
 namespace Database
 {
@@ -23,7 +22,5 @@ namespace Database
     {
       _connectionString = connectionString;
     }
-
-    
   }
 }
