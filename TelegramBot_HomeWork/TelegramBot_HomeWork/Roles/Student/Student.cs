@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static DataContracts.Models.StudentHomeWorkModel;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot;
 using Core;
+using static DataContracts.Models.Submission;
 
 namespace TelegramBot.Roles.Student
 {
@@ -18,7 +18,7 @@ namespace TelegramBot.Roles.Student
   internal class Student : UserModel, IMessageHandler
   {
 
-    private readonly List<StudentHomeWorkModel> homeWorkModels;
+    private readonly List<Submission> homeWorkModels;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса Student.
@@ -150,7 +150,7 @@ namespace TelegramBot.Roles.Student
     private async Task<string> DisplayHomeWorkStatuses(StatusWork status, long userId)
     {
       var filteredHomeWorks = homeWorkModels
-          .Where(hw => hw.IdStudent == userId && hw.Status == status)
+          .Where(hw => hw.StudentId == userId && hw.Status == status)
           .ToList();
 
       if (!filteredHomeWorks.Any())
@@ -163,7 +163,7 @@ namespace TelegramBot.Roles.Student
 
       foreach (var hw in filteredHomeWorks)
       {
-        sb.AppendLine($"ID задания: {hw.IdHomeWork}, GitHub: {hw.GithubLink}");
+        sb.AppendLine($"ID задания: {hw.AssignmentId}, GitHub: {hw.GithubLink}");
       }
 
       return sb.ToString();

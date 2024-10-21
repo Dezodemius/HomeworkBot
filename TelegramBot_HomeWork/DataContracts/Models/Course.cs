@@ -11,6 +11,6 @@ namespace DataContracts.Models
   {
     public int CourseId { get; set; }
     public string CourseName { get; set; }
-    public int? TeacherId { get; set; }
+    public long? TeacherId { get; set; }
   }
 }
