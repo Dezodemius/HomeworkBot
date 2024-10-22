@@ -21,8 +21,7 @@ namespace Core
     /// <exception cref="NotImplementedException"></exception>
     static public UserModel GetUserById(long userId)
     {
-      // return dbManager.GetUserById(userId);
-      throw new NotImplementedException();
+      return dbManager.GetAllUsers().Where(x => x.TelegramChatId == userId).First();
     }
 
     /// <summary>
