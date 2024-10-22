@@ -23,7 +23,7 @@ namespace DataContracts.Models
     /// <summary>
     /// Идентификатор запроса.
     /// </summary>
-    public long RequestId { get; set; }
+    public int RequestId { get; set; }
 
     /// <summary>
     /// Идентификатор чата Telegram.

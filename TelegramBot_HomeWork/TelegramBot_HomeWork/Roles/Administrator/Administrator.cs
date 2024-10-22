@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using TelegramBot.Processing;
 
 namespace TelegramBot.Roles.Administrator
 {
@@ -30,7 +32,7 @@ namespace TelegramBot.Roles.Administrator
     /// <returns>Ответ на сообщение администратора.</returns>
     public async Task ProcessMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
-      throw new NotImplementedException();
+      return;
     }
 
     /// <summary>
@@ -41,7 +43,17 @@ namespace TelegramBot.Roles.Administrator
     /// <exception cref="NotImplementedException"></exception>
     public async Task ProcessCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      throw new NotImplementedException();
+      if (string.IsNullOrEmpty(callbackData))
+      {
+        return;
+      }
+
+      else if (callbackData.ToLower().Contains("/registration"))
+      {
+        var result = RegistrationProcessing.AnswerRegistartionUser(botClient, chatId, messageId, callbackData);
+      }
     }
+
+
   }
 }

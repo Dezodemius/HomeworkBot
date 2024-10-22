@@ -44,7 +44,7 @@ namespace TelegramBot.Processing
             TelegramBotHandler.RegistrationRequests.Add(chatId, data);
           }
         }
-        else
+        else if (CommonRegistrationRequest.GetRegistrationRequests(chatId) == null)
         {
           List<CallbackModel> callbackModels = new List<CallbackModel>()
           {
@@ -53,6 +53,19 @@ namespace TelegramBot.Processing
 
           var inlineKeyboardMarkup = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
           await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ошибка: Данные пользователя не найдены!", inlineKeyboardMarkup);
+        }
+        else
+        {
+          var data = CommonRegistrationRequest.GetRegistrationRequests(chatId);
+
+          if (data.Status.ToLower().Contains("rejected"))
+          {
+            await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ваша заявка на регистрацию отклонена. Пожалуйста, свяжитесь с оргазизацией.");
+          }
+          else
+          {
+            await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ваша заявка на регистрацию принята. Пожалуйста, ожидайте подтверждения от администратора.");
+          }
         }
       }
     }

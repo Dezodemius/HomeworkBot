@@ -108,9 +108,13 @@ namespace TelegramBot
     /// <returns>Задача, представляющая асинхронную операцию отправки или редактирования сообщения.</returns>
     internal static async Task SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
     {
-      if (inlineKeyboardMarkup == null)
+      if (inlineKeyboardMarkup == null && messageId == null)
       {
         await botClient.SendTextMessageAsync(chatId, message);
+      }
+      else if (inlineKeyboardMarkup == null && messageId.HasValue)
+      {
+        await botClient.EditMessageTextAsync(chatId, messageId.Value, message);
       }
       else if (messageId.HasValue)
       {
