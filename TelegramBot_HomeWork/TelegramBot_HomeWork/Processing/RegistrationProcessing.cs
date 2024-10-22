@@ -64,8 +64,7 @@ namespace TelegramBot.Processing
           }
           else
           {
-            var courses = Core.CommonCourseModel.GetAllCourses();
-            await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Выберите курс:\n{string.Join("\n", courses.Select(c => $"{c.CourseId}. {c.CourseName}"))}");
+            await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Системная ошибка! Попробуйте ещё раз!");
             return;
           }
 

@@ -74,5 +74,10 @@ namespace Core
     { 
       return dbManager.GetAllUsers().Where(x=>x.Role == UserRole.Administrator).ToList();
     }
+
+    static public List<UserModel> GetAllteachers()
+    {
+      return dbManager.GetAllUsers().Where(x => x.Role == UserRole.Teacher).ToList();
+    }
   }
 }

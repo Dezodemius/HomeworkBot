@@ -43,5 +43,10 @@ namespace Core
       return data.CourseName;
     }
 
+    public static void AddCourse(Course course)
+    { 
+      dbManager.CreateCourse(course); 
+    }
+
   }
 }
