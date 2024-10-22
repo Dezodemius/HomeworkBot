@@ -7,12 +7,16 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using TelegramBot.Model;
 using TelegramBot.Processing;
 
 namespace TelegramBot.Roles.Administrator
 {
   internal class Administrator : UserModel, IMessageHandler
   {
+
+    static internal Dictionary<long, Course> course = new Dictionary<long, Course>();
+
     /// <summary>
     /// Инициализирует новый экземпляр класса Administrator.
     /// </summary>
@@ -32,7 +36,27 @@ namespace TelegramBot.Roles.Administrator
     /// <returns>Ответ на сообщение администратора.</returns>
     public async Task ProcessMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
-      return;
+      if (string.IsNullOrEmpty(message))
+      {
+        return;
+      }
+      else if (course.ContainsKey(chatId))
+      {
+        course.TryGetValue(chatId, out Course? courseData);
+
+        if (courseData != null)
+        {
+          await new CreateCourseProcessing(courseData).ProcessCreateCourseStepAsync(botClient, chatId, message, 0);
+        }
+      }
+      else if (message == "/start")
+      {
+        List<CallbackModel> callbackModels = new List<CallbackModel>();
+        callbackModels.Add(new CallbackModel("Создать курс", "/createCourse"));
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите фунцию:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
+      }
+  
+
     }
 
     /// <summary>
@@ -51,6 +75,22 @@ namespace TelegramBot.Roles.Administrator
       else if (callbackData.ToLower().Contains("/registration"))
       {
         var result = RegistrationProcessing.AnswerRegistartionUser(botClient, chatId, messageId, callbackData);
+      }
+
+      else if (callbackData.ToLower().Contains("/createcourse"))
+      {
+        if (!course.ContainsKey(chatId))
+        {
+          course.Add(chatId, new Course());
+        }
+
+        course.TryGetValue(chatId, out Course? courseData);
+
+        if (courseData != null)
+        {
+          await new CreateCourseProcessing(courseData).ProcessCreateCourseStepAsync(botClient, chatId, callbackData, messageId);
+        }
+
       }
     }
 
