@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Telegram.Bot.Types;
 
 namespace Core
 {
@@ -21,8 +22,7 @@ namespace Core
     /// <exception cref="NotImplementedException"></exception>
     static public UserModel GetUserById(long userId)
     {
-      // return dbManager.GetUserById(userId);
-      throw new NotImplementedException();
+      return dbManager.GetAllUsers().Where(x => x.TelegramChatId == userId).First();
     }
 
     /// <summary>
@@ -62,6 +62,17 @@ namespace Core
       //}
 
       throw new NotImplementedException();
+    }
+
+
+    static public void AddStudent(RegistrationRequest registrationRequest)
+    {
+      var userModel = new UserModel(registrationRequest.TelegramChatId, registrationRequest.FirstName, registrationRequest.LastName, registrationRequest.Email, UserRole.Student);
+      dbManager.CreateUser(userModel);
+    }
+    static public List<UserModel> GetAllAdministartor()
+    { 
+      return dbManager.GetAllUsers().Where(x=>x.Role == UserRole.Administrator).ToList();
     }
   }
 }
