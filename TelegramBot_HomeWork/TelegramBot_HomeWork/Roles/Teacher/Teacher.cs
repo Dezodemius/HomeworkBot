@@ -10,6 +10,8 @@ using Telegram.Bot;
 using Core;
 using System.Globalization;
 using static DataContracts.Models.Submission;
+using TelegramBot.Model;
+using TelegramBot.Processing;
 
 namespace TelegramBot.Roles.Teacher
 {
@@ -18,6 +20,8 @@ namespace TelegramBot.Roles.Teacher
   /// </summary>
   public class Teacher : UserModel, IMessageHandler
   {
+
+    static internal Dictionary<long, Assignment> assigments = new Dictionary<long, Assignment>();
 
     /// <summary>
     /// Инициализирует новый экземпляр класса Teacher.
@@ -32,7 +36,7 @@ namespace TelegramBot.Roles.Teacher
     /// <summary>
     /// Обрабатывает входящее сообщение от преподавателя.
     /// </summary>
-    /// <param name="message">Текст сообщения от пропеодавателя.</param>
+    /// <param name="message">Текст сообщения от преподавателя.</param>
     /// <returns>Ответ на сообщение учителя.</returns>
     public async Task ProcessMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
@@ -40,10 +44,20 @@ namespace TelegramBot.Roles.Teacher
       {
         return;
       }
-
-      if (message.ToLower().Contains("/start"))
+      else if (assigments.ContainsKey(chatId))
       {
-       
+        assigments.TryGetValue(chatId, out Assignment? homeworkData);
+
+        if (homeworkData != null)
+        {
+          await new CreateHomeWorkProcessing(homeworkData).ProcessCreateStepAsync(botClient, chatId, message);
+        }
+      }
+      else if (message == "/start")
+      {
+        List<CallbackModel> callbackModels = new List<CallbackModel>();
+        callbackModels.Add(new CallbackModel("Создать домашнюю работу", "/createHomework"));
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите функцию:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
       }
     }
 
@@ -56,9 +70,19 @@ namespace TelegramBot.Roles.Teacher
     public async Task ProcessCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
       if (string.IsNullOrEmpty(callbackData)) return;
-      else
+      else if (callbackData.ToLower().Contains("/createhomework"))
       {
-        
+        if (!assigments.ContainsKey(chatId))
+        {
+          assigments.Add(chatId, new Assignment());
+        }
+
+        assigments.TryGetValue(chatId, out Assignment? homeworkData);
+
+        if (homeworkData != null)
+        {
+          await new CreateHomeWorkProcessing(homeworkData).ProcessCreateStepAsync(botClient, chatId, callbackData);
+        }
       }
     }
   }

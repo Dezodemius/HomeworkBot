@@ -14,7 +14,7 @@ namespace TelegramBot.Processing
   public class RegistrationProcessing
   {
 
-    RegistrationRequest request = new RegistrationRequest();
+    RegistrationRequest _request;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса RegistrationRequest.
@@ -22,8 +22,8 @@ namespace TelegramBot.Processing
     /// <param name="telegramChatId">Идентификатор чата Telegram.</param>
     public RegistrationProcessing(RegistrationRequest registrationRequest)
     {
-      request = registrationRequest;
-      request.Status = "Pending";
+      _request = registrationRequest;
+      _request.Status = "Pending";
     }
 
     /// <summary>
@@ -34,11 +34,10 @@ namespace TelegramBot.Processing
     /// <returns>Ответ на текущий шаг регистрации.</returns>
     public async Task ProcessRegistrationStepAsync(ITelegramBotClient botClient, long chatId, string message)
     {
-      switch (request.GetStep())
+      switch (_request.GetStep())
       {
         case RegistrationStep.Start:
           {
-
             var course = Core.CommonCourseModel.GetAllCourses();
             List<CallbackModel> callbacks = new List<CallbackModel>();
             foreach (var callback in course)
@@ -48,43 +47,44 @@ namespace TelegramBot.Processing
             var inlineMarkup = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks);
             await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите курс:", inlineMarkup);
 
-            request.SetStep(RegistrationStep.Course);
+            _request.SetStep(RegistrationStep.Course);
             return;
           }
         case RegistrationStep.Course:
-
-          var courseData = message.Split('_');
-          if (int.TryParse(courseData.Last(), out int courseId))
           {
-            var nameCourse = CommonCourseModel.GetNameCourse(courseId);
-            request.CourseId = courseId;
-            request.SetStep(RegistrationStep.FirstName);
-            await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы выбрали курс \"{nameCourse}\". Теперь введите ваше имя:");
-            return;
-          }
-          else
-          {
-            await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Системная ошибка! Попробуйте ещё раз!");
-            return;
+            var courseData = message.Split('_');
+            if (int.TryParse(courseData.Last(), out int courseId))
+            {
+              var nameCourse = CommonCourseModel.GetNameCourse(courseId);
+              _request.CourseId = courseId;
+              _request.SetStep(RegistrationStep.FirstName);
+              await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы выбрали курс \"{nameCourse}\". Теперь введите ваше имя:");
+              return;
+            }
+            else
+            {
+              await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Системная ошибка! Попробуйте ещё раз!");
+              return;
+            }
           }
 
         case RegistrationStep.FirstName:
-          request.FirstName = message;
-          request.SetStep(RegistrationStep.LastName);
+          _request.FirstName = message;
+          _request.SetStep(RegistrationStep.LastName);
           await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Отлично! Теперь введите вашу фамилию:");
           return;
 
         case RegistrationStep.LastName:
-          request.LastName = message;
-          request.SetStep(RegistrationStep.Email);
+          _request.LastName = message;
+          _request.SetStep(RegistrationStep.Email);
           await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Хорошо. Теперь введите ваш email:");
           return;
 
         case RegistrationStep.Email:
-          request.Email = message;
-          request.SetStep(RegistrationStep.Completed);
+          _request.Email = message;
+          _request.SetStep(RegistrationStep.Completed);
 
-          await NewUserAsync(request, botClient);
+          await NewUserAsync(_request, botClient);
           await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ваша заявка на регистрацию принята. Пожалуйста, ожидайте подтверждения от администратора.");
           return;
 

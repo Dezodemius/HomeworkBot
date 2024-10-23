@@ -14,7 +14,6 @@ namespace TelegramBot.Roles.Administrator
 {
   internal class Administrator : UserModel, IMessageHandler
   {
-
     static internal Dictionary<long, Course> course = new Dictionary<long, Course>();
 
     /// <summary>
@@ -53,10 +52,8 @@ namespace TelegramBot.Roles.Administrator
       {
         List<CallbackModel> callbackModels = new List<CallbackModel>();
         callbackModels.Add(new CallbackModel("Создать курс", "/createCourse"));
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите фунцию:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите функцию:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
       }
-  
-
     }
 
     /// <summary>
@@ -90,10 +87,7 @@ namespace TelegramBot.Roles.Administrator
         {
           await new CreateCourseProcessing(courseData).ProcessCreateCourseStepAsync(botClient, chatId, callbackData, messageId);
         }
-
       }
     }
-
-
   }
 }
