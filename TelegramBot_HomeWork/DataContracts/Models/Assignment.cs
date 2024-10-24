@@ -1,11 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DataContracts.Models
+﻿namespace DataContracts.Models
 {
+  /// <summary>
+  /// Перечисление шагов регистрации.
+  /// </summary>
+  public enum CreateHomeworkStep
+  {
+    Start,
+    Course,
+    Name,
+    Description,
+    DueDate,
+    Completed
+  }
   public class Assignment
   {
     public int AssignmentId { get; set; }
@@ -13,5 +19,17 @@ namespace DataContracts.Models
     public string Title { get; set; }
     public string Description { get; set; }
     public DateTime? DueDate { get; set; }
+
+    private CreateHomeworkStep Step { get; set; }
+
+    public CreateHomeworkStep GetStep()
+    {
+      return Step;
+    }
+
+    public void SetStep(CreateHomeworkStep registrationStep)
+    {
+      Step = registrationStep;
+    }
   }
 }

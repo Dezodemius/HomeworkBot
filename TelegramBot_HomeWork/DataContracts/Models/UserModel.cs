@@ -27,6 +27,13 @@ namespace DataContracts.Models
     Administrator
   }
 
+  public enum ChangeRoleStep
+  { 
+    Start,
+    Role,
+    Completed
+  }
+
   /// <summary>
   /// Представляет пользователя в системе с общими атрибутами для всех ролей.
   /// </summary>
@@ -63,6 +70,8 @@ namespace DataContracts.Models
     /// </summary>
     public UserRole Role { get; set; }
 
+    private ChangeRoleStep Step { get; set; } = ChangeRoleStep.Start;
+
     /// <summary>
     /// Инициализирует новый экземпляр класса User с указанными параметрами.
     /// </summary>
@@ -97,6 +106,16 @@ namespace DataContracts.Models
       Email = email;
       Role = role;
     }
+
+    public void SetChangeStep(ChangeRoleStep changeRoleStep)
+    {
+      Step = changeRoleStep;
+    }
+    public ChangeRoleStep GetChangeStep()
+    {
+      return Step;
+    }
+
 
     /// <summary>
     /// Возвращает строковое представление пользователя.

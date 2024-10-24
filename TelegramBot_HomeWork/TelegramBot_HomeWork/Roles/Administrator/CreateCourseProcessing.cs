@@ -1,16 +1,10 @@
 ﻿using Core;
 using DataContracts.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Telegram.Bot;
-using Telegram.Bot.Requests.Abstractions;
 using TelegramBot.Model;
 using TelegramBot.Roles.Administrator;
 
-namespace TelegramBot.Processing
+namespace TelegramBot.Roles.Administrator
 {
   internal class CreateCourseProcessing
   {
@@ -41,7 +35,7 @@ namespace TelegramBot.Processing
           {
             string messageData = "Отлично. Для начала, выберите преподавателя, который будет вести курсы:";
             List<CallbackModel> callbackModels = new List<CallbackModel>();
-            var teachers = CommonUserModel.GetAllteachers();
+            var teachers = CommonUserModel.GetAllTeachers();
             if (teachers.Count == 0)
             {
               await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"К сожалению, вы не можете создать курс без преподавателя. Добавьте преподавателя и попробуйте попытку снова", null, messageId);
@@ -64,7 +58,7 @@ namespace TelegramBot.Processing
             {
               course.TeacherId = teacherDataId;
               course.SetStep(CreateStep.Name);
-              var teacher = CommonUserModel.GetAllteachers().ToList().First();
+              var teacher = CommonUserModel.GetAllTeachers().ToList().First();
               await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы выбрали преподавателя {teacher.LastName} {teacher.FirstName}. Теперь введите название курса:", null, messageId);
               return;
             }

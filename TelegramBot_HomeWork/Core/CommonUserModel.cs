@@ -70,14 +70,29 @@ namespace Core
       var userModel = new UserModel(registrationRequest.TelegramChatId, registrationRequest.FirstName, registrationRequest.LastName, registrationRequest.Email, UserRole.Student);
       dbManager.CreateUser(userModel);
     }
-    static public List<UserModel> GetAllAdministartor()
+    static public List<UserModel> GetAllAdministrators()
     { 
       return dbManager.GetAllUsers().Where(x=>x.Role == UserRole.Administrator).ToList();
     }
 
-    static public List<UserModel> GetAllteachers()
+    static public List<UserModel> GetAllStudents()
+    {
+      return dbManager.GetAllUsers().Where(x => x.Role == UserRole.Student).ToList();
+    }
+
+    static public List<UserModel> GetAllTeachers()
     {
       return dbManager.GetAllUsers().Where(x => x.Role == UserRole.Teacher).ToList();
+    }
+
+    static public List<UserModel> GetAllUsers()
+    {
+      return dbManager.GetAllUsers();
+    }
+
+    static public void UpdateUserModel(UserModel userModel)
+    { 
+      dbManager.UpdateUser(userModel);
     }
   }
 }

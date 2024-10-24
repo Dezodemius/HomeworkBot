@@ -27,7 +27,7 @@ namespace Core
     /// <exception cref="NotImplementedException"></exception>
     static public Assignment GetHomeWorkById(int courseId, int homeId)
     {
-      return (Assignment)(dbManager.GetAssignmentsByCourse(courseId).Where(x=>x.AssignmentId == homeId));
+      return (Assignment)(dbManager.GetAssignmentsByCourse(courseId).Where(x => x.AssignmentId == homeId));
     }
 
     /// <summary>
@@ -77,14 +77,12 @@ namespace Core
     }
 
     /// <summary>
-    /// Создаёт домашнюю работу по названию и описанию
+    /// Добавляет домашнюю работу в БД.
     /// </summary>
     /// <param name="homeWorkModel"></param>
-    static public void AddHomeWork(string title, string description)
+    static public void AddHomeWork(Assignment assignment)
     {
-      // var homeWorkModel = new HomeWork(title, description);
-      // dbManager.CreateHomeWork(homeWorkModel);
-      throw new NotImplementedException();
+      dbManager.CreateAssignment(assignment);
     }
 
   }

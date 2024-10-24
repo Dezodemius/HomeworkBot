@@ -31,7 +31,7 @@ namespace TelegramBot.Roles.Student
     internal Student(long telegramChatId, string firstName, string lastName, string email)
         : base(telegramChatId, firstName, lastName, email, UserRole.Student)
     {
-      homeWorkModels = CommonHomeWork.GetHomeworkForStudent(telegramChatId);
+     // homeWorkModels = CommonHomeWork.GetHomeworkForStudent(telegramChatId);
     }
 
     /// <summary>
@@ -70,39 +70,39 @@ namespace TelegramBot.Roles.Student
         return;
       }
 
-      else
-      {
-        if (callbackData.Contains("/view_homework_statuses"))
-        {
-          var keyboard = new InlineKeyboardMarkup(new[]
-          {
-          new []
-          {
-            InlineKeyboardButton.WithCallbackData("Непроверенные", "/homeWorkStatus_unchecked"),
-          },
-          new []
-          {
-            InlineKeyboardButton.WithCallbackData("Проверенные", "/homeWorkStatus_checked"),
-          },
-          new []
-          {
-            InlineKeyboardButton.WithCallbackData("В доработке", "/homeWorkStatus_needsRevision")
-          }
-        });
-
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите статус домашнего задания:", keyboard, messageId);
-        }
-        else if (callbackData.Contains("/homeWorkStatus"))
-        {
-          await CheckStatusHomeWork(botClient, chatId, callbackData, messageId);
-        }
-        else if (callbackData.Contains("/start"))
-        {
-          await botClient.DeleteMessageAsync(chatId, messageId);
-          await Task.Delay(10);
-          await ProcessMessageAsync(botClient, chatId, callbackData);
-        }
-      }
+      // else
+      // {
+      //   if (callbackData.Contains("/view_homework_statuses"))
+      //   {
+      //     var keyboard = new InlineKeyboardMarkup(new[]
+      //     {
+      //     new []
+      //     {
+      //       InlineKeyboardButton.WithCallbackData("Непроверенные", "/homeWorkStatus_unchecked"),
+      //     },
+      //     new []
+      //     {
+      //       InlineKeyboardButton.WithCallbackData("Проверенные", "/homeWorkStatus_checked"),
+      //     },
+      //     new []
+      //     {
+      //       InlineKeyboardButton.WithCallbackData("В доработке", "/homeWorkStatus_needsRevision")
+      //     }
+      //   });
+      // 
+      //     await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите статус домашнего задания:", keyboard, messageId);
+      //   }
+      //   else if (callbackData.Contains("/homeWorkStatus"))
+      //   {
+      //     await CheckStatusHomeWork(botClient, chatId, callbackData, messageId);
+      //   }
+      //   else if (callbackData.Contains("/start"))
+      //   {
+      //     await botClient.DeleteMessageAsync(chatId, messageId);
+      //     await Task.Delay(10);
+      //     await ProcessMessageAsync(botClient, chatId, callbackData);
+      //   }
+      // }
     }
 
     /// <summary>
