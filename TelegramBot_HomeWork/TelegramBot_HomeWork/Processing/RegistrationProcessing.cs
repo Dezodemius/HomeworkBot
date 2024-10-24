@@ -7,7 +7,9 @@ using Core;
 using Database;
 using DataContracts.Models;
 using Telegram.Bot;
+using Telegram.Bot.Requests.Abstractions;
 using TelegramBot.Model;
+using TelegramBot.Roles.Student;
 
 namespace TelegramBot.Processing
 {
@@ -101,7 +103,7 @@ namespace TelegramBot.Processing
     private async Task NewUserAsync(RegistrationRequest request, ITelegramBotClient botClient)
     {
       CommonRegistrationRequest.AddRegistrationRequests(request);
-      var data = CommonUserModel.GetAllAdministartor();
+      var data = CommonUserModel.GetAllAdministrators();
       List<CallbackModel> callbackModels = new List<CallbackModel>()
       {
         new CallbackModel("Принять", $"/registration_accept_{request.TelegramChatId}"),
@@ -131,16 +133,30 @@ namespace TelegramBot.Processing
       {
         CommonUserModel.AddStudent(user);
         CommonRegistrationRequest.DeleteRegistrationRequests(user);
+        var homeWorks = CommonHomeWork.GetHomeWork(user.CourseId);
+        var student = CommonUserModel.GetUserById(user.TelegramChatId);
+
+        foreach (var item in homeWorks)
+        {
+          Submission submission = new Submission
+          {
+            AssignmentId = item.AssignmentId,
+            StudentId = student.UserId,
+            Status = Submission.StatusWork.Unfulfilled,
+          };
+
+          CommonSubmission.AddSubmission(submission);
+        }
 
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Студент {user.LastName} {user.FirstName} принят в курс \"{nameCourse}\"", null, messageId);
-        await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша зявка на вступление в курс \"{nameCourse}\" успешно принята!");
+        await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{nameCourse}\" успешно принята!");
         return true;
       }
       else
       {
         CommonRegistrationRequest.UpdateStatusRegistrationRequests(user, "Rejected");
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Заявка студента {user.LastName} {user.FirstName} на вступление в курс \"{nameCourse}\" отклонена!", null, messageId);
-        await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша зявка на вступление в курс \"{nameCourse}\" отклонена!");
+        await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{nameCourse}\" отклонена!");
         return false;
       }
 

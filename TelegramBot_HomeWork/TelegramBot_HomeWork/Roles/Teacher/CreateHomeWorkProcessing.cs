@@ -11,9 +11,8 @@ using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
 using TelegramBot.Model;
 using TelegramBot.Roles.Administrator;
-using TelegramBot.Roles.Teacher;
 
-namespace TelegramBot.Processing
+namespace TelegramBot.Roles.Teacher
 {
   internal class CreateHomeWorkProcessing
   {
@@ -37,7 +36,7 @@ namespace TelegramBot.Processing
       {
         case CreateHomeworkStep.Start:
           {
-            var course = Core.CommonCourseModel.GetAllCourses();
+            var course = CommonCourseModel.GetAllCourses();
             List<CallbackModel> callbacks = new List<CallbackModel>();
             foreach (var callback in course)
             {
@@ -125,6 +124,17 @@ namespace TelegramBot.Processing
     {
       CommonHomeWork.AddHomeWork(request);
       Teacher.assigments.Remove(chatId);
+      var students = CommonUserModel.GetAllStudents();
+      foreach (var student in students)
+      {
+        Submission submission = new Submission()
+        {
+          AssignmentId = request.AssignmentId,
+          StudentId = student.UserId,
+          Status = Submission.StatusWork.Unfulfilled,
+        };
+        CommonSubmission.AddSubmission(submission);
+      }
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Создана новая домашняя работа  {request.Title}");
     }
   }
