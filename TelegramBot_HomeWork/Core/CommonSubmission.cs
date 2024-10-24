@@ -17,5 +17,13 @@ namespace Core
     { 
       dbManager.CreateSubmission(submission);
     }
+
+    public static List<Submission> GetSubmission(long telegramChatId)
+    {
+      var user = CommonUserModel.GetUserById(telegramChatId);
+      var data = dbManager.GetAllSubmissions().Where(x=>x.SubmissionId == user.UserId).ToList();
+
+      return data;
+    }
   }
 }

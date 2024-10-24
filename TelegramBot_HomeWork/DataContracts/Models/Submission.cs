@@ -37,6 +37,8 @@ namespace DataContracts.Models
 
     public int SubmissionId { get; set; }
     public int AssignmentId { get; set; }
+
+    public int CourseId { get; set; }
     public int StudentId { get; set; }
     public string GithubLink { get; set; }
     public DateTime SubmissionDate { get; set; }

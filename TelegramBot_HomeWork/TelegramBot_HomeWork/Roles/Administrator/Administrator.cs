@@ -81,7 +81,7 @@ namespace TelegramBot.Roles.Administrator
       }
       else if (callbackData.ToLower().Contains("/registration"))
       {
-        var result = RegistrationProcessing.AnswerRegistartionUser(botClient, chatId, messageId, callbackData);
+        var result = RegistrationProcessing.AnswerRegistrationUser(botClient, chatId, messageId, callbackData);
       }
       else if (callbackData.ToLower().Contains("/createcourse"))
       {

@@ -123,7 +123,7 @@ namespace TelegramBot.Processing
       }
     }
 
-    static internal async Task<bool> AnswerRegistartionUser(ITelegramBotClient botClient, long chatId, int messageId, string callbackData)
+    static internal async Task<bool> AnswerRegistrationUser(ITelegramBotClient botClient, long chatId, int messageId, string callbackData)
     {
       var data = callbackData.Split('_');
       var user = CommonRegistrationRequest.GetRegistrationRequests(Convert.ToInt64(data.Last()));
@@ -143,6 +143,7 @@ namespace TelegramBot.Processing
             AssignmentId = item.AssignmentId,
             StudentId = student.UserId,
             Status = Submission.StatusWork.Unfulfilled,
+            CourseId = item.CourseId,
           };
 
           CommonSubmission.AddSubmission(submission);

@@ -16,23 +16,32 @@ namespace Database
     /// <param name="submission">Модель отправки домашнего задания</param>
     public void CreateSubmission(Submission submission)
     {
-      using var connection = new SQLiteConnection(_connectionString);
-      connection.Open();
+      try
+      {
+        using var connection = new SQLiteConnection(_connectionString);
+        connection.Open();
 
-      string query = @"INSERT INTO Submissions 
-                        (AssignmentId, StudentId, GithubLink, SubmissionDate, Status, TeacherComment) 
-                      VALUES 
-                        (@AssignmentId, @StudentId, @GithubLink, @SubmissionDate, @Status, @TeacherComment)";
-      using var command = new SQLiteCommand(query, connection);
-      command.Parameters.AddWithValue("@AssignmentId", submission.AssignmentId);
-      command.Parameters.AddWithValue("@StudentId", submission.StudentId);
-      command.Parameters.AddWithValue("@GithubLink", submission.GithubLink);
-      command.Parameters.AddWithValue("@SubmissionDate", submission.SubmissionDate);
-      command.Parameters.AddWithValue("@Status", submission.Status.ToString());
-      command.Parameters.AddWithValue("@TeacherComment", submission.TeacherComment);
+        string query = @"INSERT INTO Submissions 
+                        (AssignmentId, StudentId, CourseId, GithubLink, SubmissionDate, Status, TeacherComment) 
+                         VALUES 
+                        (@AssignmentId, @StudentId, @CourseId, @GithubLink, @SubmissionDate, @Status, @TeacherComment)";
+        using var command = new SQLiteCommand(query, connection);
+        command.Parameters.AddWithValue("@AssignmentId", submission.AssignmentId);
+        command.Parameters.AddWithValue("@StudentId", submission.StudentId);
+        command.Parameters.AddWithValue("@CourseId", submission.CourseId);
+        command.Parameters.AddWithValue("@GithubLink", submission.GithubLink);
+        command.Parameters.AddWithValue("@SubmissionDate", submission.SubmissionDate);
+        command.Parameters.AddWithValue("@Status", submission.Status.ToString());
+        command.Parameters.AddWithValue("@TeacherComment", submission.TeacherComment);
 
-      command.ExecuteNonQuery();
-      Logger.LogInfo("Новая отправка домашнего задания добавлена в базу данных.");
+
+        command.ExecuteNonQuery();
+        Logger.LogInfo("Новая отправка домашнего задания добавлена в базу данных.");
+      }
+      catch(Exception ex)
+      {
+        Logger.LogError(ex.ToString());
+      }
     }
 
     /// <summary>
@@ -72,6 +81,7 @@ namespace Database
       string query = @"UPDATE Submissions SET 
                         AssignmentId = @AssignmentId, 
                         StudentId = @StudentId, 
+                        CourseId, = @CourseId, 
                         GithubLink = @GithubLink, 
                         SubmissionDate = @SubmissionDate, 
                         Status = @Status, 
@@ -80,6 +90,7 @@ namespace Database
       using var command = new SQLiteCommand(query, connection);
       command.Parameters.AddWithValue("@AssignmentId", updatedSubmission.AssignmentId);
       command.Parameters.AddWithValue("@StudentId", updatedSubmission.StudentId);
+      command.Parameters.AddWithValue("@CourseId", updatedSubmission.CourseId);
       command.Parameters.AddWithValue("@GithubLink", updatedSubmission.GithubLink);
       command.Parameters.AddWithValue("@SubmissionDate", updatedSubmission.SubmissionDate);
       command.Parameters.AddWithValue("@Status", updatedSubmission.Status.ToString());
@@ -106,7 +117,7 @@ namespace Database
       using var connection = new SQLiteConnection(_connectionString);
       connection.Open();
 
-      string query = "SELECT SubmissionId, AssignmentId, StudentId, GithubLink, SubmissionDate, Status, TeacherComment FROM Submissions";
+      string query = "SELECT SubmissionId, AssignmentId, StudentId,CourseId, GithubLink, SubmissionDate, Status, TeacherComment FROM Submissions";
       using var command = new SQLiteCommand(query, connection);
 
       using var reader = command.ExecuteReader();
@@ -119,6 +130,7 @@ namespace Database
           SubmissionId = Convert.ToInt32(reader["SubmissionId"]),
           AssignmentId = Convert.ToInt32(reader["AssignmentId"]),
           StudentId = Convert.ToInt32(reader["StudentId"]),
+          CourseId = Convert.ToInt32(reader["CourseId"]),
           GithubLink = reader["GithubLink"].ToString(),
           SubmissionDate = Convert.ToDateTime(reader["SubmissionDate"]),
           Status = Enum.Parse<Submission.StatusWork>(reader["Status"].ToString()),
