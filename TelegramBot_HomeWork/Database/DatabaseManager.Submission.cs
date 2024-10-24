@@ -78,33 +78,45 @@ namespace Database
       using var connection = new SQLiteConnection(_connectionString);
       connection.Open();
 
-      string query = @"UPDATE Submissions SET 
-                        AssignmentId = @AssignmentId, 
-                        StudentId = @StudentId, 
-                        CourseId, = @CourseId, 
-                        GithubLink = @GithubLink, 
-                        SubmissionDate = @SubmissionDate, 
-                        Status = @Status, 
-                        TeacherComment = @TeacherComment 
-                      WHERE SubmissionId = @Id";
-      using var command = new SQLiteCommand(query, connection);
-      command.Parameters.AddWithValue("@AssignmentId", updatedSubmission.AssignmentId);
-      command.Parameters.AddWithValue("@StudentId", updatedSubmission.StudentId);
-      command.Parameters.AddWithValue("@CourseId", updatedSubmission.CourseId);
-      command.Parameters.AddWithValue("@GithubLink", updatedSubmission.GithubLink);
-      command.Parameters.AddWithValue("@SubmissionDate", updatedSubmission.SubmissionDate);
-      command.Parameters.AddWithValue("@Status", updatedSubmission.Status.ToString());
-      command.Parameters.AddWithValue("@TeacherComment", updatedSubmission.TeacherComment);
-      command.Parameters.AddWithValue("@Id", id);
+      using var transaction = connection.BeginTransaction();
+      try
+      {
+        string query = @"UPDATE Submissions SET 
+                          AssignmentId = @AssignmentId, 
+                          StudentId = @StudentId, 
+                          CourseId = @CourseId, 
+                          GithubLink = @GithubLink, 
+                          SubmissionDate = @SubmissionDate, 
+                          Status = @Status, 
+                          TeacherComment = @TeacherComment 
+                        WHERE SubmissionId = @Id";
 
-      int rowsAffected = command.ExecuteNonQuery();
-      if (rowsAffected > 0)
-      {
-        Logger.LogInfo($"Запись Submission с Id {id} успешно обновлена.");
+        using var command = new SQLiteCommand(query, connection);
+        command.Parameters.AddWithValue("@AssignmentId", updatedSubmission.AssignmentId);
+        command.Parameters.AddWithValue("@StudentId", updatedSubmission.StudentId);
+        command.Parameters.AddWithValue("@CourseId", updatedSubmission.CourseId);
+        command.Parameters.AddWithValue("@GithubLink", updatedSubmission.GithubLink);
+        command.Parameters.AddWithValue("@SubmissionDate", updatedSubmission.SubmissionDate);
+        command.Parameters.AddWithValue("@Status", updatedSubmission.Status.ToString());
+        command.Parameters.AddWithValue("@TeacherComment", updatedSubmission.TeacherComment);
+        command.Parameters.AddWithValue("@Id", id);
+
+        int rowsAffected = command.ExecuteNonQuery();
+        if (rowsAffected > 0)
+        {
+          Logger.LogInfo($"Запись Submission с Id {id} успешно обновлена.");
+        }
+        else
+        {
+          Logger.LogError($"Запись Submission с Id {id} не найдена для обновления.");
+        }
+
+        transaction.Commit(); 
       }
-      else
+      catch
       {
-        Logger.LogError($"Запись Submission с Id {id} не найдена для обновления.");
+        transaction.Rollback(); 
+        throw;
       }
     }
 

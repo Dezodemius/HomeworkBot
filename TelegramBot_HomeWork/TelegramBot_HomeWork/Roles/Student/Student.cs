@@ -10,6 +10,10 @@ using Telegram.Bot;
 using Core;
 using static DataContracts.Models.Submission;
 using TelegramBot.Model;
+using Telegram.Bot.Types;
+using DataContracts;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text.RegularExpressions;
 
 namespace TelegramBot.Roles.Student
 {
@@ -19,6 +23,7 @@ namespace TelegramBot.Roles.Student
   internal class Student : UserModel, IMessageHandler
   {
 
+    static private readonly Dictionary<long, GitHubLink> _answerHomeWorks = new Dictionary<long, GitHubLink>();
 
     /// <summary>
     /// Инициализирует новый экземпляр класса Student.
@@ -41,8 +46,19 @@ namespace TelegramBot.Roles.Student
       {
         return;
       }
+      if (_answerHomeWorks.ContainsKey(chatId))
+      {
+        if (IsGitHubLink(message))
+        {
+          await HandleGitHubLink(botClient, chatId, message);
+        }
+        else
+        {
+          await RequestValidGitHubLink(botClient, chatId);
+        }
+      }
 
-      if (message.ToLower().Contains("/start"))
+      else if (message.ToLower().Contains("/start"))
       {
         var keyboard = new InlineKeyboardMarkup(new[]
         {
@@ -71,7 +87,11 @@ namespace TelegramBot.Roles.Student
       {
         if (callbackData.Contains("id_"))
         {
-
+          await DisplayActiveHomeWork(botClient, chatId, messageId, callbackData);
+        }
+        else if (callbackData.Contains("answer_"))
+        {
+          await HandleHomeworkResponse(botClient, chatId, messageId, callbackData);
         }
         else
         {
@@ -99,7 +119,6 @@ namespace TelegramBot.Roles.Student
         await botClient.DeleteMessageAsync(chatId, messageId);
         await ProcessMessageAsync(botClient, chatId, callbackData);
       }
-
     }
 
     /// <summary>
@@ -122,7 +141,7 @@ namespace TelegramBot.Roles.Student
         _ => throw new NotImplementedException(),
       };
 
-     await DisplayHomeWorkStatuses(botClient,chatId, messageId, statusWork, chatId);
+      await DisplayHomeWorkStatuses(botClient, chatId, messageId, statusWork, chatId);
     }
 
     /// <summary>
@@ -162,11 +181,120 @@ namespace TelegramBot.Roles.Student
           {
             continue;
           }
-          callbackModels.Add(new CallbackModel(homeWorkData.Title, $"/homeWork_id_{homeWorkData.AssignmentId}"));
+          callbackModels.Add(new CallbackModel(homeWorkData.Title, $"/homeWork_id_{hw.CourseId}_{homeWorkData.AssignmentId}"));
         }
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Домашние задания со статусом '{status}' для пользователя {student.LastName} {student.FirstName}:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
       }
 
+    }
+
+    private async Task DisplayActiveHomeWork(ITelegramBotClient botClient, long chatId, int messageId, string message)
+    {
+      var data = message.Split('_');
+      int homeWorkId;
+      int courseId;
+
+      if (int.TryParse(data[data.Length - 2], out homeWorkId))
+      {
+        if (int.TryParse(data.Last(), out courseId))
+        {
+          var homeWorkData = CommonHomeWork.GetHomeWorkById(courseId, homeWorkId);
+          var name = homeWorkData.Title;
+          var description = homeWorkData.Description;
+
+          StringBuilder stringBuilder = new StringBuilder();
+          stringBuilder.Append(name);
+          stringBuilder.Append(description);
+
+          List<CallbackModel> callbackModels = new List<CallbackModel>();
+          callbackModels.Add(new CallbackModel("Ответить", $"/homeWork_answer_{courseId}_{homeWorkData.AssignmentId}"));
+          callbackModels.Add(new CallbackModel("Назад", $"/homeWork"));
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, stringBuilder.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
+        }
+        else
+        {
+          Logger.LogError("Не удалось преобразовать courseId.");
+        }
+      }
+      else
+      {
+        Logger.LogError("Не удалось преобразовать homeWorkId.");
+      }
+    }
+
+    private async Task HandleHomeworkResponse(ITelegramBotClient botClient, long chatId, int messageId, string message)
+    {
+      var data = message.Split('_');
+      int homeWorkId;
+      int courseId;
+      if (int.TryParse(data[data.Length - 2], out homeWorkId))
+      {
+        if (int.TryParse(data.Last(), out courseId))
+        {
+          GitHubLink gitHubLink = new GitHubLink();
+          gitHubLink.CourseId = courseId;
+          gitHubLink.HomeWorkId = homeWorkId;
+          _answerHomeWorks.Add(chatId, gitHubLink);
+
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Добавьте ссылку на ваш репозиторий GitHub для отправки на проверку.", null, messageId);
+        }
+        else
+        {
+          Logger.LogError("Не удалось преобразовать courseId.");
+        }
+      }
+      else
+      {
+        Logger.LogError("Не удалось преобразовать homeWorkId.");
+      }
+    }
+
+    /// <summary>
+    /// Обрабатывает ссылку на GitHub.
+    /// </summary>
+    /// <param name="client">Клиент Telegram Bot.</param>
+    /// <param name="message">Сообщение Telegram.</param>
+    /// <param name="token">Токен отмены.</param>
+    private async Task HandleGitHubLink(ITelegramBotClient botClient, long chatId, string message)
+    {
+      var user = CommonUserModel.GetUserById(chatId);
+      var teachers = CommonUserModel.GetAllTeachers();
+      _answerHomeWorks.TryGetValue(chatId, out GitHubLink gitLink);
+      var homeWork = CommonHomeWork.GetHomeWorkById(gitLink.CourseId, gitLink.HomeWorkId);
+      var submission = CommonSubmission.GetSubmissionForHomeWork(chatId, homeWork.AssignmentId);
+      submission.GithubLink = message;
+      submission.Status = StatusWork.Unchecked;
+      CommonSubmission.UpdateSubmission(submission);
+
+
+      foreach (var teacher in teachers)
+      {
+        await TelegramBotHandler.SendMessageAsync(botClient, teacher.TelegramChatId, $"Пользователь: {user.LastName} {user.FirstName} добавил ответ на \"{homeWork.Title}\" : {message}");
+      }
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Ссылка получена: {message}. Ваше домашнее задание будет проверено.");
+    }
+
+    /// <summary>
+    /// Запрашивает корректную ссылку на GitHub.
+    /// </summary>
+    /// <param name="client">Клиент Telegram Bot.</param>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <param name="token">Токен отмены.</param>
+    private async Task RequestValidGitHubLink(ITelegramBotClient botClient, long chatId)
+    {
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, добавьте корректную ссылку на GitHub или нажмите 'Назад', чтобы выбрать другое задание.");
+    }
+
+    /// <summary>
+    /// Проверяет, является ли текст ссылкой на GitHub.
+    /// </summary>
+    /// <param name="text">Текст для проверки.</param>
+    /// <returns>Возвращает true, если текст является корректной ссылкой на GitHub.</returns>
+    bool IsGitHubLink(string text)
+    {
+      var githubLinkPattern = @"^(https?:\/\/)?(www\.)?github\.com\/[\w\-]+\/[\w\-]+(\/.*)?$";
+      return Regex.IsMatch(text, githubLinkPattern, RegexOptions.IgnoreCase);
     }
   }
 }

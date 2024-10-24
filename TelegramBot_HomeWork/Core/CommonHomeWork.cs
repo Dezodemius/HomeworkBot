@@ -27,7 +27,7 @@ namespace Core
     /// <exception cref="NotImplementedException"></exception>
     static public Assignment? GetHomeWorkById(int courseId, int homeId)
     {
-      return dbManager.GetAssignmentsByCourse(courseId).Where(hw =>hw.AssignmentId == homeId).FirstOrDefault();
+      return dbManager.GetAssignmentsByCourse(courseId).Where(hw =>hw.AssignmentId == homeId).First();
     }
 
     /// <summary>
