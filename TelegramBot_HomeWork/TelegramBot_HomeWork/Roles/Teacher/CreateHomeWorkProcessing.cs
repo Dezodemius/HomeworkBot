@@ -132,6 +132,7 @@ namespace TelegramBot.Roles.Teacher
           AssignmentId = request.AssignmentId,
           StudentId = student.UserId,
           Status = Submission.StatusWork.Unfulfilled,
+          CourseId = request.CourseId,
         };
         CommonSubmission.AddSubmission(submission);
       }

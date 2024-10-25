@@ -17,23 +17,23 @@ namespace Core
     /// <summary>
     /// Возвращает модель пользователя по уникальному идентификатору.
     /// </summary>
-    /// <param name="userId">Уникальный идентификатор.</param>
+    /// <param name="chatId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    static public UserModel GetUserById(long userId)
+    static public UserModel GetUserById(long chatId)
     {
-      return dbManager.GetAllUsers().Where(x => x.TelegramChatId == userId).First();
+      return dbManager.GetAllUsers().Where(x => x.TelegramChatId == chatId).First();
     }
 
     /// <summary>
     /// Возвращает роль пользователя по уникальному идентификатору.
     /// </summary>
-    /// <param name="userId">Уникальный идентификатор.</param>
+    /// <param name="chatId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public static UserRole? GetUserRoleById(long userId)
+    public static UserRole? GetUserRoleById(long chatId)
     {
-      var user = dbManager.GetAllUsers().FirstOrDefault(u => u.TelegramChatId == userId);
+      var user = dbManager.GetAllUsers().FirstOrDefault(u => u.TelegramChatId == chatId);
       return user?.Role;
     }
 

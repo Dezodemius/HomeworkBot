@@ -25,9 +25,9 @@ namespace Core
     /// <param name="userId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    static public Assignment GetHomeWorkById(int courseId, int homeId)
+    static public Assignment? GetHomeWorkById(int courseId, int homeId)
     {
-      return (Assignment)(dbManager.GetAssignmentsByCourse(courseId).Where(x => x.AssignmentId == homeId));
+      return dbManager.GetAssignmentsByCourse(courseId).Where(hw =>hw.AssignmentId == homeId).First();
     }
 
     /// <summary>
@@ -37,15 +37,10 @@ namespace Core
     /// <returns>Список моделей задач для домашнего задания.</returns>
     static public List<Submission> GetHomeworkForStudent(long userId)
     {
-      // List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
-      // var allTasks = dbManager.GetAllHomeWorksForStudents();
-      // if (allTasks.Any())
-      // {
-      //   tasks = allTasks.FindAll(x => x.IdStudent == userId);
-      // }
-      // return tasks;
+      var student = CommonUserModel.GetUserById(userId);
+      var data = dbManager.GetAllSubmissions()?.Where(x=>x.StudentId == student.UserId).ToList();
+      return data;
 
-      throw new NotImplementedException();
     }
 
     /// <summary>
