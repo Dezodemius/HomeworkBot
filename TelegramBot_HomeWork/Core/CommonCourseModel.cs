@@ -3,9 +3,6 @@ using DataContracts.Data;
 using DataContracts.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core
 {
@@ -16,8 +13,7 @@ namespace Core
     /// <summary>
     /// Возвращает все курсы.
     /// </summary>
-    /// <param name="idUser"></param>
-    /// <returns></returns>
+    /// <returns>Список всех курсов.</returns>
     public static List<Course> GetAllCourses()
     {
       return dbManager.GetAllCourses();
@@ -26,27 +22,30 @@ namespace Core
     /// <summary>
     /// Возвращает все курсы пользователя.
     /// </summary>
-    /// <param name="idUser"></param>
-    /// <returns></returns>
+    /// <param name="idUser">Идентификатор пользователя.</param>
+    /// <returns>Список курсов пользователя.</returns>
     public static List<Course> GetAllUserCourses(int idUser)
     {
-      var userCourses = dbManager.GetAllUserCourses().Where(x => x.UserId == idUser).ToList();
-      var courseIds = userCourses.Select(uc => uc.CourseId).ToList();
-      var courses = dbManager.GetAllCourses().Where(c => courseIds.Contains(c.CourseId)).ToList();
-
-      return courses;
+      return dbManager.GetAllUserCoursesByUserId(idUser);
     }
 
+    /// <summary>
+    /// Возвращает название курса по его идентификатору.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Название курса.</returns>
     public static string GetNameCourse(int courseId)
     {
-      var data = GetAllCourses().Where(x=> x.CourseId == courseId).First() as Course;
-      return data.CourseName;
+      return dbManager.GetCourseNameById(courseId);
     }
 
+    /// <summary>
+    /// Добавляет новый курс.
+    /// </summary>
+    /// <param name="course">Модель курса.</param>
     public static void AddCourse(Course course)
-    { 
-      dbManager.CreateCourse(course); 
+    {
+      dbManager.CreateCourse(course);
     }
-
   }
 }

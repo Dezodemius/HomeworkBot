@@ -123,7 +123,7 @@ namespace TelegramBot.Roles.Teacher
     private async Task NewHomeworkAsync(Assignment request, ITelegramBotClient botClient, long chatId)
     {
       CommonHomeWork.AddHomeWork(request);
-      Teacher.assigments.Remove(chatId);
+      Teacher.assignments.Remove(chatId);
       var students = CommonUserModel.GetAllStudents();
       foreach (var student in students)
       {

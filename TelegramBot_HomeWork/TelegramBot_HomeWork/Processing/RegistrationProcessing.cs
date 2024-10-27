@@ -7,21 +7,22 @@ using Core;
 using Database;
 using DataContracts.Models;
 using Telegram.Bot;
-using Telegram.Bot.Requests.Abstractions;
 using TelegramBot.Model;
 using TelegramBot.Roles.Student;
 
 namespace TelegramBot.Processing
 {
+  /// <summary>
+  /// Класс для обработки регистрационного процесса.
+  /// </summary>
   public class RegistrationProcessing
   {
-
-    RegistrationRequest _request;
+    private readonly RegistrationRequest _request;
 
     /// <summary>
     /// Инициализирует новый экземпляр класса RegistrationRequest.
     /// </summary>
-    /// <param name="telegramChatId">Идентификатор чата Telegram.</param>
+    /// <param name="registrationRequest">Объект запроса на регистрацию.</param>
     public RegistrationProcessing(RegistrationRequest registrationRequest)
     {
       _request = registrationRequest;
@@ -31,137 +32,200 @@ namespace TelegramBot.Processing
     /// <summary>
     /// Обрабатывает текущий шаг регистрации.
     /// </summary>
+    /// <param name="botClient">Клиент Telegram-бота.</param>
+    /// <param name="chatId">Идентификатор чата Telegram.</param>
     /// <param name="message">Сообщение от пользователя.</param>
-    /// <param name="dbManager">Менеджер базы данных.</param>
-    /// <returns>Ответ на текущий шаг регистрации.</returns>
     public async Task ProcessRegistrationStepAsync(ITelegramBotClient botClient, long chatId, string message)
     {
       switch (_request.GetStep())
       {
         case RegistrationStep.Start:
-          {
-            var course = Core.CommonCourseModel.GetAllCourses();
-            List<CallbackModel> callbacks = new List<CallbackModel>();
-            foreach (var callback in course)
-            {
-              callbacks.Add(new CallbackModel(callback.CourseName, $"/courseId_{callback.CourseId.ToString()}"));
-            }
-            var inlineMarkup = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks);
-            await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите курс:", inlineMarkup);
+          await ProcessCourseSelectionStepAsync(botClient, chatId);
+          break;
 
-            _request.SetStep(RegistrationStep.Course);
-            return;
-          }
         case RegistrationStep.Course:
-          {
-            var courseData = message.Split('_');
-            if (int.TryParse(courseData.Last(), out int courseId))
-            {
-              var nameCourse = CommonCourseModel.GetNameCourse(courseId);
-              _request.CourseId = courseId;
-              _request.SetStep(RegistrationStep.FirstName);
-              await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы выбрали курс \"{nameCourse}\". Теперь введите ваше имя:");
-              return;
-            }
-            else
-            {
-              await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Системная ошибка! Попробуйте ещё раз!");
-              return;
-            }
-          }
+          await ProcessCourseConfirmationStepAsync(botClient, chatId, message);
+          break;
 
         case RegistrationStep.FirstName:
-          _request.FirstName = message;
-          _request.SetStep(RegistrationStep.LastName);
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Отлично! Теперь введите вашу фамилию:");
-          return;
+          await ProcessFirstNameStepAsync(botClient, chatId, message);
+          break;
 
         case RegistrationStep.LastName:
-          _request.LastName = message;
-          _request.SetStep(RegistrationStep.Email);
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Хорошо. Теперь введите ваш email:");
-          return;
+          await ProcessLastNameStepAsync(botClient, chatId, message);
+          break;
 
         case RegistrationStep.Email:
-          _request.Email = message;
-          _request.SetStep(RegistrationStep.Completed);
-
-          await NewUserAsync(_request, botClient);
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ваша заявка на регистрацию принята. Пожалуйста, ожидайте подтверждения от администратора.");
-          return;
+          await ProcessEmailStepAsync(botClient, chatId, message);
+          break;
 
         case RegistrationStep.Completed:
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ваша регистрация уже завершена. Ожидайте подтверждения от администратора.");
-          return;
+          await SendCompletionMessageAsync(botClient, chatId);
+          break;
 
         default:
           await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Неизвестный шаг регистрации.");
-          return;
+          break;
       }
     }
 
-    private async Task NewUserAsync(RegistrationRequest request, ITelegramBotClient botClient)
+    /// <summary>
+    /// Отправляет пользователю список доступных курсов для выбора.
+    /// </summary>
+    private async Task ProcessCourseSelectionStepAsync(ITelegramBotClient botClient, long chatId)
     {
-      CommonRegistrationRequest.AddRegistrationRequests(request);
-      var data = CommonUserModel.GetAllAdministrators();
-      List<CallbackModel> callbackModels = new List<CallbackModel>()
+      var courses = Core.CommonCourseModel.GetAllCourses();
+      var callbacks = courses.Select(course => new CallbackModel(course.CourseName, $"/courseId_{course.CourseId}")).ToList();
+
+      var inlineMarkup = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks);
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите курс:", inlineMarkup);
+      _request.SetStep(RegistrationStep.Course);
+    }
+
+    /// <summary>
+    /// Обрабатывает выбор курса и запрашивает имя пользователя.
+    /// </summary>
+    private async Task ProcessCourseConfirmationStepAsync(ITelegramBotClient botClient, long chatId, string message)
+    {
+      var courseData = message.Split('_');
+      if (int.TryParse(courseData.Last(), out int courseId))
       {
-        new CallbackModel("Принять", $"/registration_accept_{request.TelegramChatId}"),
-        new CallbackModel("Отклонить", $"/registration_reject_{request.TelegramChatId}"),
+        var courseName = CommonCourseModel.GetNameCourse(courseId);
+        _request.CourseId = courseId;
+        _request.SetStep(RegistrationStep.FirstName);
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы выбрали курс \"{courseName}\". Теперь введите ваше имя:");
+      }
+      else
+      {
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Системная ошибка! Попробуйте ещё раз!");
+      }
+    }
+
+    /// <summary>
+    /// Сохраняет имя пользователя и запрашивает фамилию.
+    /// </summary>
+    private async Task ProcessFirstNameStepAsync(ITelegramBotClient botClient, long chatId, string message)
+    {
+      _request.FirstName = message;
+      _request.SetStep(RegistrationStep.LastName);
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Отлично! Теперь введите вашу фамилию:");
+    }
+
+    /// <summary>
+    /// Сохраняет фамилию пользователя и запрашивает email.
+    /// </summary>
+    private async Task ProcessLastNameStepAsync(ITelegramBotClient botClient, long chatId, string message)
+    {
+      _request.LastName = message;
+      _request.SetStep(RegistrationStep.Email);
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Хорошо. Теперь введите ваш email:");
+    }
+
+    /// <summary>
+    /// Завершает регистрацию, сохраняя email и отправляя уведомления.
+    /// </summary>
+    private async Task ProcessEmailStepAsync(ITelegramBotClient botClient, long chatId, string message)
+    {
+      _request.Email = message;
+      _request.SetStep(RegistrationStep.Completed);
+
+      await NotifyAdministratorsAsync(botClient);
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ваша заявка на регистрацию принята. Пожалуйста, ожидайте подтверждения от администратора.");
+    }
+
+    /// <summary>
+    /// Отправляет сообщение пользователю о завершенной регистрации.
+    /// </summary>
+    private async Task SendCompletionMessageAsync(ITelegramBotClient botClient, long chatId)
+    {
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ваша регистрация уже завершена. Ожидайте подтверждения от администратора.");
+    }
+
+    /// <summary>
+    /// Уведомляет администраторов о новой заявке на регистрацию.
+    /// </summary>
+    private async Task NotifyAdministratorsAsync(ITelegramBotClient botClient)
+    {
+      CommonRegistrationRequest.AddRegistrationRequests(_request);
+      var admins = CommonUserModel.GetAllAdministrators();
+      var courseName = CommonCourseModel.GetNameCourse(_request.CourseId);
+
+      var message = new StringBuilder()
+        .AppendLine("Новая заявка от участника:")
+        .AppendLine($"Фамилия: {_request.LastName}")
+        .AppendLine($"Имя: {_request.FirstName}")
+        .AppendLine($"Почта: {_request.Email}")
+        .AppendLine($"Выбранный курс: {courseName}")
+        .ToString();
+
+      var callbacks = new List<CallbackModel>
+      {
+        new CallbackModel("Принять", $"/registration_accept_{_request.TelegramChatId}"),
+        new CallbackModel("Отклонить", $"/registration_reject_{_request.TelegramChatId}")
       };
 
-      StringBuilder stringBuilder = new StringBuilder();
-      stringBuilder.AppendLine("Новая заявка от участники:");
-      stringBuilder.AppendLine($"Фамилия: {request.LastName};");
-      stringBuilder.AppendLine($"Имя: {request.FirstName};");
-      stringBuilder.AppendLine($"Почта: {request.Email};");
-      var nameCourse = CommonCourseModel.GetNameCourse(request.CourseId);
-      stringBuilder.AppendLine($"Выбранный курс: {nameCourse}.");
-      foreach (var item in data)
+      foreach (var admin in admins)
       {
-        await TelegramBotHandler.SendMessageAsync(botClient, item.TelegramChatId, stringBuilder.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
+        await TelegramBotHandler.SendMessageAsync(botClient, admin.TelegramChatId, message, TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks));
       }
     }
 
-    static internal async Task<bool> AnswerRegistrationUser(ITelegramBotClient botClient, long chatId, int messageId, string callbackData)
+    /// <summary>
+    /// Обрабатывает ответ администратора на заявку пользователя на регистрацию.
+    /// </summary>
+    public static async Task<bool> AnswerRegistrationUser(ITelegramBotClient botClient, long chatId, int messageId, string callbackData)
     {
       var data = callbackData.Split('_');
       var user = CommonRegistrationRequest.GetRegistrationRequests(Convert.ToInt64(data.Last()));
-      var nameCourse = CommonCourseModel.GetNameCourse(user.CourseId);
+      var courseName = CommonCourseModel.GetNameCourse(user.CourseId);
 
       if (data[1].ToLower().Contains("accept"))
       {
-        CommonUserModel.AddStudent(user);
-        CommonRegistrationRequest.DeleteRegistrationRequests(user);
-        var homeWorks = CommonHomeWork.GetHomeWork(user.CourseId);
-        var student = CommonUserModel.GetUserById(user.TelegramChatId);
-
-        foreach (var item in homeWorks)
-        {
-          Submission submission = new Submission
-          {
-            AssignmentId = item.AssignmentId,
-            StudentId = student.UserId,
-            Status = Submission.StatusWork.Unfulfilled,
-            CourseId = item.CourseId,
-          };
-
-          CommonSubmission.AddSubmission(submission);
-        }
-
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Студент {user.LastName} {user.FirstName} принят в курс \"{nameCourse}\"", null, messageId);
-        await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{nameCourse}\" успешно принята!");
+        await ApproveRegistrationAsync(botClient, chatId, messageId, user, courseName);
         return true;
       }
       else
       {
-        CommonRegistrationRequest.UpdateStatusRegistrationRequests(user, "Rejected");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Заявка студента {user.LastName} {user.FirstName} на вступление в курс \"{nameCourse}\" отклонена!", null, messageId);
-        await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{nameCourse}\" отклонена!");
+        await RejectRegistrationAsync(botClient, chatId, messageId, user, courseName);
         return false;
       }
+    }
 
+    /// <summary>
+    /// Одобряет заявку пользователя и создает записи заданий для студента.
+    /// </summary>
+    private static async Task ApproveRegistrationAsync(ITelegramBotClient botClient, long chatId, int messageId, RegistrationRequest user, string courseName)
+    {
+      CommonUserModel.AddStudent(user);
+      CommonRegistrationRequest.DeleteRegistrationRequests(user);
+
+      var homeworks = CommonHomeWork.GetHomeWork(user.CourseId);
+      var student = CommonUserModel.GetUserById(user.TelegramChatId);
+
+      foreach (var homework in homeworks)
+      {
+        var submission = new Submission
+        {
+          AssignmentId = homework.AssignmentId,
+          StudentId = student.UserId,
+          Status = Submission.StatusWork.Unfulfilled,
+          CourseId = homework.CourseId,
+        };
+        CommonSubmission.AddSubmission(submission);
+      }
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Студент {user.LastName} {user.FirstName} принят в курс \"{courseName}\"", null, messageId);
+      await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{courseName}\" успешно принята!");
+    }
+
+    /// <summary>
+    /// Отклоняет заявку пользователя и отправляет уведомление.
+    /// </summary>
+    private static async Task RejectRegistrationAsync(ITelegramBotClient botClient, long chatId, int messageId, RegistrationRequest user, string courseName)
+    {
+      CommonRegistrationRequest.UpdateStatusRegistrationRequests(user, "Rejected");
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Заявка студента {user.LastName} {user.FirstName} на вступление в курс \"{courseName}\" отклонена!", null, messageId);
+      await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{courseName}\" отклонена.");
     }
   }
 }
-

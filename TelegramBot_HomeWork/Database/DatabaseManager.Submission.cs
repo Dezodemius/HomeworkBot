@@ -155,5 +155,37 @@ namespace Database
       Logger.LogInfo($"Получено {submissions.Count} записей Submission из базы данных.");
       return submissions;
     }
+
+    public List<Submission> GetSubmissionsByStudentId(long studentId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = "SELECT SubmissionId, AssignmentId, StudentId, CourseId, GithubLink, SubmissionDate, Status, TeacherComment FROM Submissions WHERE StudentId = @StudentId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@StudentId", studentId);
+
+      using var reader = command.ExecuteReader();
+      var submissions = new List<Submission>();
+
+      while (reader.Read())
+      {
+        var submission = new Submission
+        {
+          SubmissionId = Convert.ToInt32(reader["SubmissionId"]),
+          AssignmentId = Convert.ToInt32(reader["AssignmentId"]),
+          StudentId = Convert.ToInt32(reader["StudentId"]),
+          CourseId = Convert.ToInt32(reader["CourseId"]),
+          GithubLink = reader["GithubLink"].ToString(),
+          SubmissionDate = Convert.ToDateTime(reader["SubmissionDate"]),
+          Status = Enum.Parse<Submission.StatusWork>(reader["Status"].ToString()),
+          TeacherComment = reader["TeacherComment"].ToString()
+        };
+
+        submissions.Add(submission);
+      }
+
+      return submissions;
+    }
   }
 }

@@ -116,5 +116,30 @@ namespace Database
       Logger.LogInfo($"Получено {users.Count} пользователей из базы данных.");
       return users;
     }
+
+    public UserModel? GetUserByTelegramChatId(long telegramChatId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = "SELECT UserId, TelegramChatId, FirstName, LastName, Email, Role FROM Users WHERE TelegramChatId = @TelegramChatId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@TelegramChatId", telegramChatId);
+
+      using var reader = command.ExecuteReader();
+      if (reader.Read())
+      {
+        return new UserModel(
+          userId: reader.GetInt32(0),
+          telegramChatId: Convert.ToInt64(reader["TelegramChatId"]),
+          firstName: reader["FirstName"].ToString(),
+          lastName: reader["LastName"].ToString(),
+          email: reader["Email"].ToString(),
+          role: Enum.Parse<UserRole>(reader["Role"].ToString())
+        );
+      }
+
+      return null;
+    }
   }
 }

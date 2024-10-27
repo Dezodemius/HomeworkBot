@@ -1,4 +1,5 @@
 ﻿using Database;
+using DataContracts;
 using DataContracts.Data;
 using DataContracts.Models;
 using System;
@@ -20,9 +21,18 @@ namespace Core
     /// <param name="chatId">Уникальный идентификатор.</param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    static public UserModel GetUserById(long chatId)
+    static public UserModel? GetUserById(long chatId)
     {
-      return dbManager.GetAllUsers().Where(x => x.TelegramChatId == chatId).First();
+      try
+      {
+        Logger.LogInfo("Поиск пользователя");
+        return dbManager.GetUserByTelegramChatId(chatId);
+      }
+      catch
+      { 
+        Logger.LogError("Пользователь не найден!");
+        return null;
+      }
     }
 
     /// <summary>
@@ -79,6 +89,17 @@ namespace Core
     {
       return dbManager.GetAllUsers().Where(x => x.Role == UserRole.Student).ToList();
     }
+
+    public static List<UserModel> GetAllStudentsByCourse(int courseId)
+    {
+      var allStudents = dbManager.GetAllUsers().Where(x => x.Role == UserRole.Student).ToList();
+      var studentCourseLinks = dbManager.GetAllUserCourses().Where(uc => uc.CourseId == courseId).ToList();
+      var studentIds = studentCourseLinks.Select(sc => sc.UserId).ToList();
+      var studentsInCourse = allStudents.Where(student => studentIds.Contains(student.UserId)).ToList();
+
+      return studentsInCourse;
+    }
+
 
     static public List<UserModel> GetAllTeachers()
     {
