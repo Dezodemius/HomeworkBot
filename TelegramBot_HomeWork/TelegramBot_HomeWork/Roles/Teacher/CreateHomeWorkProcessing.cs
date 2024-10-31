@@ -130,7 +130,7 @@ namespace TelegramBot.Roles.Teacher
         Submission submission = new Submission()
         {
           AssignmentId = request.AssignmentId,
-          StudentId = student.UserId,
+          StudentId = student.TelegramChatId,
           Status = Submission.StatusWork.Unfulfilled,
           CourseId = request.CourseId,
         };

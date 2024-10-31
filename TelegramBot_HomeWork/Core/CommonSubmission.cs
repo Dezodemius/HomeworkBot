@@ -28,7 +28,7 @@ namespace Core
         return new List<Submission>();
       }
 
-      return dbManager.GetSubmissionsByStudentId(user.UserId);
+      return dbManager.GetSubmissionsByStudentId(user.TelegramChatId);
     }
 
     public static void UpdateSubmission(Submission submission)
@@ -40,7 +40,7 @@ namespace Core
     {
       var user = CommonUserModel.GetUserById(telegramChatId);
 
-      var data = dbManager.GetAllSubmissions().Where(x => x.StudentId == user.UserId && x.AssignmentId == homeWorkId)
+      var data = dbManager.GetAllSubmissions().Where(x => x.StudentId == user.TelegramChatId && x.AssignmentId == homeWorkId)
           .FirstOrDefault();
 
 

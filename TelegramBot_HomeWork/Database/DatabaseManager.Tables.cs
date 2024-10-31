@@ -61,8 +61,11 @@ namespace Database
             .Select(p => $"{p.Name} {GetSQLiteType(p.PropertyType)}")
             .ToList();
 
-        columns.RemoveAt(0);
-        columns.Insert(0, $"{firstProperty.Name} INTEGER PRIMARY KEY AUTOINCREMENT");
+        if (tableName != "Users")
+        {
+          columns.RemoveAt(0);
+          columns.Insert(0, $"{firstProperty.Name} INTEGER PRIMARY KEY AUTOINCREMENT");
+        }
 
         var commandText = $"CREATE TABLE IF NOT EXISTS {tableName} ({string.Join(", ", columns)})";
         using var command = new SQLiteCommand(commandText, connection);
@@ -104,8 +107,8 @@ namespace Database
         return "DATETIME";
       }
       else if (type.IsEnum)
-      { 
-        return "TEXT"; 
+      {
+        return "TEXT";
       }
 
       throw new NotSupportedException($"Тип {type.Name} не поддерживается.");

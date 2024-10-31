@@ -207,7 +207,7 @@ namespace TelegramBot.Processing
         var submission = new Submission
         {
           AssignmentId = homework.AssignmentId,
-          StudentId = student.UserId,
+          StudentId = student.TelegramChatId,
           Status = Submission.StatusWork.Unfulfilled,
           CourseId = homework.CourseId,
         };

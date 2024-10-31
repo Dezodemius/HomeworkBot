@@ -38,7 +38,7 @@ namespace Core
     static public List<Submission> GetHomeworkForStudent(long userId)
     {
       var student = CommonUserModel.GetUserById(userId);
-      var data = dbManager.GetAllSubmissions()?.Where(x=>x.StudentId == student.UserId).ToList();
+      var data = dbManager.GetAllSubmissions()?.Where(x=>x.StudentId == student.TelegramChatId).ToList();
       return data;
 
     }

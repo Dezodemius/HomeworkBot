@@ -203,7 +203,7 @@ namespace TelegramBot.Roles.Teacher
     {
       List<CallbackModel> callbackModels = new List<CallbackModel>();
       var teacher = CommonUserModel.GetUserById(chatId);
-      var courses = CommonCourseModel.GetAllUserCourses(teacher.UserId);
+      var courses = CommonCourseModel.GetAllUserCourses(teacher.TelegramChatId);
 
       foreach (var course in courses)
       {

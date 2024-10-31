@@ -24,7 +24,7 @@ namespace Core
     /// </summary>
     /// <param name="idUser">Идентификатор пользователя.</param>
     /// <returns>Список курсов пользователя.</returns>
-    public static List<Course> GetAllUserCourses(int idUser)
+    public static List<Course> GetAllUserCourses(long idUser)
     {
       return dbManager.GetAllUserCoursesByUserId(idUser);
     }

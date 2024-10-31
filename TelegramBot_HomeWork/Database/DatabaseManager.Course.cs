@@ -116,7 +116,7 @@ namespace Database
     /// </summary>
     /// <param name="userId">Идентификатор пользователя.</param>
     /// <returns>Список курсов пользователя.</returns>
-    public List<Course> GetAllUserCoursesByUserId(int userId)
+    public List<Course> GetAllUserCoursesByUserId(long userId)
     {
       using var connection = new SQLiteConnection(_connectionString);
       connection.Open();
