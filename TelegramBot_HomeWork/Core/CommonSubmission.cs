@@ -31,6 +31,19 @@ namespace Core
       return dbManager.GetSubmissionsByStudentId(user.TelegramChatId);
     }
 
+    public static List<Submission> GetSubmissionByCourse(long telegramChatId, int courseId)
+    {
+      var user = CommonUserModel.GetUserById(telegramChatId);
+      if (user == null)
+      {
+        Logger.LogError($"Пользователь с TelegramChatId {telegramChatId} не найден.");
+        return new List<Submission>();
+      }
+
+      var data = GetSubmission(telegramChatId);
+      return data.Where(x => x.CourseId == courseId).ToList();
+    }
+
     public static void UpdateSubmission(Submission submission)
     {
       dbManager.UpdateSubmission(submission.SubmissionId, submission);

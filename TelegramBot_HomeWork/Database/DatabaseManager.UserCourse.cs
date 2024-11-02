@@ -101,7 +101,7 @@ namespace Database
       {
         var userCourse = new UserCourse
         {
-          UserId = Convert.ToInt32(reader["UserId"]),
+          UserId = Convert.ToInt64(reader["UserId"]),
           CourseId = Convert.ToInt32(reader["CourseId"])
         };
 

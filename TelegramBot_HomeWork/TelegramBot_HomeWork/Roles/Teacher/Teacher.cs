@@ -14,6 +14,8 @@ using TelegramBot.Model;
 using TelegramBot.Processing;
 using System.ComponentModel.DataAnnotations;
 using Telegram.Bot.Types;
+using System.Text.RegularExpressions;
+using TelegramBot.Roles.Student;
 
 namespace TelegramBot.Roles.Teacher
 {
@@ -119,7 +121,14 @@ namespace TelegramBot.Roles.Teacher
     {
       if (callbackData.ToLower().Contains("students"))
       {
-        await ShowStudentsForCourse(botClient, chatId, callbackData, messageId);
+        if (callbackData.ToLower().Contains("studentid"))
+        {
+          await ShowHomeworkForStudent(botClient, chatId, callbackData, messageId);
+        }
+        else
+        {
+          await ShowStudentsForCourse(botClient, chatId, callbackData, messageId);
+        }
       }
       else if (callbackData.ToLower().Contains("homeworks"))
       {
@@ -158,6 +167,33 @@ namespace TelegramBot.Roles.Teacher
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите студента:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
     }
 
+    private async Task ShowHomeworkForStudent(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
+    {
+      var courseMatch = Regex.Match(callbackData, @"course_(\d+)");
+      var studentIdMatch = Regex.Match(callbackData, @"studentId_(\d+)");
+
+      if (courseMatch.Success && studentIdMatch.Success)
+      {
+        int courseId = int.Parse(courseMatch.Groups[1].Value);
+        long studentId = long.Parse(studentIdMatch.Groups[1].Value);
+
+        var data = CommonSubmission.GetSubmissionByCourse(studentId, courseId);
+
+        List<CallbackModel> callbackModels = new List<CallbackModel>();
+        foreach (var item in data)
+        {
+          var homeWork = CommonHomeWork.GetHomeWorkById(item.CourseId, item.AssignmentId);
+          callbackModels.Add(new CallbackModel($"{homeWork.Title}", $"{callbackData}_studentId_{studentId}_homeWorkId_{homeWork.AssignmentId}"));
+        }
+
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите домашнюю работу:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
+      }
+      else
+      {
+        throw new ArgumentException("Не удалось найти идентификаторы 'course' или 'studentId' в строке.");
+      }
+    }
+
     /// <summary>
     /// Отображает домашние работы для выбранного курса.
     /// </summary>
@@ -169,7 +205,7 @@ namespace TelegramBot.Roles.Teacher
     private async Task ShowHomeworksForCourse(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
       // Здесь можно добавить логику для отображения домашних работ
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Логика для отображения домашних работ еще не реализована.", null,  messageId);
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Логика для отображения домашних работ еще не реализована.", null, messageId);
     }
 
     /// <summary>

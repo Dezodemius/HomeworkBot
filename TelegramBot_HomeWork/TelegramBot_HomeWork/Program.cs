@@ -27,7 +27,7 @@ namespace TelegramBot
 
         Core.CheckData.CheckTables();
         Console.WriteLine("База данных и таблицы успешно созданы");
-        Core.Test.CreateTestCoursesAndAssignments();
+        // Core.Test.CreateTestCoursesAndAssignments();
         var botHandler = new TelegramBotHandler(config.BotToken);
         await botHandler.StartBotAsync();
         
