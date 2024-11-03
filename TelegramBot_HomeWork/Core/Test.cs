@@ -58,7 +58,7 @@ namespace Core
 
         UserCourse userCourse = new UserCourse();
         userCourse.CourseId = i;
-        userCourse.UserId = teacher.UserId;
+        userCourse.UserId = teacher.TelegramChatId;
         dbManager.CreateUserCourse(userCourse);
       }
 

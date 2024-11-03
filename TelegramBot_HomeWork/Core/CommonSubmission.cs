@@ -15,7 +15,7 @@ namespace Core
     static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
     public static void AddSubmission(Submission submission)
-    { 
+    {
       dbManager.CreateSubmission(submission);
     }
 
@@ -28,7 +28,20 @@ namespace Core
         return new List<Submission>();
       }
 
-      return dbManager.GetSubmissionsByStudentId(user.UserId);
+      return dbManager.GetSubmissionsByStudentId(user.TelegramChatId);
+    }
+
+    public static List<Submission> GetSubmissionByCourse(long telegramChatId, int courseId)
+    {
+      var user = CommonUserModel.GetUserById(telegramChatId);
+      if (user == null)
+      {
+        Logger.LogError($"Пользователь с TelegramChatId {telegramChatId} не найден.");
+        return new List<Submission>();
+      }
+
+      var data = GetSubmission(telegramChatId);
+      return data.Where(x => x.CourseId == courseId).ToList();
     }
 
     public static void UpdateSubmission(Submission submission)
@@ -36,20 +49,27 @@ namespace Core
       dbManager.UpdateSubmission(submission.SubmissionId, submission);
     }
 
-    public static Submission GetSubmissionForHomeWork(long telegramChatId, int homeWorkId)
+    public static Submission? GetSubmissionForHomeWork(long telegramChatId, int homeWorkId)
     {
       var user = CommonUserModel.GetUserById(telegramChatId);
 
-      var data = dbManager.GetAllSubmissions().Where(x => x.StudentId == user.UserId && x.AssignmentId == homeWorkId)
-          .FirstOrDefault();
-
-
-      if (data == null)
+      if (user != null)
       {
-        Logger.LogError($"Не найдена запись о подаче для telegramChatId: {telegramChatId}, homeWorkId: {homeWorkId}.");
-      }
+        var data = dbManager.GetAllSubmissions().Where(x => x.StudentId == user.TelegramChatId && x.AssignmentId == homeWorkId)
+            .FirstOrDefault();
 
-      return data;
+
+        if (data == null)
+        {
+          Logger.LogError($"Не найдена запись о подаче для telegramChatId: {telegramChatId}, homeWorkId: {homeWorkId}.");
+        }
+
+        return data;
+      }
+      else
+      {
+        return null;
+      }
     }
 
   }

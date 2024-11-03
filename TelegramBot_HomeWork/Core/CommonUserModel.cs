@@ -93,9 +93,12 @@ namespace Core
     public static List<UserModel> GetAllStudentsByCourse(int courseId)
     {
       var allStudents = dbManager.GetAllUsers().Where(x => x.Role == UserRole.Student).ToList();
-      var studentCourseLinks = dbManager.GetAllUserCourses().Where(uc => uc.CourseId == courseId).ToList();
+
+      var temporaryData = dbManager.GetAllUserCourses();
+      var studentCourseLinks = temporaryData.Where(uc => uc.CourseId == courseId).ToList();
+
       var studentIds = studentCourseLinks.Select(sc => sc.UserId).ToList();
-      var studentsInCourse = allStudents.Where(student => studentIds.Contains(student.UserId)).ToList();
+      var studentsInCourse = allStudents.Where(student => studentIds.Contains(student.TelegramChatId)).ToList();
 
       return studentsInCourse;
     }

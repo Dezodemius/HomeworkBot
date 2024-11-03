@@ -27,7 +27,14 @@ namespace Core
     /// <exception cref="NotImplementedException"></exception>
     static public Assignment? GetHomeWorkById(int courseId, int homeId)
     {
-      return dbManager.GetAssignmentsByCourse(courseId).Where(hw =>hw.AssignmentId == homeId).First();
+      try
+      {
+        return dbManager.GetAssignmentsByCourse(courseId).Where(hw => hw.AssignmentId == homeId).First();
+      }
+      catch
+      {
+        return null;
+      }
     }
 
     /// <summary>
@@ -38,7 +45,7 @@ namespace Core
     static public List<Submission> GetHomeworkForStudent(long userId)
     {
       var student = CommonUserModel.GetUserById(userId);
-      var data = dbManager.GetAllSubmissions()?.Where(x=>x.StudentId == student.UserId).ToList();
+      var data = dbManager.GetAllSubmissions()?.Where(x => x.StudentId == student.TelegramChatId).ToList();
       return data;
 
     }

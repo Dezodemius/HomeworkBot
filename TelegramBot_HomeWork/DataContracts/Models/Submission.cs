@@ -39,7 +39,7 @@ namespace DataContracts.Models
     public int AssignmentId { get; set; }
 
     public int CourseId { get; set; }
-    public int StudentId { get; set; }
+    public long StudentId { get; set; }
     public string GithubLink { get; set; }
     public DateTime SubmissionDate { get; set; }
     public StatusWork Status { get; set; }

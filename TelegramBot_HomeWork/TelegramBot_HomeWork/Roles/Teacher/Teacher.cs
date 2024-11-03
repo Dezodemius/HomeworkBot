@@ -14,6 +14,8 @@ using TelegramBot.Model;
 using TelegramBot.Processing;
 using System.ComponentModel.DataAnnotations;
 using Telegram.Bot.Types;
+using System.Text.RegularExpressions;
+using TelegramBot.Roles.Student;
 
 namespace TelegramBot.Roles.Teacher
 {
@@ -51,8 +53,13 @@ namespace TelegramBot.Roles.Teacher
       {
         await new CreateHomeWorkProcessing(homeworkData).ProcessCreateStepAsync(botClient, chatId, message);
       }
+      else if (ViewHomeWorkProcessing.teacherStep.ContainsKey(chatId))
+      {
+        ViewHomeWorkProcessing.ViewAssigment(botClient, chatId, message);
+      }
       else if (message == "/start")
       {
+        ViewHomeWorkProcessing.teacherStep.Remove(chatId);
         await ShowTeacherOptions(botClient, chatId);
       }
     }
@@ -83,7 +90,12 @@ namespace TelegramBot.Roles.Teacher
       }
       else if (callbackData.ToLower().Contains("/checkhomework"))
       {
-        await HandleCheckHomeworkCallback(botClient, chatId, callbackData, messageId);
+        await ViewHomeWorkProcessing.ViewAssigment(botClient, chatId, callbackData, messageId);
+        //await HandleCheckHomeworkCallback(botClient, chatId, callbackData, messageId);
+      }
+      else if (callbackData.ToLower().Contains("/send"))
+      {
+        await ViewHomeWorkProcessing.ViewAssigment(botClient, chatId, callbackData, messageId);
       }
     }
 
@@ -119,7 +131,14 @@ namespace TelegramBot.Roles.Teacher
     {
       if (callbackData.ToLower().Contains("students"))
       {
-        await ShowStudentsForCourse(botClient, chatId, callbackData, messageId);
+        if (callbackData.ToLower().Contains("studentid"))
+        {
+          await ShowHomeworkForStudent(botClient, chatId, callbackData, messageId);
+        }
+        else
+        {
+          await ShowStudentsForCourse(botClient, chatId, callbackData, messageId);
+        }
       }
       else if (callbackData.ToLower().Contains("homeworks"))
       {
@@ -158,6 +177,36 @@ namespace TelegramBot.Roles.Teacher
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите студента:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
     }
 
+    private async Task ShowHomeworkForStudent(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
+    {
+      var courseMatch = Regex.Match(callbackData, @"course_(\d+)");
+      var studentIdMatch = Regex.Match(callbackData, @"studentId_(\d+)");
+
+      if (courseMatch.Success && studentIdMatch.Success)
+      {
+        int courseId = int.Parse(courseMatch.Groups[1].Value);
+        long studentId = long.Parse(studentIdMatch.Groups[1].Value);
+
+        var data = CommonSubmission.GetSubmissionByCourse(studentId, courseId);
+
+        List<CallbackModel> callbackModels = new List<CallbackModel>();
+        foreach (var item in data)
+        {
+          var homeWork = CommonHomeWork.GetHomeWorkById(item.CourseId, item.AssignmentId);
+          if (homeWork != null)
+          {
+            callbackModels.Add(new CallbackModel($"{homeWork.Title}", $"{callbackData}_studentId_{studentId}_homeWorkId_{homeWork.AssignmentId}"));
+          }
+        }
+
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите домашнюю работу:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
+      }
+      else
+      {
+        throw new ArgumentException("Не удалось найти идентификаторы 'course' или 'studentId' в строке.");
+      }
+    }
+
     /// <summary>
     /// Отображает домашние работы для выбранного курса.
     /// </summary>
@@ -169,7 +218,7 @@ namespace TelegramBot.Roles.Teacher
     private async Task ShowHomeworksForCourse(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
       // Здесь можно добавить логику для отображения домашних работ
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Логика для отображения домашних работ еще не реализована.", null,  messageId);
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Логика для отображения домашних работ еще не реализована.", null, messageId);
     }
 
     /// <summary>
@@ -203,7 +252,7 @@ namespace TelegramBot.Roles.Teacher
     {
       List<CallbackModel> callbackModels = new List<CallbackModel>();
       var teacher = CommonUserModel.GetUserById(chatId);
-      var courses = CommonCourseModel.GetAllUserCourses(teacher.UserId);
+      var courses = CommonCourseModel.GetAllUserCourses(teacher.TelegramChatId);
 
       foreach (var course in courses)
       {
