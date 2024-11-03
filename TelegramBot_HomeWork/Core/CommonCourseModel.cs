@@ -47,5 +47,14 @@ namespace Core
     {
       dbManager.CreateCourse(course);
     }
+
+    public static void AddUserInCourse(long userId, int courseId)
+    {
+      UserCourse userCourse = new UserCourse();
+      userCourse.UserId = userId;
+      userCourse.CourseId = courseId;
+
+      dbManager.CreateUserCourse(userCourse);
+    }
   }
 }

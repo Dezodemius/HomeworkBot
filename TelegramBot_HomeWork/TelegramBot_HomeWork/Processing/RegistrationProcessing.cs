@@ -201,6 +201,7 @@ namespace TelegramBot.Processing
 
       var homeworks = CommonHomeWork.GetHomeWork(user.CourseId);
       var student = CommonUserModel.GetUserById(user.TelegramChatId);
+      CommonCourseModel.AddUserInCourse(user.TelegramChatId, user.CourseId);
 
       foreach (var homework in homeworks)
       {

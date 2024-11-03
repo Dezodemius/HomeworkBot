@@ -30,7 +30,7 @@ namespace TelegramBot.Roles.Teacher
     /// <param name="message">Сообщение от пользователя.</param>
     /// <param name="dbManager">Менеджер базы данных.</param>
     /// <returns>Ответ на текущий шаг регистрации.</returns>
-    public async Task ProcessCreateStepAsync(ITelegramBotClient botClient, long chatId, string message)
+    internal async Task ProcessCreateStepAsync(ITelegramBotClient botClient, long chatId, string message)
     {
       switch (_assignment.GetStep())
       {

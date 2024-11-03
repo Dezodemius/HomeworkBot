@@ -53,8 +53,13 @@ namespace TelegramBot.Roles.Teacher
       {
         await new CreateHomeWorkProcessing(homeworkData).ProcessCreateStepAsync(botClient, chatId, message);
       }
+      else if (ViewHomeWorkProcessing.teacherStep.ContainsKey(chatId))
+      {
+        ViewHomeWorkProcessing.ViewAssigment(botClient, chatId, message);
+      }
       else if (message == "/start")
       {
+        ViewHomeWorkProcessing.teacherStep.Remove(chatId);
         await ShowTeacherOptions(botClient, chatId);
       }
     }
@@ -85,7 +90,12 @@ namespace TelegramBot.Roles.Teacher
       }
       else if (callbackData.ToLower().Contains("/checkhomework"))
       {
-        await HandleCheckHomeworkCallback(botClient, chatId, callbackData, messageId);
+        await ViewHomeWorkProcessing.ViewAssigment(botClient, chatId, callbackData, messageId);
+        //await HandleCheckHomeworkCallback(botClient, chatId, callbackData, messageId);
+      }
+      else if (callbackData.ToLower().Contains("/send"))
+      {
+        await ViewHomeWorkProcessing.ViewAssigment(botClient, chatId, callbackData, messageId);
       }
     }
 
@@ -183,7 +193,10 @@ namespace TelegramBot.Roles.Teacher
         foreach (var item in data)
         {
           var homeWork = CommonHomeWork.GetHomeWorkById(item.CourseId, item.AssignmentId);
-          callbackModels.Add(new CallbackModel($"{homeWork.Title}", $"{callbackData}_studentId_{studentId}_homeWorkId_{homeWork.AssignmentId}"));
+          if (homeWork != null)
+          {
+            callbackModels.Add(new CallbackModel($"{homeWork.Title}", $"{callbackData}_studentId_{studentId}_homeWorkId_{homeWork.AssignmentId}"));
+          }
         }
 
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите домашнюю работу:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
