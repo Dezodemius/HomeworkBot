@@ -1,23 +1,26 @@
 ﻿using Core;
 using DataContracts;
+using DataContracts.Models;
 using System.Text;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using TelegramBot.Model;
 using static DataContracts.Models.Submission;
+using static TelegramBot.Roles.Teacher.ViewHomeWork.HomeworkStudentViewer;
 
 namespace TelegramBot.Roles.Teacher.ViewHomeWork
 {
-  internal static class ViewHomeWorkProcessing
+  internal static partial class ViewHomeWorkProcessing
   {
     /// <summary>
     /// Текущий шаг преподавателя.
     /// </summary>
-    internal static Dictionary<long, ViewAssigmentStep> teacherStep = new Dictionary<long, ViewAssigmentStep>();
+    internal static Dictionary<long, ViewAssignmentStep> teacherStep = new Dictionary<long, ViewAssignmentStep>();
 
     /// <summary>
     /// Текущее состояние выбранных данных.
     /// </summary>
-    internal static Dictionary<long, ViewAssigmnetsModel> teacherData = new Dictionary<long, ViewAssigmnetsModel>();
+    internal static Dictionary<long, ViewAssignmentsModel> teacherData = new Dictionary<long, ViewAssignmentsModel>();
 
     /// <summary>
     /// Записи коментариев преподавателей.
@@ -33,51 +36,33 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// Структура для хранения информации о выбранных данных,
     /// включая идентификатор курса, идентификатор задания и идентификатор студента.
     /// </summary>
-    internal struct ViewAssigmnetsModel
+    internal struct ViewAssignmentsModel
     {
       /// <summary>
       /// Идентификатор курса
       /// </summary>
-      public int courseId;
+      public int CourseId { get; set; }
 
       /// <summary>
       /// Идентификатор задания
       /// </summary>
-      public int assigmentId;
+      public int AssignmentId { get; set; }
 
       /// <summary>
       /// Идентификатор студента
       /// </summary>
-      public long studentId;
+      public long StudentId { get; set; }
     }
 
+
     /// <summary>
-    /// Шаг просмотра дз. 
+    /// Класс, представляющий информацию о задании.
     /// </summary>
-    internal enum ViewAssigmentStep
+    public class AssignmentInfo
     {
-      ChooseOption,
-      ComplitedChoose,
-
-      DisplayStudent,
-      DisplayAssigment,
-
-      ChooseAssigment,
-      ChooseStudent,
-
-      DisplayAssigmentByStudent,
-      DisplayStudentByAssigment,
-
-      ChooseStatusStudent,
-      ChooseStatusAssigment,
-
-      Revision,
-      Passed,
-      Cancellation,
-
-      TeacherMessages,
-      ChangeStatus,
-      Complited,
+      public string Title { get; set; }
+      public string Description { get; set; }
+      public string GithubLink { get; set; }
     }
 
     #region Методы.
@@ -96,7 +81,7 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     {
       try
       {
-        if (teacherStep.TryGetValue(chatId, out ViewAssigmentStep step))
+        if (teacherStep.TryGetValue(chatId, out ViewAssignmentStep step))
         {
           await ProcessStep(botClient, chatId, message, messageId, step);
         }
@@ -134,39 +119,15 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// <returns></returns>
     static internal async Task SendMessages(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      CallbackModel callbackModel = new CallbackModel("Отправить коментарии", "/send");
+      CallbackModel callbackModel = new CallbackModel("Отправить комментарии", "/send");
 
       if (callbackData.ToLower().Contains("/send"))
       {
-        if (teacherData.TryGetValue(chatId, out ViewAssigmnetsModel data))
-        {
-          var result = HomeWorkUpgrate(botClient, chatId, callbackData, messageId, StatusWork.NeedsRevision);
-          if (result)
-          {
-            var assigmentData = CommonHomeWork.GetAssignmentById(data.courseId, data.assigmentId);
-            var studentData = CommonUserModel.GetUserByChatId(data.studentId);
-            await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Домашнее задание {assigmentData.Title} студента {studentData.LastName} {studentData.FirstName} отправлено на доработку!", null, messageId);
-
-            if (teacherMessages.TryGetValue(chatId, out StringBuilder stringBuilder))
-            {
-              await TelegramBotHandler.SendMessageAsync(botClient, data.studentId, $"Домашнее задание {assigmentData.Title} отправлено на доработку с коментариями: \r\n{stringBuilder.ToString()}", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModel));
-            }
-
-            DeleteStep(chatId);
-          }
-        }
+        await ProcessSendRequest(botClient, chatId, callbackData, messageId, callbackModel);
       }
       else
       {
-        if (teacherMessages.TryGetValue(chatId, out StringBuilder stringBuilder))
-        {
-          stringBuilder.AppendLine("*" + callbackData);
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Введите следующий комментарий. Записанные коментарии: \r\n{stringBuilder.ToString()}", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModel));
-        }
-        else
-        {
-          teacherMessages.Add(chatId, new StringBuilder());
-        }
+        await AddCommentToStorage(botClient, chatId, callbackData, messageId, callbackModel);
       }
     }
 
@@ -175,13 +136,9 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// </summary>
     /// <param name="chatId">Идентификатор чата пользователя.</param>
     /// <param name="newStep">Новый шаг, на который необходимо перейти.</param>
-    static internal void ChangeStep(long chatId, ViewAssigmentStep newStep)
+    static internal void ChangeStep(long chatId, ViewAssignmentStep newStep)
     {
-      if (teacherStep.ContainsKey(chatId))
-      {
-        DeleteStep(chatId);
-        teacherStep.Add(chatId, newStep);
-      }
+      teacherStep[chatId] = newStep;
     }
 
     /// <summary>
@@ -189,11 +146,14 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// </summary>
     /// <param name="chatId">Идентификатор чата пользователя.</param>
     /// <param name="newData">Новые данные для обновления.</param>
-    static internal void ChangeData(long chatId, ViewAssigmnetsModel newData)
+    static internal void ChangeData(long chatId, ViewAssignmentsModel newData)
     {
       if (teacherData.ContainsKey(chatId))
       {
-        teacherData.Remove(chatId);
+        teacherData[chatId] = newData;
+      }
+      else
+      {
         teacherData.Add(chatId, newData);
       }
     }
@@ -204,10 +164,7 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// <param name="chatId">Идентификатор чата пользователя.</param>
     static internal void DeleteStep(long chatId)
     {
-      if (teacherStep.ContainsKey(chatId))
-      {
-        teacherStep.Remove(chatId);
-      }
+      teacherStep.Remove(chatId);
     }
 
     /// <summary>
@@ -221,22 +178,19 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// <returns>Возвращает true, если обновление прошло успешно.</returns>
     static internal bool HomeWorkUpgrate(ITelegramBotClient botClient, long chatId, string callbackData, int messageId, StatusWork statusWork)
     {
-      if (teacherData.TryGetValue(chatId, out ViewAssigmnetsModel model))
+      if (teacherData.TryGetValue(chatId, out ViewAssignmentsModel model))
       {
-        var homeWork = CommonSubmission.GetSubmissionForAssignment(model.studentId, model.assigmentId);
-        if (homeWork == null)
-        {
-          return false;
-        }
+        var homeWork = CommonSubmission.GetSubmissionForAssignment(model.StudentId, model.AssignmentId);
 
-        homeWork.Status = statusWork;
-        CommonSubmission.UpdateSubmission(homeWork);
-        return true;
+        if (homeWork != null)
+        {
+          homeWork.Status = statusWork;
+          CommonSubmission.UpdateSubmission(homeWork);
+          return true;
+        }
       }
-      else
-      {
-        return false;
-      }
+
+      return false;
     }
 
     /// <summary>
@@ -255,56 +209,72 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
       switch (temporaryData.Last())
       {
         case "checked":
-          {
-            if (teacherData.TryGetValue(chatId, out ViewAssigmnetsModel data))
-            {
-              var result = HomeWorkUpgrate(botClient, chatId, callbackData, messageId, StatusWork.Checked);
-              if (result)
-              {
-                var assigmentData = CommonHomeWork.GetAssignmentById(data.courseId, data.assigmentId);
-                var studentData = CommonUserModel.GetUserByChatId(data.studentId);
-
-                await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Домашнее задание {assigmentData.Title} студента {studentData.LastName} {studentData.FirstName} зачтено!", null, messageId);
-                await TelegramBotHandler.SendMessageAsync(botClient, data.studentId, $"Домашнее задание {assigmentData.Title} зачтено!");
-                DeleteStep(chatId);
-              }
-            }
-            break;
-          }
+          await ProcessCheckedStatus(botClient, chatId, callbackData, messageId);
+          break;
 
         case "needsRevision":
-          {
-            if (teacherData.TryGetValue(chatId, out ViewAssigmnetsModel data))
-            {
-              var result = ViewHomeWorkProcessing.HomeWorkUpgrate(botClient, chatId, callbackData, messageId, StatusWork.NeedsRevision);
-              if (result)
-              {
-                var assigmentData = CommonHomeWork.GetAssignmentById(data.courseId, data.assigmentId);
-                var studentData = CommonUserModel.GetUserByChatId(data.studentId);
-
-                await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Введите коментарии. Вы можете отправить несколько штук.", null, messageId);
-                await ViewHomeWorkProcessing.SendMessages(botClient, chatId, callbackData, messageId);
-
-                ChangeStep(chatId, ViewAssigmentStep.Revision);
-              }
-            }
-            break;
-          }
+          await ProcessNeedsRevisionStatus(botClient, chatId, callbackData, messageId);
+          break;
 
         case "break":
-          {
-            ChangeStep(chatId, ViewAssigmentStep.ChooseAssigment);
-            if (students)
-            { 
-            await StudentHomeworkViewer.ShowAssigmentByStudent(botClient, chatId, callbackData, messageId);
-            }
-            else
-            {
-              await HomeworkStudentViwer.ShowStudentByAssigment(botClient, chatId, callbackData, messageId);
-            }
-            break;
-          }
+          await ProcessBreakStatus(botClient, chatId, callbackData, messageId, students);
+          break;
       }
+    }
+
+    /// <summary>
+    /// Пытается получить данные о преподавателе для текущего чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <param name="data">Возвращает данные о назначенных заданиях, если успешно найдено.</param>
+    /// <returns>True, если данные успешно получены; иначе False.</returns>
+    static internal bool TryGetTeacherData(long chatId, out ViewAssignmentsModel data)
+    {
+      data = new ViewAssignmentsModel();
+      return teacherStep.TryGetValue(chatId, out _) && teacherData.TryGetValue(chatId, out data);
+    }
+    /// <summary>
+    /// Отправляет преподавателю сообщение с опциями для выбора статуса задания (Зачтено, На доработку, Назад).
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram Bot.</param>
+    /// <param name="chatId">Идентификатор чата.</param>
+    /// <param name="assignmentInfo">Информация о задании для отображения.</param>
+    /// <param name="messageId">Идентификатор сообщения, к которому привязано сообщение с опциями.</param>
+    static internal async Task SendAssignmentOptionsAsync(ITelegramBotClient botClient, long chatId, AssignmentInfo assignmentInfo, int messageId)
+    {
+      var message = $"{assignmentInfo.Title}\n{assignmentInfo.Description}\nСсылка на домашнюю работу: {assignmentInfo.GithubLink}";
+
+      List<CallbackModel> callbackModels = new List<CallbackModel>
+            {
+                new CallbackModel("Зачтено", $"{functionHeader}_checked"),
+                new CallbackModel("На доработку", $"{functionHeader}_needsRevision"),
+                new CallbackModel("Назад", $"{functionHeader}_break")
+            };
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, message, TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
+    }
+
+
+    /// <summary>
+    /// Получает информацию о задании студента.
+    /// </summary>
+    /// <param name="dataStudent">Модель данных о студенте и задании.</param>
+    /// <returns>Информация о задании в виде строки, если задание найдено; иначе null.</returns>
+    static internal AssignmentInfo RetrieveAssignmentInfo(ViewAssignmentsModel dataStudent)
+    {
+      var assignment = CommonSubmission.GetSubmissionForAssignment(dataStudent.StudentId, dataStudent.AssignmentId);
+      if (assignment != null)
+      {
+        var homeWork = CommonHomeWork.GetAssignmentById(assignment.CourseId, assignment.AssignmentId);
+
+        return new AssignmentInfo
+        {
+          Title = homeWork.Title,
+          Description = homeWork.Description,
+          GithubLink = assignment.GithubLink
+        };
+      }
+      return null;
     }
     #endregion
 
@@ -318,50 +288,38 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// <param name="messageId"></param>
     /// <param name="step"></param>
     /// <returns></returns>
-    static async Task ProcessStep(ITelegramBotClient botClient, long chatId, string message, int messageId, ViewAssigmentStep step)
+    static async Task ProcessStep(ITelegramBotClient botClient, long chatId, string message, int messageId, ViewAssignmentStep step)
     {
       switch (step)
       {
-        case ViewAssigmentStep.ChooseOption:
+        case ViewAssignmentStep.DisplayCourseOptions:
           await ShowOptions(botClient, chatId, message, messageId);
           break;
 
-        case ViewAssigmentStep.ComplitedChoose:
+        case ViewAssignmentStep.ChooseOptions:
           await ChangeOptions(botClient, chatId, message, messageId);
           break;
 
-        case ViewAssigmentStep.ChooseAssigment:
-        case ViewAssigmentStep.DisplayAssigmentByStudent:
+        case ViewAssignmentStep.SelectAssignment:
+        case ViewAssignmentStep.ShowAssignmentsForStudent:
           await StudentHomeworkViewer.ProcessStep(botClient, chatId, message, messageId, step);
           break;
 
-        case ViewAssigmentStep.ChooseStudent:
-        case ViewAssigmentStep.DisplayStudentByAssigment:
-          await HomeworkStudentViwer.ProcessStep(botClient, chatId, message, messageId, step);
+        case ViewAssignmentStep.SelectStudent:
+        case ViewAssignmentStep.ShowStudentsForAssignment:
+          await HomeworkStudentViewer.ProcessStep(botClient, chatId, message, messageId, step);
           break;
 
-        case ViewAssigmentStep.Revision:
+        case ViewAssignmentStep.RequestRevision:
           await SendMessages(botClient, chatId, message, messageId);
           break;
 
-        case ViewAssigmentStep.ChooseStatusStudent:
+        case ViewAssignmentStep.SelectStudentStatus:
           await ChooseStatusProseccing(botClient, chatId, message, messageId, true);
           break;
 
-        case ViewAssigmentStep.ChooseStatusAssigment:
+        case ViewAssignmentStep.SelectAssignmentStatus:
           await ChooseStatusProseccing(botClient, chatId, message, messageId, false);
-          break;
-
-
-        case ViewAssigmentStep.Passed:
-          break;
-        case ViewAssigmentStep.Cancellation:
-          break;
-        case ViewAssigmentStep.TeacherMessages:
-          break;
-        case ViewAssigmentStep.ChangeStatus:
-          break;
-        case ViewAssigmentStep.Complited:
           break;
       }
     }
@@ -377,7 +335,7 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// <returns>Асинхронная задача.</returns>
     static async Task ShowCourses(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      InitializeTeacherStep(chatId, ViewAssigmentStep.ChooseOption);
+      InitializeTeacherStep(chatId, ViewAssignmentStep.DisplayCourseOptions);
 
       var teacher = CommonUserModel.GetUserByChatId(chatId);
       var courses = CommonCourseModel.GetUserCourses(teacher.TelegramChatId);
@@ -416,7 +374,7 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// <param name="courseId">Идентификатор курса.</param>
     static void UpdateViewAssigmnetsModel(long chatId, int courseId)
     {
-      var model = new ViewAssigmnetsModel { courseId = courseId };
+      var model = new ViewAssignmentsModel { CourseId = courseId };
       teacherData[chatId] = model;
       Logger.LogInfo($"Данные обновлены для чата {chatId} с курсом {courseId}.");
     }
@@ -430,7 +388,7 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// <returns>Задача, представляющая асинхронную операцию.</returns>
     static async Task SendOptions(ITelegramBotClient botClient, long chatId, int messageId)
     {
-      ChangeStep(chatId, ViewAssigmentStep.ComplitedChoose);
+      ChangeStep(chatId, ViewAssignmentStep.ChooseOptions);
 
       var callbackModels = new List<CallbackModel>
       {
@@ -446,7 +404,7 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     /// </summary>
     /// <param name="chatId">Идентификатор чата.</param>
     /// <param name="step">Шаг просмотра заданий.</param>
-    static void InitializeTeacherStep(long chatId, ViewAssigmentStep step)
+    static void InitializeTeacherStep(long chatId, ViewAssignmentStep step)
     {
       if (teacherStep.ContainsKey(chatId))
       {
@@ -476,7 +434,7 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
       }
       else if (data.Last() == "homeworks")
       {
-        await HomeworkStudentViwer.ShowAssigmentForCourse(botClient, chatId, messageId);
+        await HomeworkStudentViewer.ShowAssignmentForCourse(botClient, chatId, messageId);
       }
       else
       {
@@ -486,24 +444,130 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
     }
 
     /// <summary>
-    /// Отображает задания для выбранного курса.
+    /// Обрабатывает статус "зачтено", отправляет уведомления и обновляет состояние.
     /// </summary>
-    /// <param name="botClient">Клиент Telegram Bot.</param>
-    /// <param name="chatId">Идентификатор чата.</param>
-    /// <param name="callbackData">Данные обратного вызова.</param>
-    /// <param name="messageId">Идентификатор сообщения.</param>
-    /// <returns></returns>
-    static async Task ShowAssigmentForCourse(ITelegramBotClient botClient, long chatId, int messageId)
+    static private async Task ProcessCheckedStatus(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      if (teacherStep.TryGetValue(chatId, out ViewAssigmentStep step))
+      if (teacherData.TryGetValue(chatId, out ViewAssignmentsModel data))
       {
-        ChangeStep(chatId, ViewAssigmentStep.DisplayAssigment);
+        var result = HomeWorkUpgrate(botClient, chatId, callbackData, messageId, StatusWork.Checked);
+        if (result)
+        {
+          var assigmentData = CommonHomeWork.GetAssignmentById(data.CourseId, data.AssignmentId);
+          var studentData = CommonUserModel.GetUserByChatId(data.StudentId);
+
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Домашнее задание {assigmentData.Title} студента {studentData.LastName} {studentData.FirstName} зачтено!", null, messageId);
+          await TelegramBotHandler.SendMessageAsync(botClient, data.StudentId, $"Домашнее задание {assigmentData.Title} зачтено!");
+          DeleteStep(chatId);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Обрабатывает статус "на доработку", запрашивая комментарии от пользователя.
+    /// </summary>
+    static private async Task ProcessNeedsRevisionStatus(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
+    {
+      if (teacherData.TryGetValue(chatId, out ViewAssignmentsModel data))
+      {
+        var result = ViewHomeWorkProcessing.HomeWorkUpgrate(botClient, chatId, callbackData, messageId, StatusWork.NeedsRevision);
+        if (result)
+        {
+          var assigmentData = CommonHomeWork.GetAssignmentById(data.CourseId, data.AssignmentId);
+          var studentData = CommonUserModel.GetUserByChatId(data.StudentId);
+
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Введите комментарии. Вы можете отправить несколько штук.", null, messageId);
+          await ViewHomeWorkProcessing.SendMessages(botClient, chatId, callbackData, messageId);
+
+          ChangeStep(chatId, ViewAssignmentStep.RequestRevision);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Обрабатывает статус "возврат к выбору задания", перенаправляя на отображение заданий.
+    /// </summary>
+    static private async Task ProcessBreakStatus(ITelegramBotClient botClient, long chatId, string callbackData, int messageId, bool students)
+    {
+      ChangeStep(chatId, ViewAssignmentStep.SelectAssignment);
+      if (students)
+      {
+        await StudentHomeworkViewer.ShowAssigmentByStudent(botClient, chatId, callbackData, messageId);
       }
       else
       {
-        await SendErrorMessage(botClient, chatId, messageId, "Ошибка при отображении заданий для выбранного курса");
-        return;
+        await HomeworkStudentViewer.ShowStudentByAssignment(botClient, chatId, callbackData, messageId);
       }
+    }
+
+    /// <summary>
+    /// Обрабатывает запрос на отправку домашнего задания на доработку.
+    /// </summary>
+    private static async Task ProcessSendRequest(ITelegramBotClient botClient, long chatId, string callbackData, int messageId, CallbackModel callbackModel)
+    {
+      if (teacherData.TryGetValue(chatId, out ViewAssignmentsModel data))
+      {
+        var result = HomeWorkUpgrate(botClient, chatId, callbackData, messageId, StatusWork.NeedsRevision);
+        if (result)
+        {
+          var assignmentData = CommonHomeWork.GetAssignmentById(data.CourseId, data.AssignmentId);
+          var studentData = CommonUserModel.GetUserByChatId(data.StudentId);
+
+          await NotifyTeacher(botClient, chatId, assignmentData, studentData, messageId);
+          await SendCommentsToStudent(botClient, data.StudentId, assignmentData, callbackModel);
+          
+          DeleteStep(chatId);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Отправляет уведомление преподавателю о том, что домашка отправлена на доработку.
+    /// </summary>
+    private static async Task NotifyTeacher(ITelegramBotClient botClient, long chatId, Assignment assignmentData, UserModel studentData, int messageId)
+    {
+      await TelegramBotHandler.SendMessageAsync(
+          botClient,
+          chatId,
+          $"Домашнее задание {assignmentData.Title} студента {studentData.LastName} {studentData.FirstName} отправлено на доработку!",
+          null,
+          messageId
+      );
+    }
+
+    /// <summary>
+    /// Отправляет комментарии студенту.
+    /// </summary>
+    private static async Task SendCommentsToStudent(ITelegramBotClient botClient, long studentId, Assignment assignmentData, CallbackModel callbackModel)
+    {
+      if (teacherMessages.TryGetValue(studentId, out StringBuilder stringBuilder))
+      {
+        await TelegramBotHandler.SendMessageAsync(
+            botClient,
+            studentId,
+            $"Домашнее задание {assignmentData.Title} отправлено на доработку с комментариями: \r\n{stringBuilder}",
+            TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModel)
+        );
+      }
+    }
+
+    /// <summary>
+    /// Добавляет новый комментарий в хранилище комментариев преподавателя.
+    /// </summary>
+    private static async Task AddCommentToStorage(ITelegramBotClient botClient, long chatId, string callbackData, int messageId, CallbackModel callbackModel)
+    {
+      if (!teacherMessages.ContainsKey(chatId))
+      {
+        teacherMessages.Add(chatId, new StringBuilder());
+      }
+
+      teacherMessages[chatId].AppendLine("*" + callbackData);
+      await TelegramBotHandler.SendMessageAsync(
+          botClient,
+          chatId,
+          $"Введите следующий комментарий. Записанные комментарии: \r\n{teacherMessages[chatId]}",
+          TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModel)
+      );
     }
     #endregion
 
