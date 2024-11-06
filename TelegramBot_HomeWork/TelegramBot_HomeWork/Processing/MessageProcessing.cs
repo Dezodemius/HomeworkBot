@@ -23,7 +23,7 @@ namespace TelegramBot.Processing
       var chatId = message.Chat.Id;
       var messageText = message.Text;
 
-      UserRole? userRole = CommonUserModel.GetUserRoleById(chatId);
+      UserRole? userRole = CommonUserModel.GetUserRoleByChatId(chatId);
       bool responseMessage = userRole switch
       {
         UserRole.Administrator => await HandleAdministratorMessageAsync(botClient, chatId, messageText),
@@ -44,7 +44,7 @@ namespace TelegramBot.Processing
             TelegramBotHandler.RegistrationRequests.Add(chatId, data);
           }
         }
-        else if (CommonRegistrationRequest.GetRegistrationRequests(chatId) == null)
+        else if (CommonRegistrationRequest.GetRegistrationRequestByTelegramId(chatId) == null)
         {
           List<CallbackModel> callbackModels = new List<CallbackModel>()
           {
@@ -56,7 +56,7 @@ namespace TelegramBot.Processing
         }
         else
         {
-          var data = CommonRegistrationRequest.GetRegistrationRequests(chatId);
+          var data = CommonRegistrationRequest.GetRegistrationRequestByTelegramId(chatId);
 
           if (data.Status.ToLower().Contains("rejected"))
           {
@@ -78,7 +78,7 @@ namespace TelegramBot.Processing
     /// <returns>Ответ на сообщение администратора.</returns>
     static private async Task<bool> HandleAdministratorMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
-      var userData = CommonUserModel.GetUserById(chatId);
+      var userData = CommonUserModel.GetUserByChatId(chatId);
       if (userData != null)
       {
         var admin = new Administrator(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
@@ -96,7 +96,7 @@ namespace TelegramBot.Processing
     /// <returns>Ответ на сообщение учителя.</returns>
     static private async Task<bool> HandleTeacherMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
-      var userData = CommonUserModel.GetUserById(chatId);
+      var userData = CommonUserModel.GetUserByChatId(chatId);
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
@@ -114,7 +114,7 @@ namespace TelegramBot.Processing
     /// <returns>Ответ на сообщение студента.</returns>
     static private async Task<bool> HandleStudentMessageAsync(ITelegramBotClient botClient, long chatId, string message)
     {
-      var userData = CommonUserModel.GetUserById(chatId);
+      var userData = CommonUserModel.GetUserByChatId(chatId);
       if (userData != null)
       {
         var student = new Student(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);

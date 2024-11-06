@@ -13,35 +13,44 @@ namespace Core
   {
     static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
-    static public List<RegistrationRequest> GetAllRegistrationRequests()
+    /// <summary>
+    /// Получает список всех запросов на регистрацию.
+    /// </summary>
+    /// <returns>Список объектов <see cref="RegistrationRequest"/>.</returns>
+    static public List<RegistrationRequest> GetAllRegistrationRequests() => dbManager.GetAllRegistrationRequests();
+
+    /// <summary>
+    /// Получает запрос на регистрацию по Telegram ID.
+    /// </summary>
+    /// <param name="telegramId">Telegram ID пользователя.</param>
+    /// <returns>Объект <see cref="RegistrationRequest"/>, если найден; иначе null.</returns>
+    static public RegistrationRequest GetRegistrationRequestByTelegramId(long telegramId)
     {
-      return dbManager.GetAllRegistrationRequests();
+      var request = dbManager.GetAllRegistrationRequests().FirstOrDefault(x => x.TelegramChatId == telegramId);
+      return request;
     }
 
-    static public RegistrationRequest GetRegistrationRequests(long telegramId)
-    {
-      var data = dbManager.GetAllRegistrationRequests().Where(x => x.TelegramChatId == telegramId);
+    /// <summary>
+    /// Добавляет новый запрос на регистрацию.
+    /// </summary>
+    /// <param name="registrationRequest">Объект <see cref="RegistrationRequest"/> для добавления.</param>
+    static public void AddRegistrationRequests(RegistrationRequest registrationRequest) => dbManager.CreateRegistrationRequest(registrationRequest);
 
-      if (data.Count() != 0)
-        return data.First();
-      else
-        return null;
-    }
-
-    static public void AddRegistrationRequests(RegistrationRequest registrationRequest)
-    {
-      dbManager.CreateRegistrationRequest(registrationRequest);
-    }
-
-    static public void UpdateStatusRegistrationRequests(RegistrationRequest registrationRequest, string status)
+    /// <summary>
+    /// Обновляет статус запроса на регистрацию.
+    /// </summary>
+    /// <param name="registrationRequest">Объект <see cref="RegistrationRequest"/> для обновления.</param>
+    /// <param name="status">Новый статус.</param>
+    static public void UpdateRegistrationRequestStatus(RegistrationRequest registrationRequest, string status)
     {
       registrationRequest.Status = status;
       dbManager.UpdateRegistrationRequest(registrationRequest.RequestId, registrationRequest);
     }
 
-    static public void DeleteRegistrationRequests(RegistrationRequest registrationRequest) 
-    {
-      dbManager.DeleteRegistrationRequest(registrationRequest.RequestId);
-    }
+    /// <summary>
+    /// Удаляет запрос на регистрацию.
+    /// </summary>
+    /// <param name="registrationRequest">Объект <see cref="RegistrationRequest"/> для удаления.</param>
+    static public void DeleteRegistrationRequest(RegistrationRequest registrationRequest) => dbManager.DeleteRegistrationRequest(registrationRequest.RequestId);
   }
 }

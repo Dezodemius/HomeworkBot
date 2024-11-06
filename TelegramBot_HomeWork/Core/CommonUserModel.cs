@@ -16,12 +16,11 @@ namespace Core
     static readonly DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
     /// <summary>
-    /// Возвращает модель пользователя по уникальному идентификатору.
+    /// Получает модель пользователя по идентификатору чата Telegram.
     /// </summary>
-    /// <param name="chatId">Уникальный идентификатор.</param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    static public UserModel? GetUserById(long chatId)
+    /// <param name="chatId">Уникальный идентификатор чата Telegram.</param>
+    /// <returns>Объект <see cref="UserModel"/>, если пользователь найден; иначе null.</returns>
+    static public UserModel? GetUserByChatId(long chatId)
     {
       try
       {
@@ -36,85 +35,84 @@ namespace Core
     }
 
     /// <summary>
-    /// Возвращает роль пользователя по уникальному идентификатору.
+    /// Определяет роль пользователя по идентификатору чата Telegram.
     /// </summary>
-    /// <param name="chatId">Уникальный идентификатор.</param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    public static UserRole? GetUserRoleById(long chatId)
+    /// <param name="chatId">Уникальный идентификатор чата Telegram.</param>
+    /// <returns>Роль пользователя, если он найден; иначе null.</returns>
+    public static UserRole? GetUserRoleByChatId(long chatId)
     {
       var user = dbManager.GetAllUsers().FirstOrDefault(u => u.TelegramChatId == chatId);
       return user?.Role;
     }
 
     /// <summary>
-    /// Получает список студентов, выполнивших конкретное домашнее задание.
+    /// Добавляет нового студента в базу данных.
     /// </summary>
-    /// <param name="homewokrId">Идентификатор домашнего задания.</param>
-    /// <returns></returns>
-    /// <exception cref="SystemException">Исключение, которое возникает, если таких студентов нет.</exception>
-    /// <exception cref="Exception">Другие исклбчения, которые могут возникнуть.</exception>
-    static public List<string> GetStudentsCompletedHomework(int homewokrId)
-    {
-      //try
-      //{
-      //  return dbManager.GetStudentName(homewokrId);
-      //}
-      //catch (SystemException)
-      //{
-      //  Console.WriteLine($"Нет студентов с таким выполненным домашним заданием ");
-      //  throw new SystemException();
-      //}
-      //catch (Exception ex)
-      //{
-      //  Console.WriteLine($"Ошибка: {ex.Message}");
-      //  throw new Exception();
-      //}
-
-      throw new NotImplementedException();
-    }
-
-
-    static public void AddStudent(RegistrationRequest registrationRequest)
+    /// <param name="registrationRequest">Запрос на регистрацию с данными студента.</param>
+    static public void RegisterStudent(RegistrationRequest registrationRequest)
     {
       var userModel = new UserModel(registrationRequest.TelegramChatId, registrationRequest.FirstName, registrationRequest.LastName, registrationRequest.Email, UserRole.Student);
       dbManager.CreateUser(userModel);
     }
-    static public List<UserModel> GetAllAdministrators()
+
+    /// <summary>
+    /// Возвращает список всех администраторов.
+    /// </summary>
+    /// <returns>Список объектов <see cref="UserModel"/> с ролью администратора.</returns>
+    static public List<UserModel> GetAdministrators()
     { 
       return dbManager.GetAllUsers().Where(x=>x.Role == UserRole.Administrator).ToList();
     }
 
-    static public List<UserModel> GetAllStudents()
+    /// <summary>
+    /// Возвращает список всех студентов.
+    /// </summary>
+    /// <returns>Список объектов <see cref="UserModel"/> с ролью студента.</returns>
+    static public List<UserModel> GetStudents()
     {
       return dbManager.GetAllUsers().Where(x => x.Role == UserRole.Student).ToList();
     }
 
-    public static List<UserModel> GetAllStudentsByCourse(int courseId)
+    /// <summary>
+    /// Возвращает список студентов, зарегистрированных на указанный курс.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Список объектов <see cref="UserModel"/> студентов, относящихся к курсу.</returns>
+    public static List<UserModel> GetStudentsByCourseId(int courseId)
     {
-      var allStudents = dbManager.GetAllUsers().Where(x => x.Role == UserRole.Student).ToList();
+      var studentIds = dbManager.GetAllUserCourses()
+                                .Where(uc => uc.CourseId == courseId)
+                                .Select(uc => uc.UserId)
+                                .ToHashSet(); 
 
-      var temporaryData = dbManager.GetAllUserCourses();
-      var studentCourseLinks = temporaryData.Where(uc => uc.CourseId == courseId).ToList();
-
-      var studentIds = studentCourseLinks.Select(sc => sc.UserId).ToList();
-      var studentsInCourse = allStudents.Where(student => studentIds.Contains(student.TelegramChatId)).ToList();
-
-      return studentsInCourse;
+      return dbManager.GetAllUsers()
+                      .Where(user => user.Role == UserRole.Student && studentIds.Contains(user.TelegramChatId))
+                      .ToList();
     }
 
-
-    static public List<UserModel> GetAllTeachers()
+    /// <summary>
+    /// Возвращает список всех преподавателей.
+    /// </summary>
+    /// <returns>Список объектов <see cref="UserModel"/> с ролью преподавателя.</returns>
+    static public List<UserModel> GetTeachers()
     {
       return dbManager.GetAllUsers().Where(x => x.Role == UserRole.Teacher).ToList();
     }
 
-    static public List<UserModel> GetAllUsers()
+    /// <summary>
+    /// Возвращает список всех пользователей.
+    /// </summary>
+    /// <returns>Список всех объектов <see cref="UserModel"/>.</returns>
+    static public List<UserModel> GetUsers()
     {
       return dbManager.GetAllUsers();
     }
 
-    static public void UpdateUserModel(UserModel userModel)
+    /// <summary>
+    /// Обновляет данные пользователя в базе данных.
+    /// </summary>
+    /// <param name="userModel">Модель пользователя с обновленными данными.</param>
+    static public void UpdateUser(UserModel userModel)
     { 
       dbManager.UpdateUser(userModel);
     }

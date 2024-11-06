@@ -134,11 +134,11 @@ namespace TelegramBot.Roles.Student
     /// </summary>
     private async Task DisplayHomeWorkStatuses(ITelegramBotClient botClient, long chatId, int messageId, StatusWork status, long userId)
     {
-      var filteredHomeWorks = CommonHomeWork.GetHomeworkForStudent(userId)
+      var filteredHomeWorks = CommonSubmission.GetSubmissionsByTelegramChatId(userId)
           .Where(hw => hw.Status == status)
           .ToList();
 
-      var student = CommonUserModel.GetUserById(userId);
+      var student = CommonUserModel.GetUserByChatId(userId);
       var callbackModels = new List<CallbackModel> { new CallbackModel("Назад", "/homeWork") };
 
       if (!filteredHomeWorks.Any())
@@ -149,7 +149,7 @@ namespace TelegramBot.Roles.Student
 
       foreach (var hw in filteredHomeWorks)
       {
-        var homeWorkData = CommonHomeWork.GetHomeWorkById(hw.CourseId, hw.AssignmentId);
+        var homeWorkData = CommonHomeWork.GetAssignmentById(hw.CourseId, hw.AssignmentId);
         if (homeWorkData != null)
         {
           callbackModels.Add(new CallbackModel(homeWorkData.Title, $"/homeWork_id_{hw.CourseId}_{homeWorkData.AssignmentId}"));
@@ -167,7 +167,7 @@ namespace TelegramBot.Roles.Student
       var data = message.Split('_');
       if (int.TryParse(data[^2], out int homeWorkId) && int.TryParse(data[^1], out int courseId))
       {
-        var homeWorkData = CommonHomeWork.GetHomeWorkById(courseId, homeWorkId);
+        var homeWorkData = CommonHomeWork.GetAssignmentById(courseId, homeWorkId);
         if (homeWorkData != null)
         {
           var stringBuilder = new StringBuilder()
@@ -213,11 +213,11 @@ namespace TelegramBot.Roles.Student
     /// </summary>
     private async Task HandleGitHubLink(ITelegramBotClient botClient, long chatId, string message)
     {
-      var user = CommonUserModel.GetUserById(chatId);
-      var teachers = CommonUserModel.GetAllTeachers();
+      var user = CommonUserModel.GetUserByChatId(chatId);
+      var teachers = CommonUserModel.GetTeachers();
       _answerHomeWorks.TryGetValue(chatId, out var gitLink);
-      var homeWork = CommonHomeWork.GetHomeWorkById(gitLink.CourseId, gitLink.HomeWorkId);
-      var submission = CommonSubmission.GetSubmissionForHomeWork(chatId, homeWork.AssignmentId);
+      var homeWork = CommonHomeWork.GetAssignmentById(gitLink.CourseId, gitLink.HomeWorkId);
+      var submission = CommonSubmission.GetSubmissionForAssignment(chatId, homeWork.AssignmentId);
       submission.GithubLink = message;
       submission.Status = StatusWork.Unchecked;
       CommonSubmission.UpdateSubmission(submission);

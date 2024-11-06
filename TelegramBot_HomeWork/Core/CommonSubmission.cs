@@ -14,14 +14,23 @@ namespace Core
   {
     static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
-    public static void AddSubmission(Submission submission)
+    /// <summary>
+    /// Добавляет новую запись выполнения задания.
+    /// </summary>
+    /// <param name="submission">Объект <see cref="Submission"/> для добавления.</param>
+    public static void CreateSubmission(Submission submission)
     {
       dbManager.CreateSubmission(submission);
     }
 
-    public static List<Submission> GetSubmission(long telegramChatId)
+    /// <summary>
+    /// Получает список всех выполненных заданий для пользователя по его Telegram Chat ID.
+    /// </summary>
+    /// <param name="telegramChatId">Telegram Chat ID пользователя.</param>
+    /// <returns>Список объектов <see cref="Submission"/>.</returns>
+    public static List<Submission> GetSubmissionsByTelegramChatId(long telegramChatId)
     {
-      var user = CommonUserModel.GetUserById(telegramChatId);
+      var user = CommonUserModel.GetUserByChatId(telegramChatId);
       if (user == null)
       {
         Logger.LogError($"Пользователь с TelegramChatId {telegramChatId} не найден.");
@@ -31,27 +40,43 @@ namespace Core
       return dbManager.GetSubmissionsByStudentId(user.TelegramChatId);
     }
 
-    public static List<Submission> GetSubmissionByCourse(long telegramChatId, int courseId)
+    /// <summary>
+    /// Получает список выполненных заданий для пользователя по курсу.
+    /// </summary>
+    /// <param name="telegramChatId">Telegram Chat ID пользователя.</param>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Список объектов <see cref="Submission"/>.</returns>
+    public static List<Submission> GetSubmissionsByCourse(long telegramChatId, int courseId)
     {
-      var user = CommonUserModel.GetUserById(telegramChatId);
+      var user = CommonUserModel.GetUserByChatId(telegramChatId);
       if (user == null)
       {
         Logger.LogError($"Пользователь с TelegramChatId {telegramChatId} не найден.");
         return new List<Submission>();
       }
 
-      var data = GetSubmission(telegramChatId);
+      var data = GetSubmissionsByTelegramChatId(telegramChatId);
       return data.Where(x => x.CourseId == courseId).ToList();
     }
 
+    /// <summary>
+    /// Обновляет данные выполнения задания.
+    /// </summary>
+    /// <param name="submission">Объект <see cref="Submission"/> с обновленными данными.</param>
     public static void UpdateSubmission(Submission submission)
     {
       dbManager.UpdateSubmission(submission.SubmissionId, submission);
     }
 
-    public static Submission? GetSubmissionForHomeWork(long telegramChatId, int homeWorkId)
+    /// <summary>
+    /// Получает запись о выполнении задания для определенного задания и студента.
+    /// </summary>
+    /// <param name="telegramChatId">Telegram Chat ID пользователя.</param>
+    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
+    /// <returns>Объект <see cref="Submission"/>, если найден; иначе null.</returns>
+    public static Submission? GetSubmissionForAssignment(long telegramChatId, int homeWorkId)
     {
-      var user = CommonUserModel.GetUserById(telegramChatId);
+      var user = CommonUserModel.GetUserByChatId(telegramChatId);
 
       if (user != null)
       {
@@ -72,5 +97,10 @@ namespace Core
       }
     }
 
+    public static List<Submission?> GetSubmissionsByCourseAndAssigment(int assigmentId, int courseId)
+    {
+      var data = dbManager.GetAllSubmissions().Where(x => x.AssignmentId == assigmentId && x.CourseId == courseId);
+      return data.Count() > 0 ? data.ToList() : null;
+    }
   }
 }

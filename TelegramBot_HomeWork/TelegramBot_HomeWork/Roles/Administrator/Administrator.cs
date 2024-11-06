@@ -157,7 +157,7 @@ namespace TelegramBot.Roles.Administrator
     {
       var data = callbackData.Split('_');
       long.TryParse(data.Last(), out long id);
-      var userModel = CommonUserModel.GetUserById(id);
+      var userModel = CommonUserModel.GetUserByChatId(id);
 
       if (userModel != null)
       {
@@ -183,7 +183,7 @@ namespace TelegramBot.Roles.Administrator
     /// </summary>
     private async Task ShowUserRoleOptions(ITelegramBotClient botClient, long chatId)
     {
-      var users = CommonUserModel.GetAllUsers();
+      var users = CommonUserModel.GetUsers();
       var callbackModels = users
           .Where(user => user.Role != UserRole.Administrator)
           .Select(user => new CallbackModel($"{user.LastName} {user.FirstName} - {user.Role}", $"/changeuserrole_id_{user.TelegramChatId}"))

@@ -25,7 +25,7 @@ namespace TelegramBot.Processing
     {
       var chatId = callbackQuery.From.Id;
 
-      UserRole? userRole = CommonUserModel.GetUserRoleById(chatId);
+      UserRole? userRole = CommonUserModel.GetUserRoleByChatId(chatId);
       bool responseMessage = userRole switch
       {
         UserRole.Administrator => await HandleAdministratorCallbackAsync(botClient, chatId, callbackQuery.Data, callbackQuery.Message.MessageId),
@@ -66,7 +66,7 @@ namespace TelegramBot.Processing
     /// <returns>Ответ на callback-запрос администратора.</returns>
     static private async Task<bool> HandleAdministratorCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      var userData = CommonUserModel.GetUserById(chatId);
+      var userData = CommonUserModel.GetUserByChatId(chatId);
       if (userData != null)
       {
         var admin = new Administrator(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
@@ -84,7 +84,7 @@ namespace TelegramBot.Processing
     /// <returns>Ответ на callback-запрос учителя.</returns>
     static private async Task<bool> HandleTeacherCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      var userData = CommonUserModel.GetUserById(chatId);
+      var userData = CommonUserModel.GetUserByChatId(chatId);
       if (userData != null)
       {
         var teacher = new Teacher(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);
@@ -102,7 +102,7 @@ namespace TelegramBot.Processing
     /// <returns>Ответ на callback-запрос студента.</returns>
     static private async Task<bool> HandleStudentCallbackAsync(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      var userData = CommonUserModel.GetUserById(chatId);
+      var userData = CommonUserModel.GetUserByChatId(chatId);
       if (userData != null)
       {
         var student = new Student(userData.TelegramChatId, userData.FirstName, userData.LastName, userData.Email);

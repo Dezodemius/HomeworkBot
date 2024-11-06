@@ -49,7 +49,7 @@ namespace TelegramBot.Roles.Administrator
             {
               _user.Role = (UserRole)parsedRole;
 
-              CommonUserModel.UpdateUserModel(_user);
+              CommonUserModel.UpdateUser(_user);
               await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Роль пользователя {_user.LastName} {_user.FirstName} изменена на {_user.Role}");
               Administrator.changeUserRole.Remove(chatId);
             }
