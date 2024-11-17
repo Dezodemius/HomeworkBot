@@ -77,8 +77,8 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
         dataStudent.StudentId = studentId;
         ChangeData(chatId, dataStudent);
         ChangeStep(chatId, ViewAssignmentStep.ShowAssignmentsForStudent);
-
         var callbackModels = GetAssignmentListByStudentAsync(dataStudent);
+
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите домашнюю работу:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), messageId);
       }
       else
@@ -132,7 +132,6 @@ namespace TelegramBot.Roles.Teacher.ViewHomeWork
           .Where(callbackModel => callbackModel != null)
           .ToList();
     }
-
 
     /// <summary>
     /// Формирует модель кнопки для домашнего задания.
