@@ -1,15 +1,12 @@
 ﻿using DataContracts;
 using DataContracts.Models;
-using System.Data.SqlClient;
 using System.Data.SQLite;
 
 namespace Database
 {
-  /// <summary>
-  /// Класс для управления базой данных SQLite.
-  /// </summary>
   public partial class DatabaseManager
   {
+
     /// <summary>
     /// Создает новую запись Submission.
     /// </summary>
@@ -38,7 +35,7 @@ namespace Database
         command.ExecuteNonQuery();
         Logger.LogInfo("Новая отправка домашнего задания добавлена в базу данных.");
       }
-      catch(Exception ex)
+      catch (Exception ex)
       {
         Logger.LogError(ex.ToString());
       }
@@ -111,29 +108,90 @@ namespace Database
           Logger.LogError($"Запись Submission с Id {id} не найдена для обновления.");
         }
 
-        transaction.Commit(); 
+        transaction.Commit();
       }
       catch
       {
-        transaction.Rollback(); 
+        transaction.Rollback();
         throw;
       }
     }
 
     /// <summary>
-    /// Возвращает все записи Submission из базы данных.
+    /// Возвращает все записи Submission для студента по его Telegram Chat ID.
     /// </summary>
-    /// <returns>Список всех Submission</returns>
-    public List<Submission> GetAllSubmissions()
+    public List<Submission> GetSubmissionsByStudentId(long studentId)
     {
       using var connection = new SQLiteConnection(_connectionString);
       connection.Open();
 
-      string query = "SELECT SubmissionId, AssignmentId, StudentId,CourseId, GithubLink, SubmissionDate, Status, TeacherComment FROM Submissions";
+      string query = @"SELECT SubmissionId, AssignmentId, StudentId, CourseId, GithubLink, SubmissionDate, Status, TeacherComment 
+                       FROM Submissions WHERE StudentId = @StudentId";
       using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@StudentId", studentId);
 
-      using var reader = command.ExecuteReader();
+      return ReadSubmissions(command);
+    }
+
+    /// <summary>
+    /// Возвращает все записи Submission для конкретного студента и курса.
+    /// </summary>
+    public List<Submission> GetSubmissionsByCourse(long studentId, int courseId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = @"SELECT SubmissionId, AssignmentId, StudentId, CourseId, GithubLink, SubmissionDate, Status, TeacherComment 
+                       FROM Submissions WHERE StudentId = @StudentId AND CourseId = @CourseId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@StudentId", studentId);
+      command.Parameters.AddWithValue("@CourseId", courseId);
+
+      return ReadSubmissions(command);
+    }
+
+    /// <summary>
+    /// Возвращает запись Submission для конкретного задания и студента.
+    /// </summary>
+    public Submission? GetSubmissionForAssignment(long studentId, int assignmentId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = @"SELECT SubmissionId, AssignmentId, StudentId, CourseId, GithubLink, SubmissionDate, Status, TeacherComment 
+                       FROM Submissions WHERE StudentId = @StudentId AND AssignmentId = @AssignmentId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@StudentId", studentId);
+      command.Parameters.AddWithValue("@AssignmentId", assignmentId);
+
+      var submissions = ReadSubmissions(command);
+      return submissions.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Возвращает список записей Submission для указанного задания и курса.
+    /// </summary>
+    public List<Submission> GetSubmissionsByCourseAndAssignment(int assignmentId, int courseId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = @"SELECT SubmissionId, AssignmentId, StudentId, CourseId, GithubLink, SubmissionDate, Status, TeacherComment 
+                       FROM Submissions WHERE AssignmentId = @AssignmentId AND CourseId = @CourseId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@AssignmentId", assignmentId);
+      command.Parameters.AddWithValue("@CourseId", courseId);
+
+      return ReadSubmissions(command);
+    }
+
+    /// <summary>
+    /// Метод для чтения данных из базы и преобразования их в список Submission.
+    /// </summary>
+    private List<Submission> ReadSubmissions(SQLiteCommand command)
+    {
       var submissions = new List<Submission>();
+      using var reader = command.ExecuteReader();
 
       while (reader.Read())
       {
@@ -152,7 +210,6 @@ namespace Database
         submissions.Add(submission);
       }
 
-      Logger.LogInfo($"Получено {submissions.Count} записей Submission из базы данных.");
       return submissions;
     }
   }

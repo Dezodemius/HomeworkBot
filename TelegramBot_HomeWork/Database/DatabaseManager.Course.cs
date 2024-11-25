@@ -101,7 +101,7 @@ namespace Database
         {
           CourseId = Convert.ToInt32(reader["CourseId"]),
           CourseName = reader["CourseName"].ToString(),
-          TeacherId = reader["TeacherId"] != DBNull.Value ? Convert.ToInt32(reader["TeacherId"]) : (int?)null
+          TeacherId = reader["TeacherId"] != DBNull.Value ? Convert.ToInt64(reader["TeacherId"]) : (long?)null
         };
 
         courses.Add(course);
@@ -109,6 +109,60 @@ namespace Database
 
       Logger.LogInfo($"Получено {courses.Count} курсов из базы данных.");
       return courses;
+    }
+
+    /// <summary>
+    /// Возвращает все курсы пользователя по его идентификатору.
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Список курсов пользователя.</returns>
+    public List<Course> GetAllUserCoursesByUserId(long userId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = @"
+                SELECT c.CourseId, c.CourseName, c.TeacherId
+                FROM Courses c
+                JOIN UserCourses uc ON c.CourseId = uc.CourseId
+                WHERE uc.UserId = @UserId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@UserId", userId);
+
+      using var reader = command.ExecuteReader();
+      var courses = new List<Course>();
+
+      while (reader.Read())
+      {
+        var course = new Course
+        {
+          CourseId = Convert.ToInt32(reader["CourseId"]),
+          CourseName = reader["CourseName"].ToString(),
+          TeacherId = reader["TeacherId"] != DBNull.Value ? Convert.ToInt64(reader["TeacherId"]) : (long?)null
+        };
+
+        courses.Add(course);
+      }
+
+      Logger.LogInfo($"Получено {courses.Count} курсов для пользователя с Id {userId}.");
+      return courses;
+    }
+
+    /// <summary>
+    /// Возвращает название курса по его уникальному идентификатору.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Название курса.</returns>
+    public string GetCourseNameById(int courseId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = "SELECT CourseName FROM Courses WHERE CourseId = @CourseId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@CourseId", courseId);
+
+      return command.ExecuteScalar() as string;
     }
   }
 }

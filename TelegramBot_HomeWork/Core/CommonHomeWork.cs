@@ -14,68 +14,39 @@ namespace Core
   {
     static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
-    static public List<Assignment> GetHomeWork(int courseId)
+    /// <summary>
+    /// Получает список домашних заданий для указанного курса.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Список объектов <see cref="Assignment"/> для курса.</returns>
+    static public List<Assignment> GetAssignmentsByCourseId(int courseId)
     {
       return dbManager.GetAssignmentsByCourse(courseId);
     }
 
     /// <summary>
-    /// Возвращает модель домашней работы по уникальному идентификатору.
+    /// Получает домашнее задание по его идентификатору и идентификатору курса.
     /// </summary>
-    /// <param name="userId">Уникальный идентификатор.</param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    static public Assignment? GetHomeWorkById(int courseId, int homeId)
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <param name="assignmentId">Идентификатор домашнего задания.</param>
+    /// <returns>Объект <see cref="Assignment"/>, если найден; иначе null.</returns>
+    static public Assignment? GetAssignmentById(int courseId, int homeId)
     {
-      return dbManager.GetAssignmentsByCourse(courseId).Where(hw =>hw.AssignmentId == homeId).First();
+      try
+      {
+        return dbManager.GetAssignmentsByCourse(courseId).Where(hw => hw.AssignmentId == homeId).First();
+      }
+      catch
+      {
+        return null;
+      }
     }
 
     /// <summary>
-    /// Получает список домашних работ для указанного студента.
+    /// Добавляет новое домашнее задание в базу данных.
     /// </summary>
-    /// <param name="userId">Идентификатор студента.</param>
-    /// <returns>Список моделей задач для домашнего задания.</returns>
-    static public List<Submission> GetHomeworkForStudent(long userId)
-    {
-      var student = CommonUserModel.GetUserById(userId);
-      var data = dbManager.GetAllSubmissions()?.Where(x=>x.StudentId == student.UserId).ToList();
-      return data;
-
-    }
-
-    /// <summary>
-    /// Получает список задач для указанного домашнего задания или для всех дз.
-    /// </summary>
-    /// <param name="statusWork">Статус задания.</param>
-    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
-    /// <returns>Список моделей непроверенных задач для домашнего задания.</returns>
-    static public List<Submission> GetTasksForHomework(StatusWork statusWork, int homeworkId = -1)
-    {
-      // List<StudentHomeWorkModel>? tasks = new List<StudentHomeWorkModel>();
-      // var allTasks = dbManager.GetAllHomeWorksForStudents();
-      // if (homeworkId != -1)
-      // {
-      //   if (allTasks.Any())
-      //   {
-      //     tasks = allTasks.FindAll(x => x.IdHomeWork == homeworkId && x.Status == statusWork);
-      //   }
-      // }
-      // else
-      // {
-      //   if (allTasks.Any())
-      //   {
-      //     tasks = allTasks.FindAll(x => x.Status == statusWork);
-      //   }
-      // }
-      // return tasks;
-      throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// Добавляет домашнюю работу в БД.
-    /// </summary>
-    /// <param name="homeWorkModel"></param>
-    static public void AddHomeWork(Assignment assignment)
+    /// <param name="assignment">Объект домашнего задания для добавления.</param>
+    static public void CreateAssignment(Assignment assignment)
     {
       dbManager.CreateAssignment(assignment);
     }

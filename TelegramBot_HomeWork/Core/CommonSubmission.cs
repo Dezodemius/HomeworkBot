@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Database;
+﻿using Database;
 using DataContracts;
 using DataContracts.Data;
 using DataContracts.Models;
@@ -14,38 +9,92 @@ namespace Core
   {
     static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
-    public static void AddSubmission(Submission submission)
-    { 
+    /// <summary>
+    /// Создаёт новую запись выполнения задания.
+    /// </summary>
+    /// <param name="submission">Объект <see cref="Submission"/> для добавления.</param>
+    public static void CreateSubmission(Submission submission)
+    {
       dbManager.CreateSubmission(submission);
     }
 
-    public static List<Submission> GetSubmission(long telegramChatId)
+    /// <summary>
+    /// Получает список всех выполненных заданий для пользователя по его Telegram Chat ID.
+    /// </summary>
+    /// <param name="telegramChatId">Telegram Chat ID пользователя.</param>
+    /// <returns>Список объектов <see cref="Submission"/>.</returns>
+    public static List<Submission> GetSubmissionsByTelegramChatId(long telegramChatId)
     {
-      var user = CommonUserModel.GetUserById(telegramChatId);
-      var data = dbManager.GetAllSubmissions().Where(x=>x.SubmissionId == user.UserId).ToList();
-      return data;
+      var user = CommonUserModel.GetUserByChatId(telegramChatId);
+      if (user == null)
+      {
+        Logger.LogError($"Пользователь с TelegramChatId {telegramChatId} не найден.");
+        return new List<Submission>();
+      }
+
+      return dbManager.GetSubmissionsByStudentId(user.TelegramChatId);
     }
 
+    /// <summary>
+    /// Получает список выполненных заданий для пользователя по курсу.
+    /// </summary>
+    /// <param name="telegramChatId">Telegram Chat ID пользователя.</param>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Список объектов <see cref="Submission"/> для заданного курса.</returns>
+    public static List<Submission> GetSubmissionsByCourse(long telegramChatId, int courseId)
+    {
+      var user = CommonUserModel.GetUserByChatId(telegramChatId);
+      if (user == null)
+      {
+        Logger.LogError($"Пользователь с TelegramChatId {telegramChatId} не найден.");
+        return new List<Submission>();
+      }
+
+      return dbManager.GetSubmissionsByCourse(user.TelegramChatId, courseId);
+    }
+
+    /// <summary>
+    /// Обновляет данные выполнения задания.
+    /// </summary>
+    /// <param name="submission">Объект <see cref="Submission"/> с обновленными данными.</param>
     public static void UpdateSubmission(Submission submission)
     {
       dbManager.UpdateSubmission(submission.SubmissionId, submission);
     }
 
-    public static Submission GetSubmissionForHomeWork(long telegramChatId, int homeWorkId)
+    /// <summary>
+    /// Получает запись о выполнении задания для конкретного задания и студента.
+    /// </summary>
+    /// <param name="telegramChatId">Telegram Chat ID пользователя.</param>
+    /// <param name="homeworkId">Идентификатор домашнего задания.</param>
+    /// <returns>Объект <see cref="Submission"/>, если найден; иначе null.</returns>
+    public static Submission? GetSubmissionForAssignment(long telegramChatId, int homeWorkId)
     {
-      var user = CommonUserModel.GetUserById(telegramChatId);
+      var user = CommonUserModel.GetUserByChatId(telegramChatId);
+      if (user == null)
+      {
+        Logger.LogError($"Пользователь с TelegramChatId {telegramChatId} не найден.");
+        return null;
+      }
 
-      var data = dbManager.GetAllSubmissions().Where(x => x.StudentId == user.UserId && x.AssignmentId == homeWorkId)
-          .FirstOrDefault();
-
-
-      if (data == null)
+      var submission = dbManager.GetSubmissionForAssignment(user.TelegramChatId, homeWorkId);
+      if (submission == null)
       {
         Logger.LogError($"Не найдена запись о подаче для telegramChatId: {telegramChatId}, homeWorkId: {homeWorkId}.");
       }
 
-      return data;
+      return submission;
     }
 
+    /// <summary>
+    /// Получает записи выполнения задания по курсу и заданию.
+    /// </summary>
+    /// <param name="assignmentId">Идентификатор задания.</param>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Список объектов <see cref="Submission"/> для заданного курса и задания.</returns>
+    public static List<Submission> GetSubmissionsByCourseAndAssignment(int assignmentId, int courseId)
+    {
+      return dbManager.GetSubmissionsByCourseAndAssignment(assignmentId, courseId);
+    }
   }
 }

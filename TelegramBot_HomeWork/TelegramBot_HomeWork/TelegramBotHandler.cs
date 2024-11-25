@@ -108,21 +108,29 @@ namespace TelegramBot
     /// <returns>Задача, представляющая асинхронную операцию отправки или редактирования сообщения.</returns>
     internal static async Task SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
     {
-      if (inlineKeyboardMarkup == null && messageId == null)
+      try
       {
-        await botClient.SendTextMessageAsync(chatId, message);
+        if (inlineKeyboardMarkup == null && messageId == null)
+        {
+          await botClient.SendTextMessageAsync(chatId, message);
+        }
+        else if (inlineKeyboardMarkup == null && messageId.HasValue)
+        {
+          await botClient.EditMessageTextAsync(chatId, messageId.Value, message);
+        }
+        else if (messageId.HasValue)
+        {
+          await botClient.EditMessageTextAsync(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
+        }
+        else
+        {
+          await botClient.SendTextMessageAsync(chatId, message, replyMarkup: inlineKeyboardMarkup);
+        }
       }
-      else if (inlineKeyboardMarkup == null && messageId.HasValue)
+      catch (Exception ex)
       {
-        await botClient.EditMessageTextAsync(chatId, messageId.Value, message);
-      }
-      else if (messageId.HasValue)
-      {
-        await botClient.EditMessageTextAsync(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
-      }
-      else
-      {
-        await botClient.SendTextMessageAsync(chatId, message, replyMarkup: inlineKeyboardMarkup);
+        Console.WriteLine(ex.ToString());
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Произошла системная ошибка! Повторите попытку позже...");
       }
     }
 
@@ -141,6 +149,20 @@ namespace TelegramBot
       {
         buttons.Add(new List<InlineKeyboardButton> { InlineKeyboardButton.WithCallbackData(callbackModel.Name, callbackModel.Command) });
       }
+
+      return new InlineKeyboardMarkup(buttons);
+    }
+
+    /// <summary>
+    /// Возвращает кнопки сообщения по модели данных.
+    /// </summary>
+    /// <param name="data">Модели Callback/</param>
+    /// <returns></returns>
+    internal static InlineKeyboardMarkup GetInlineKeyboardMarkupAsync(CallbackModel callbackModel)
+    {
+
+      List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>();
+      buttons.Add(new List<InlineKeyboardButton> { InlineKeyboardButton.WithCallbackData(callbackModel.Name, callbackModel.Command) });
 
       return new InlineKeyboardMarkup(buttons);
     }

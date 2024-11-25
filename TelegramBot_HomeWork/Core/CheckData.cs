@@ -17,6 +17,5 @@ namespace Core
       dbManager.EnsureDatabaseCreated();
       dbManager.EnsureTablesCreated();
     }
-
   }
 }

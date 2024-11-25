@@ -13,5 +13,15 @@ namespace TelegramBot.Model
     public int HomeWorkId { get; set; }
     public string Link { get; set; }
 
+    public GitHubLink()
+    { 
+    
+    }
+
+    public GitHubLink(int courseId, int homeWorkId)
+    {
+      CourseId = courseId;
+      HomeWorkId = homeWorkId;
+    }
   }
 }

@@ -30,13 +30,13 @@ namespace TelegramBot.Roles.Teacher
     /// <param name="message">Сообщение от пользователя.</param>
     /// <param name="dbManager">Менеджер базы данных.</param>
     /// <returns>Ответ на текущий шаг регистрации.</returns>
-    public async Task ProcessCreateStepAsync(ITelegramBotClient botClient, long chatId, string message)
+    internal async Task ProcessCreateStepAsync(ITelegramBotClient botClient, long chatId, string message)
     {
       switch (_assignment.GetStep())
       {
         case CreateHomeworkStep.Start:
           {
-            var course = CommonCourseModel.GetAllCourses();
+            var course = CommonCourseModel.GetCourses();
             List<CallbackModel> callbacks = new List<CallbackModel>();
             foreach (var callback in course)
             {
@@ -54,7 +54,7 @@ namespace TelegramBot.Roles.Teacher
             var courseData = message.Split('_');
             if (int.TryParse(courseData.Last(), out int courseId))
             {
-              var nameCourse = CommonCourseModel.GetNameCourse(courseId);
+              var nameCourse = CommonCourseModel.GetCourseNameById(courseId);
               _assignment.CourseId = courseId;
               _assignment.SetStep(CreateHomeworkStep.Name);
               await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы выбрали курс \"{nameCourse}\". Теперь введите название домашней работы:");
@@ -122,19 +122,19 @@ namespace TelegramBot.Roles.Teacher
     }
     private async Task NewHomeworkAsync(Assignment request, ITelegramBotClient botClient, long chatId)
     {
-      CommonHomeWork.AddHomeWork(request);
-      Teacher.assigments.Remove(chatId);
-      var students = CommonUserModel.GetAllStudents();
+      CommonHomeWork.CreateAssignment(request);
+      Teacher.assignments.Remove(chatId);
+      var students = CommonUserModel.GetStudents();
       foreach (var student in students)
       {
         Submission submission = new Submission()
         {
           AssignmentId = request.AssignmentId,
-          StudentId = student.UserId,
+          StudentId = student.TelegramChatId,
           Status = Submission.StatusWork.Unfulfilled,
           CourseId = request.CourseId,
         };
-        CommonSubmission.AddSubmission(submission);
+        CommonSubmission.CreateSubmission(submission);
       }
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Создана новая домашняя работа  {request.Title}");
     }

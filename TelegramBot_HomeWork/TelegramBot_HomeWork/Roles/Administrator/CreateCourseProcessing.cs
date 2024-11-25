@@ -35,7 +35,7 @@ namespace TelegramBot.Roles.Administrator
           {
             string messageData = "Отлично. Для начала, выберите преподавателя, который будет вести курсы:";
             List<CallbackModel> callbackModels = new List<CallbackModel>();
-            var teachers = CommonUserModel.GetAllTeachers();
+            var teachers = CommonUserModel.GetTeachers();
             if (teachers.Count == 0)
             {
               await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"К сожалению, вы не можете создать курс без преподавателя. Добавьте преподавателя и попробуйте попытку снова", null, messageId);
@@ -58,7 +58,7 @@ namespace TelegramBot.Roles.Administrator
             {
               course.TeacherId = teacherDataId;
               course.SetStep(CreateStep.Name);
-              var teacher = CommonUserModel.GetAllTeachers().ToList().First();
+              var teacher = CommonUserModel.GetTeachers().ToList().First();
               await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Вы выбрали преподавателя {teacher.LastName} {teacher.FirstName}. Теперь введите название курса:", null, messageId);
               return;
             }
@@ -85,7 +85,7 @@ namespace TelegramBot.Roles.Administrator
 
     private async Task NewCourseAsync(Course course, ITelegramBotClient botClient, long chatId)
     {
-      CommonCourseModel.AddCourse(course);
+      CommonCourseModel.CreateNewCourse(course);
       Administrator.course.Remove(chatId);
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Создан новый курс {course.CourseName}");
     }

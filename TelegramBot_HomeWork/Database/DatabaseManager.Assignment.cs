@@ -121,5 +121,38 @@ namespace Database
       Logger.LogInfo($"Получено {assignments.Count} заданий для курса с CourseId {courseId}.");
       return assignments;
     }
+
+    /// <summary>
+    /// Возвращает домашнюю работу по уникальному идентификатору.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <param name="homeId">Идентификатор задания.</param>
+    /// <returns>Модель задания.</returns>
+    public Assignment? GetAssignmentById(int courseId, int homeId)
+    {
+      using var connection = new SQLiteConnection(_connectionString);
+      connection.Open();
+
+      string query = "SELECT AssignmentId, CourseId, Title, Description, DueDate FROM Assignments WHERE CourseId = @CourseId AND AssignmentId = @HomeId";
+      using var command = new SQLiteCommand(query, connection);
+      command.Parameters.AddWithValue("@CourseId", courseId);
+      command.Parameters.AddWithValue("@HomeId", homeId);
+
+      using var reader = command.ExecuteReader();
+
+      if (reader.Read())
+      {
+        return new Assignment
+        {
+          AssignmentId = Convert.ToInt32(reader["AssignmentId"]),
+          CourseId = Convert.ToInt32(reader["CourseId"]),
+          Title = reader["Title"].ToString(),
+          Description = reader["Description"].ToString(),
+          DueDate = reader["DueDate"] != DBNull.Value ? DateTime.Parse(reader["DueDate"].ToString()) : (DateTime?)null
+        };
+      }
+
+      return null;
+    }
   }
 }

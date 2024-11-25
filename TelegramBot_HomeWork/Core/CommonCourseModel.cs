@@ -3,9 +3,6 @@ using DataContracts.Data;
 using DataContracts.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core
 {
@@ -14,11 +11,10 @@ namespace Core
     static DatabaseManager dbManager = new DatabaseManager(ApplicationData.ConfigApp.DatabaseConnectionString);
 
     /// <summary>
-    /// Возвращает все курсы.
+    /// Получает список всех курсов из базы данных.
     /// </summary>
-    /// <param name="idUser"></param>
-    /// <returns></returns>
-    public static List<Course> GetAllCourses()
+    /// <returns>Список всех курсов.</returns>
+    public static List<Course> GetCourses()
     {
       return dbManager.GetAllCourses();
     }
@@ -26,27 +22,44 @@ namespace Core
     /// <summary>
     /// Возвращает все курсы пользователя.
     /// </summary>
-    /// <param name="idUser"></param>
-    /// <returns></returns>
-    public static List<Course> GetAllUserCourses(int idUser)
+    /// <param name="idUser">Идентификатор пользователя.</param>
+    /// <returns>Список курсов пользователя.</returns>
+    public static List<Course> GetUserCourses(long idUser)
     {
-      var userCourses = dbManager.GetAllUserCourses().Where(x => x.UserId == idUser).ToList();
-      var courseIds = userCourses.Select(uc => uc.CourseId).ToList();
-      var courses = dbManager.GetAllCourses().Where(c => courseIds.Contains(c.CourseId)).ToList();
-
-      return courses;
+      return dbManager.GetAllUserCoursesByUserId(idUser);
     }
 
-    public static string GetNameCourse(int courseId)
+    /// <summary>
+    /// Возвращает название курса по заданному идентификатору.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <returns>Название курса.</returns>
+    public static string GetCourseNameById(int courseId)
     {
-      var data = GetAllCourses().Where(x=> x.CourseId == courseId).First() as Course;
-      return data.CourseName;
+      return dbManager.GetCourseNameById(courseId);
     }
 
-    public static void AddCourse(Course course)
-    { 
-      dbManager.CreateCourse(course); 
+    /// <summary>
+    /// Добавляет новый курс в базу данных.
+    /// </summary>
+    /// <param name="course">Объект курса для добавления.</param>
+    public static void CreateNewCourse(Course course)
+    {
+      dbManager.CreateCourse(course);
     }
 
+    /// <summary>
+    /// Записывает пользователя на указанный курс.
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <param name="courseId">Идентификатор курса.</param>
+    public static void EnrollUserToCourse(long userId, int courseId)
+    {
+      UserCourse userCourse = new UserCourse();
+      userCourse.UserId = userId;
+      userCourse.CourseId = courseId;
+
+      dbManager.CreateUserCourse(userCourse);
+    }
   }
 }
