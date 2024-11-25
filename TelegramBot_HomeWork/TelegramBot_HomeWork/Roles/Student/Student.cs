@@ -117,16 +117,22 @@ namespace TelegramBot.Roles.Student
     /// </summary>
     private async Task CheckStatusHomeWork(ITelegramBotClient botClient, long chatId, string callbackData, int messageId)
     {
-      StatusWork statusWork = callbackData switch
+      try
       {
-        "/homeWork_unchecked" => StatusWork.Unchecked,
-        "/homeWork_checked" => StatusWork.Checked,
-        "/homeWork_needsRevision" => StatusWork.NeedsRevision,
-        "/homeWork_unfulfilled" => StatusWork.Unfulfilled,
-        _ => throw new NotImplementedException(),
-      };
-
-      await DisplayHomeWorkStatuses(botClient, chatId, messageId, statusWork, chatId);
+        StatusWork statusWork = callbackData switch
+        {
+          "/homeWork_unchecked" => StatusWork.Unchecked,
+          "/homeWork_checked" => StatusWork.Checked,
+          "/homeWork_needsRevision" => StatusWork.NeedsRevision,
+          "/homeWork_unfulfilled" => StatusWork.Unfulfilled,
+          _ => throw new NotImplementedException(),
+        };
+        await DisplayHomeWorkStatuses(botClient, chatId, messageId, statusWork, chatId);
+      }
+      catch(NotImplementedException ex)
+      {
+        Logger.LogError($"Неизвестная команда: \"{callbackData}\" от пользователя: \"{chatId}\"");
+      }
     }
 
     /// <summary>

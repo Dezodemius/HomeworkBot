@@ -98,6 +98,12 @@ namespace TelegramBot.Roles.Teacher
       {
         await ViewHomeWorkProcessing.ViewAssigment(botClient, chatId, callbackData, messageId);
       }
+      else if (callbackData == "/start")
+      {
+        ViewHomeWorkProcessing.teacherStep.Remove(chatId);
+        await ShowTeacherOptions(botClient, chatId);
+        await botClient.DeleteMessageAsync(chatId, messageId);
+      }
     }
 
     /// <summary>

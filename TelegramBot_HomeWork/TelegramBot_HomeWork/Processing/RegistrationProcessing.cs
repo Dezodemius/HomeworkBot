@@ -216,7 +216,7 @@ namespace TelegramBot.Processing
       }
 
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Студент {user.LastName} {user.FirstName} принят в курс \"{courseName}\"", null, messageId);
-      await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{courseName}\" успешно принята!");
+      await TelegramBotHandler.SendMessageAsync(botClient, user.TelegramChatId, $"Ваша заявка на вступление в курс \"{courseName}\" успешно принята!", TelegramBotHandler.GetInlineKeyboardMarkupAsync(new CallbackModel("Начать","/start")));
     }
 
     /// <summary>

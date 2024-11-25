@@ -52,7 +52,7 @@ namespace TelegramBot.Processing
           };
 
           var inlineKeyboardMarkup = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Ошибка: Данные пользователя не найдены!", inlineKeyboardMarkup);
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Добро пожаловать! Зарегестрируйтесь в системе", inlineKeyboardMarkup);
         }
         else
         {

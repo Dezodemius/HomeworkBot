@@ -26,9 +26,9 @@ namespace TelegramBot.Roles.Administrator
           {
             var roleNames = new Dictionary<UserRole, string>
             {
-                { UserRole.Administrator, "Администратор" },
-                { UserRole.Student, "Студент" },
-                { UserRole.Teacher, "Преподаватель" }
+              { UserRole.Administrator, "Администратор" },
+              { UserRole.Student, "Студент" },
+              { UserRole.Teacher, "Преподаватель" }
             };
 
             var nameRole = Enum.GetValues(typeof(UserRole));
@@ -51,6 +51,7 @@ namespace TelegramBot.Roles.Administrator
 
               CommonUserModel.UpdateUser(_user);
               await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Роль пользователя {_user.LastName} {_user.FirstName} изменена на {_user.Role}");
+              await TelegramBotHandler.SendMessageAsync(botClient, _user.TelegramChatId, $"Ваша роль изменена на {_user.Role}", TelegramBotHandler.GetInlineKeyboardMarkupAsync(new CallbackModel("Опробовать новые функции", "/start")));
               Administrator.changeUserRole.Remove(chatId);
             }
             else
