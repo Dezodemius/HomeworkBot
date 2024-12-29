@@ -64,6 +64,9 @@ namespace HomeWorkTelegramBot.Models
     /// </summary>
     public DateOnly BirthDate { get; set; }
 
+    /// <summary>
+    /// Роль пользователя.
+    /// </summary>
     public Role UserRole { get; set; }
   }
 }

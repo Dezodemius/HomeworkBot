@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 
 namespace HomeWorkTelegramBot.Bot.Function
@@ -21,12 +22,12 @@ namespace HomeWorkTelegramBot.Bot.Function
     /// Обрабатывает входящие сообщения.
     /// </summary>
     /// <param name="message">Сообщение для обработки.</param>
-    void HandleMessage(Message message);
+    void HandleMessage(ITelegramBotClient botClient, Message message);
 
     /// <summary>
     /// Обрабатывает входящие запросы.
     /// </summary>
     /// <param name="request">Запрос для обработки.</param>
-    void HandleCallback(CallbackQuery callbackQuery);
+    void HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery);
   }
 }
