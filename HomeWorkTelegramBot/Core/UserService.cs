@@ -47,6 +47,23 @@ namespace HomeWorkTelegramBot.Core
       return exists;
     }
 
-
+    /// <summary>
+    /// Возвращает пользователя по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Объект User или null, если пользователь не найден.</returns>
+    public static User GetUserByChatId(long chatId)
+    {
+      var user = userRepository.GetUserByChatId(chatId);
+      if (user != null)
+      {
+        LogInformation($"Найден пользователь с ChatId {chatId}");
+      }
+      else
+      {
+        LogWarning($"Пользователь с ChatId {chatId} не найден.");
+      }
+      return user;
+    }
   }
 }

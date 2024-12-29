@@ -34,7 +34,7 @@ namespace HomeWorkTelegramBot.DataBase
     /// <summary>
     /// Таблица курсов.
     /// </summary>
-    public DbSet<CourseEnrollment> CourseEnrollment { get; set; }
+    public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
 
     /// <summary>
     /// Таблица регистрации пользователей.
@@ -81,7 +81,7 @@ namespace HomeWorkTelegramBot.DataBase
         {
           LogInformation("Подключение к базе данных успешно.");
 
-          var tablesExist = Answers.Any() || Users.Any() || TaskWorks.Any() || Courses.Any() || CourseEnrollment.Any();
+          var tablesExist = Answers.Any() || Users.Any() || TaskWorks.Any() || Courses.Any() || CourseEnrollments.Any();
 
           if (tablesExist)
           {

@@ -8,6 +8,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot;
 using static HomeWorkTelegramBot.Config.Logger;
 using Telegram.Bot.Types.ReplyMarkups;
+using HomeWorkTelegramBot.Config;
 
 namespace HomeWorkTelegramBot.Bot.Function
 {
@@ -243,10 +244,33 @@ namespace HomeWorkTelegramBot.Bot.Function
       {
         UserRegistrationService.AddUserRegistration(user);
         LogInformation($"Регистрация завершена для пользователя с ChatId {chatId}");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Регистрация завершена. Спасибо!");
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Регистрация завершена. Ожидайте подтверждение от администратора!");
         _registrationData.Remove(chatId);
         _userSteps.Remove(chatId);
+        await SendRegistrationToAdmin(botClient, user);
       }
+    }
+
+    /// <summary>
+    /// Отправляет информацию о пользователе администратору для подтверждения.
+    /// </summary>
+    static private async Task SendRegistrationToAdmin(ITelegramBotClient botClient, UserRegistration user)
+    {
+      long adminChatId = ApplicationData.ConfigApp.AdminId;
+
+      string userInfo = $"Новая регистрация:\n" +
+                        $"Имя: {user.Name}\n" +
+                        $"Фамилия: {user.Surname}\n" +
+                        $"Отчество: {user.Lastname}\n" +
+                        $"Дата рождения: {user.BirthDate}\n" +
+                        $"Email: {user.Email}\n" +
+                        $"Курс: {user.CourseId}";
+
+      List<CallbackModel> callbacks = new List<CallbackModel>();
+      callbacks.Add(new CallbackModel("Принять", $"/approve_{user.ChatId}"));
+      callbacks.Add(new CallbackModel("Отказать", $"/reject_{user.ChatId}"));
+
+      await TelegramBotHandler.SendMessageAsync(botClient, adminChatId, userInfo, TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks));
     }
   }
 }

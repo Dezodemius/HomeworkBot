@@ -19,7 +19,21 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
 
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
-      throw new NotImplementedException();
+      var commandHandlers = new Dictionary<string, Func<Task>>
+      {
+        { "/approve_", async () => await new NewUser().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/reject_", async () => await new NewUser().HandleCallbackQueryAsync(botClient, callbackQuery) },
+      };
+
+      foreach (var command in commandHandlers.Keys)
+      {
+        if (callbackQuery.Data.StartsWith(command))
+        {
+          await commandHandlers[command]();
+          return;
+        }
+      }
+
     }
 
     public async Task HandleStartButton()

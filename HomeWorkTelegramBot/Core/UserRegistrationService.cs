@@ -47,5 +47,24 @@ namespace HomeWorkTelegramBot.Core
         throw;
       }
     }
+
+    /// <summary>
+    /// Возвращает запись о регистрации пользователя по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Объект UserRegistration или null, если запись не найдена.</returns>
+    public static UserRegistration GetUserRegistrationByChatId(long chatId)
+    {
+      var registration = registrationRepository.GetUserRegistrationByChatId(chatId);
+      if (registration != null)
+      {
+        LogInformation($"Найдена регистрация пользователя с ChatId {chatId}");
+      }
+      else
+      {
+        LogWarning($"Регистрация пользователя с ChatId {chatId} не найдена.");
+      }
+      return registration;
+    }
   }
 }

@@ -36,5 +36,15 @@ namespace HomeWorkTelegramBot.DataBase
     {
       return ApplicationData.DbContext.Users.Any(u => u.ChatId == chatId);
     }
+
+    /// <summary>
+    /// Возвращает пользователя по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Объект User или null, если пользователь не найден.</returns>
+    public User GetUserByChatId(long chatId)
+    {
+      return ApplicationData.DbContext.Users.FirstOrDefault(u => u.ChatId == chatId);
+    }
   }
 }

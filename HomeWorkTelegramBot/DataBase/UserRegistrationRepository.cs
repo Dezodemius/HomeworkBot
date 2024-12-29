@@ -1,10 +1,6 @@
 ﻿using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HomeWorkTelegramBot.DataBase
 {
@@ -50,6 +46,16 @@ namespace HomeWorkTelegramBot.DataBase
       {
         return false;
       }
+    }
+
+    /// <summary>
+    /// Возвращает запись о регистрации пользователя по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Объект UserRegistration или null, если запись не найдена.</returns>
+    public UserRegistration GetUserRegistrationByChatId(long chatId)
+    {
+      return ApplicationData.DbContext.UserRegistrations.FirstOrDefault(r => r.ChatId == chatId);
     }
   }
 }
