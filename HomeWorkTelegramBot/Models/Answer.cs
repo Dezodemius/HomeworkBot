@@ -54,6 +54,11 @@ namespace HomeWorkTelegramBot.Models
     public int TaskId { get; set; }
 
     /// <summary>
+    /// Идентификатор чата пользователя, который дал ответ на задание.
+    /// </summary>
+    public long UserId { get; set; }
+
+    /// <summary>
     /// Дата и время, когда был дан ответ.
     /// </summary>
     public DateTime Date { get; set; }

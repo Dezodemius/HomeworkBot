@@ -111,6 +111,7 @@ namespace HomeWorkTelegramBot
         .RuleFor(a => a.AnswerText, f => f.Lorem.Sentence())
         .RuleFor(a => a.CourseId, f => f.Random.Int(1, 5))
         .RuleFor(a => a.TaskId, f => f.Random.Int(1, 20))
+        .RuleFor(a => a.UserId, f => BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 0))
         .RuleFor(a => a.Date, f => f.Date.Recent())
         .RuleFor(a => a.Status, f => f.PickRandom<Answer.TaskStatus>());
 

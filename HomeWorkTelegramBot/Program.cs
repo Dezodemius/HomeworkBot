@@ -13,9 +13,9 @@ namespace HomeWorkTelegramBot
       try
       {
         var config = ApplicationData.ConfigApp;
-        LogInformation($"Строка подключения к базе данных: {config.DataPath}");
-        LogInformation($"Токен бота: {config.BotToken}");
-        LogInformation($"ID администратора: {config.AdminId}");
+        //LogInformation($"Строка подключения к базе данных: {config.DataPath}");
+        //LogInformation($"Токен бота: {config.BotToken}");
+        //LogInformation($"ID администратора: {config.AdminId}");
 
         using var dbContext = new ApplicationDbContext();
         ApplicationData.DbContext = dbContext;
@@ -23,9 +23,9 @@ namespace HomeWorkTelegramBot
         // dbContext.DeleteDatabase();
         dbContext.CheckDatabaseAndTables();
 
-        // var seeder = new DataSeeder(dbContext);
-        // seeder.SeedData();
-        // LogInformation("База данных заполнена тестовыми данными.");
+         var seeder = new DataSeeder(dbContext);
+        seeder.SeedData();
+        LogInformation("База данных заполнена тестовыми данными.");
 
         var botHandler = new TelegramBotHandler(config.BotToken);
         await botHandler.StartBotAsync();
