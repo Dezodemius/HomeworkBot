@@ -17,6 +17,11 @@ namespace HomeWorkTelegramBot.Models
     public int Id { get; set; }
 
     /// <summary>
+    /// Уникальный идентификатор курса.
+    /// </summary>
+    public long TeacherId { get; set; }
+
+    /// <summary>
     /// Название курса.
     /// </summary>
     public string Name { get; set; }

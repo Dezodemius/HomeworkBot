@@ -14,5 +14,18 @@ namespace HomeWorkTelegramBot.DataBase
       ApplicationData.DbContext.Users.Add(user);
       ApplicationData.DbContext.SaveChanges();
     }
+
+    /// <summary>
+    /// Возвращает роль пользователя по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Роль пользователя или null, если пользователь не найден.</returns>
+    public User.Role? GetUserRoleByChatId(long chatId)
+    {
+      var user = ApplicationData.DbContext.Users
+                  .FirstOrDefault(u => u.ChatId == chatId);
+      return user?.UserRole;
+    }
+
   }
 }
