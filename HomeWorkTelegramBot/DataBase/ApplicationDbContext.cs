@@ -34,7 +34,12 @@ namespace HomeWorkTelegramBot.DataBase
     /// <summary>
     /// Таблица курсов.
     /// </summary>
-    public DbSet<CourseEnrollment> CourseEnrollment { get; set; }
+    public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+
+    /// <summary>
+    /// Таблица регистрации пользователей.
+    /// </summary>
+    public DbSet<UserRegistration> UserRegistrations { get; set; }
 
     /// <summary>
     /// Настраивает подключение к базе данных.
@@ -76,7 +81,7 @@ namespace HomeWorkTelegramBot.DataBase
         {
           LogInformation("Подключение к базе данных успешно.");
 
-          var tablesExist = Answers.Any() || Users.Any() || TaskWorks.Any() || Courses.Any() || CourseEnrollment.Any();
+          var tablesExist = Answers.Any() || Users.Any() || TaskWorks.Any() || Courses.Any() || CourseEnrollments.Any();
 
           if (tablesExist)
           {
@@ -121,6 +126,16 @@ namespace HomeWorkTelegramBot.DataBase
         LogException(ex);
         throw;
       }
+    }
+
+    /// <summary>
+    /// Проверяет, есть ли данные в таблице для указанного типа.
+    /// </summary>
+    /// <typeparam name="T">Тип сущности для проверки.</typeparam>
+    /// <returns>True, если в таблице есть данные, иначе false.</returns>
+    static public bool HasData<T>() where T : class
+    {
+      return new ApplicationDbContext().Set<T>().Any();
     }
   }
 }

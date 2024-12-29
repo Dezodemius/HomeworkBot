@@ -20,12 +20,12 @@ namespace HomeWorkTelegramBot
         using var dbContext = new ApplicationDbContext();
         ApplicationData.DbContext = dbContext;
 
-        // dbContext.DeleteDatabase();
+        dbContext.DeleteDatabase();
         dbContext.CheckDatabaseAndTables();
 
-        // var seeder = new DataSeeder(dbContext);
-        // seeder.SeedData();
-        // LogInformation("База данных заполнена тестовыми данными.");
+        var seeder = new DataSeeder(dbContext);
+        seeder.SeedData();
+        LogInformation("База данных заполнена тестовыми данными.");
 
         var botHandler = new TelegramBotHandler(config.BotToken);
         await botHandler.StartBotAsync();

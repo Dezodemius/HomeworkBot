@@ -10,17 +10,17 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
 {
   internal class StudentHandler : IRoleHandler
   {
-    public void HandleMessage(ITelegramBotClient botClient, Message message)
+    public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message)
     {
       throw new NotImplementedException();
     }
 
-    public void HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+    public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       throw new NotImplementedException();
     }
 
-    public void HandleStartButton()
+    public async Task HandleStartButton()
     {
       throw new NotImplementedException();
     }
