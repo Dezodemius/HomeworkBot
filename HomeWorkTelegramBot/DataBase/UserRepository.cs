@@ -27,5 +27,14 @@ namespace HomeWorkTelegramBot.DataBase
       return user?.UserRole;
     }
 
+    /// <summary>
+    /// Проверяет, существует ли пользователь с данным ChatId.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>True, если пользователь существует, иначе false.</returns>
+    public bool UserExists(long chatId)
+    {
+      return ApplicationData.DbContext.Users.Any(u => u.ChatId == chatId);
+    }
   }
 }

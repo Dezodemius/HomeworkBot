@@ -32,6 +32,11 @@ namespace HomeWorkTelegramBot.DataBase
     public DbSet<Courses> Courses { get; set; }
 
     /// <summary>
+    /// Таблица курсов.
+    /// </summary>
+    public DbSet<CourseEnrollment> CourseEnrollment { get; set; }
+
+    /// <summary>
     /// Настраивает подключение к базе данных.
     /// </summary>
     /// <param name="optionsBuilder">Параметры конфигурации.</param>
@@ -71,7 +76,8 @@ namespace HomeWorkTelegramBot.DataBase
         {
           LogInformation("Подключение к базе данных успешно.");
 
-          var tablesExist = Answers.Any() || Users.Any() || TaskWorks.Any() || Courses.Any();
+          var tablesExist = Answers.Any() || Users.Any() || TaskWorks.Any() || Courses.Any() || CourseEnrollment.Any();
+
           if (tablesExist)
           {
             LogInformation("Все таблицы существуют и доступны.");

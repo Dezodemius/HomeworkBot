@@ -33,5 +33,17 @@ namespace HomeWorkTelegramBot.Core
 
       return role;
     }
+
+    /// <summary>
+    /// Проверяет, существует ли пользователь с данным ChatId.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>True, если пользователь существует, иначе false.</returns>
+    public static bool UserExists(long chatId)
+    {
+      var exists = userRepository.UserExists(chatId);
+      LogInformation($"Проверка существования пользователя с ChatId {chatId}: {exists}");
+      return exists;
+    }
   }
 }

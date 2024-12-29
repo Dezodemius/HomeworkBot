@@ -1,16 +1,9 @@
-﻿using HomeWorkTelegramBot.Config;
-using Microsoft.AspNetCore.Components.Forms;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using Telegram.Bot.Types;
-using Telegram.Bot;
-using static HomeWorkTelegramBot.Config.Logger;
+﻿using HomeWorkTelegramBot.Bot.Function.Administrator;
+using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Core;
-using HomeWorkTelegramBot.Bot.Function.Administrator;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot.Bot.Function.Processing
 {
@@ -30,7 +23,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Processing
 
       if (chatId == ApplicationData.ConfigApp.AdminId)
       {
-        new AdministratorHandler().HandleMessage(message);
+        new AdministratorHandler().HandleMessage(botClient, message);
         return;
       }
 
@@ -41,12 +34,15 @@ namespace HomeWorkTelegramBot.Bot.Function.Processing
 
         if (handler != null)
         {
-          handler.HandleMessage(message);
+          handler.HandleMessage(botClient, message);
           LogInformation($"Сообщение обработано для роли: {userRole}");
         }
         else
         {
-          LogWarning($"Обработчик для роли {userRole} не найден.");
+          if (!UserService.UserExists(chatId))
+          {
+            await TelegramBotHandler.SendMessageAsync(botClient, chatId, "У вас нет доступа к боту!");
+          }
         }
       }
       catch (Exception ex)
