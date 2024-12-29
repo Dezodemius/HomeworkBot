@@ -27,6 +27,6 @@ namespace HomeWorkTelegramBot.Bot.Function
     /// Обрабатывает входящие запросы.
     /// </summary>
     /// <param name="request">Запрос для обработки.</param>
-    void HandleCallback(string request);
+    void HandleCallback(CallbackQuery callbackQuery);
   }
 }

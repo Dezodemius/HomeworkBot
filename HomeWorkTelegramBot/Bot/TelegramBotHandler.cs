@@ -1,4 +1,5 @@
-﻿using HomeWorkTelegramBot.Config;
+﻿using HomeWorkTelegramBot.Bot.Function.Processing;
+using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Utils;
 using System;
 using System.Collections.Generic;
@@ -70,45 +71,6 @@ namespace HomeWorkTelegramBot.Bot
       else if (update.Type == UpdateType.CallbackQuery)
       {
         await CallbackProcessing.HandleCallbackQueryAsync(botClient, update.CallbackQuery, cancellationToken);
-      }
-    }
-
-    static internal async Task StartMessageAsync(ITelegramBotClient botClient, long chatId, int messageId = -1)
-    {
-      var greeting = TimeGreeting.GetGreeting();
-      StringBuilder sb = new StringBuilder();
-      sb.AppendLine($"{greeting}. Выберите функцию:");
-      sb.AppendLine("/help - Помощь по командам.");
-
-      sb.AppendLine("\r\nПоиск по данным:");
-      sb.AppendLine("/search - Поиск работы по параметрам.");
-
-      sb.AppendLine("\r\nРабота с данными клиента:");
-      sb.AppendLine("/select - Выбор пользователя для просмотра работы.");
-      sb.AppendLine("/addClient - Добавление нового клиента.");
-      sb.AppendLine("/deleteClient - Удаление клиента.");
-      sb.AppendLine("/editClient - Редактирование данных клиента.");
-
-      sb.AppendLine("\r\nРабота с данными авто:");
-      sb.AppendLine("/addCar - Добавление нового автомобиля.");
-      sb.AppendLine("/deleteCar - Удаление автомобиля.");
-      sb.AppendLine("/editCar - Редактирование данных автомобиля.");
-
-      if (chatId == ApplicationData.ConfigApp.AdminId)
-      {
-        sb.AppendLine("\r\nФункции администратора:");
-        sb.AppendLine("/change - Смена администратора.");
-        sb.AppendLine("/addUser- Добавление пользователя.");
-        sb.AppendLine("/log- получает логи.");
-      }
-
-      if (messageId != -1)
-      {
-        await SendMessageAsync(botClient, chatId, sb.ToString(), null, messageId);
-      }
-      else
-      {
-        await SendMessageAsync(botClient, chatId, sb.ToString());
       }
     }
 

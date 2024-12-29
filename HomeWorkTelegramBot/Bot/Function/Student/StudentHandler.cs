@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Telegram.Bot.Types;
 
 namespace HomeWorkTelegramBot.Bot.Function.Student
 {
   internal class StudentHandler : IRoleHandler
   {
-    public void HandleMessage(string message)
+    public void HandleMessage(Message message)
     {
       throw new NotImplementedException();
     }
 
-    public void HandleCallback(string request)
+    public void HandleCallback(CallbackQuery callbackQuery)
     {
       throw new NotImplementedException();
     }

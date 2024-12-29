@@ -9,7 +9,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
   internal class TeacherHandler : IRoleHandler
   {
-    public void HandleMessage(string message)
+    public void HandleMessage(Message message)
     {
       throw new NotImplementedException();
     }
