@@ -23,7 +23,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Processing
 
       if (chatId == ApplicationData.ConfigApp.AdminId)
       {
-        new AdministratorHandler().HandleMessage(botClient, message);
+        new AdministratorHandler().HandleMessageAsync(botClient, message);
         return;
       }
 
@@ -34,15 +34,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Processing
 
         if (handler != null)
         {
-          handler.HandleMessage(botClient, message);
+          handler.HandleMessageAsync(botClient, message);
           LogInformation($"Сообщение обработано для роли: {userRole}");
         }
         else
         {
-          if (!UserService.UserExists(chatId))
-          {
-            await TelegramBotHandler.SendMessageAsync(botClient, chatId, "У вас нет доступа к боту!");
-          }
+          LogWarning($"Обработчик для роли {userRole} не найден.");
         }
       }
       catch (Exception ex)

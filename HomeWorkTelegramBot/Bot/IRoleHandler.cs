@@ -16,18 +16,18 @@ namespace HomeWorkTelegramBot.Bot.Function
     /// <summary>
     /// Обрабатывает нажатие кнопки "Старт".
     /// </summary>
-    void HandleStartButton();
+    Task HandleStartButton();
 
     /// <summary>
     /// Обрабатывает входящие сообщения.
     /// </summary>
     /// <param name="message">Сообщение для обработки.</param>
-    void HandleMessage(ITelegramBotClient botClient, Message message);
+    Task HandleMessageAsync(ITelegramBotClient botClient, Message message);
 
     /// <summary>
     /// Обрабатывает входящие запросы.
     /// </summary>
     /// <param name="request">Запрос для обработки.</param>
-    void HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery);
+    Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery);
   }
 }

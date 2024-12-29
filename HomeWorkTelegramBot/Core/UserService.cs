@@ -29,6 +29,7 @@ namespace HomeWorkTelegramBot.Core
       else
       {
         LogWarning($"Пользователь с ChatId {chatId} не найден.");
+        role = User.Role.UnregisteredUser;
       }
 
       return role;
@@ -45,5 +46,7 @@ namespace HomeWorkTelegramBot.Core
       LogInformation($"Проверка существования пользователя с ChatId {chatId}: {exists}");
       return exists;
     }
+
+
   }
 }
