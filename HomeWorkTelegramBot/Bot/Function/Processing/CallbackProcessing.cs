@@ -22,7 +22,7 @@ namespace HomeWorkTelegramBot.Bot
 
       if (chatId == ApplicationData.ConfigApp.AdminId)
       {
-        new AdministratorHandler().HandleCallback(messageText);
+        new AdministratorHandler().HandleCallback(callbackQuery);
         return;
       }
 
