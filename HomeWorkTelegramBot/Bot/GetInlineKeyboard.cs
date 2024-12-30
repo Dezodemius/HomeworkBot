@@ -1,9 +1,4 @@
 ﻿using HomeWorkTelegramBot.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace HomeWorkTelegramBot.Bot
@@ -37,9 +32,26 @@ namespace HomeWorkTelegramBot.Bot
       List<CallbackModel> callbackModels = new List<CallbackModel>();
       foreach (var user in users)
       {
-        string command = $"/selectuser_{user.Id}";
+        string command = $"/selectuser_{user.ChatId}";
         var studentName = $"{user.Surname} {user.Name}";
         callbackModels.Add(new CallbackModel(studentName, command));
+      }
+
+      return TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+    }
+
+    /// <summary>
+    /// Создает клавиатуру со студентами.
+    /// </summary>
+    /// <param name="tasks">Список студентов курса.</param>
+    /// <returns>Клавиатуру с данными о студентах.</returns>
+    public static InlineKeyboardMarkup GetTaskKeyboard(List<TaskWork> tasks)
+    {
+      List<CallbackModel> callbackModels = new List<CallbackModel>();
+      foreach (var task in tasks)
+      {
+        string command = $"/selecttask_{task.Id}";
+        callbackModels.Add(new CallbackModel(task.Name, command));
       }
 
       return TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);

@@ -53,6 +53,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery);
       }
+      else if (callbackQuery.Data.StartsWith("/selecttask_"))
+      {
+        await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery);
+      }
 
       foreach (var command in commandHandlers.Keys)
       {
