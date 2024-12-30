@@ -20,7 +20,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       throw new NotImplementedException();
     }
 
-    public async Task HandleStartButton()
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
       throw new NotImplementedException();
     }
