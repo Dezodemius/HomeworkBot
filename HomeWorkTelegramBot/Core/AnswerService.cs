@@ -61,6 +61,18 @@ namespace HomeWorkTelegramBot.Core
     }
 
     /// <summary>
+    /// Получает все ответы для указанного пользователя и логирует это действие.
+    /// </summary>
+    /// <param name="userId">Идентификатор чата пользователя.</param>
+    /// <returns>Список ответов для задания.</returns>
+    public static List<Answer> GetAnswersByUserId(long userId)
+    {
+      var answers = answerRepository.GetAnswersByUserId(userId);
+      LogInformation($"Получено {answers.Count} ответов для пользователя с chatId {userId}");
+      return answers;
+    }
+
+    /// <summary>
     /// Получает все ответы и логирует это действие.
     /// </summary>
     /// <returns>Список всех ответов.</returns>

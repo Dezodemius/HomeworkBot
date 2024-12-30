@@ -9,7 +9,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
   {
     public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message)
     {
-      if(CreateTaskWork._creationData.Count != 0)
+      if (CreateTaskWork._creationData.Count != 0)
       {
         await new NewTaskWork().HandleMessageAsync(botClient, message);
       }
@@ -26,9 +26,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         new[]
             {
                 InlineKeyboardButton.WithCallbackData("Посмотреть статусы домашних заданий студента", "/studhwstat"),
+            },
+        new[]
+            {
                 InlineKeyboardButton.WithCallbackData("Посмотреть выполнение домашнего задания", "/hwstatistics"),
             },
-      });
+        });
         await TelegramBotHandler.SendMessageAsync(botClient, message.Chat.Id, sb.ToString(), keyboard);
       }
     }
@@ -42,9 +45,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         { "/hwstatistics", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
       };
 
-      if (CreateTaskWork._creationData != null && callbackQuery.Data.StartsWith("/selectcourse_"))
+      if (CreateTaskWork._creationData.Count != 0 && callbackQuery.Data.StartsWith("/selectcourse_"))
       {
-          await new NewTaskWork().HandleCallback(botClient, callbackQuery);
+        await new NewTaskWork().HandleCallback(botClient, callbackQuery);
+      }
+      else if (callbackQuery.Data.StartsWith("/selectcourse_"))
+      {
+        await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery);
       }
 
       foreach (var command in commandHandlers.Keys)

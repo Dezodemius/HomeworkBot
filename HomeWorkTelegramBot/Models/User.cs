@@ -35,7 +35,7 @@ namespace HomeWorkTelegramBot.Models
     }
 
     /// <summary>
-    /// Идентификатор чата пользователя.
+    /// Идентификатор записи о пользователе.
     /// </summary>
     public long Id { get; set; }
 

@@ -43,6 +43,18 @@ namespace HomeWorkTelegramBot.DataBase
     }
 
     /// <summary>
+    /// Получает все ответы пользователя по идентификатору.
+    /// </summary>
+    /// <param name="userId">Идентификатор ответа.</param>
+    /// <returns>Объект Answer или null, если ответ не найден.</returns>
+    public List<Answer> GetAnswersByUserId(long userId)
+    {
+      return ApplicationData.DbContext.Answers
+        .Where(a => a.UserId == userId)
+        .ToList();
+    }
+
+    /// <summary>
     /// Получает все ответы для указанного задания.
     /// </summary>
     /// <param name="taskId">Идентификатор задания.</param>

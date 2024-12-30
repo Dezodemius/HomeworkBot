@@ -204,26 +204,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       _creationData[chatId] = new TaskWork();
       LogInformation($"Начало создания нового задания преподавателем с ChatId {chatId}");
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
-      var callbackModels = GetCoursesCallbackModels(courses);
-      var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+      var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses);
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard);
-    }
-
-    /// <summary>
-    /// Создает клавиатуру с курсами.
-    /// </summary>
-    /// <param name="courses">Список курсов.</param>
-    /// <returns>Список объектов CallbackModel.</returns>
-    private static List<CallbackModel> GetCoursesCallbackModels(List<Courses> courses)
-    {
-      List<CallbackModel> callbackModels = new List<CallbackModel>();
-      foreach (var course in courses)
-      {
-        string command = $"/selectcourse_{course.Id}";
-        callbackModels.Add(new CallbackModel(course.Name, command));
-      }
-
-      return callbackModels;
     }
   }
 }
