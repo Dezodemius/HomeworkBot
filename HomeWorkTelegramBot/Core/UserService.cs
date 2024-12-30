@@ -29,9 +29,41 @@ namespace HomeWorkTelegramBot.Core
       else
       {
         LogWarning($"Пользователь с ChatId {chatId} не найден.");
+        role = User.Role.UnregisteredUser;
       }
 
       return role;
+    }
+
+    /// <summary>
+    /// Проверяет, существует ли пользователь с данным ChatId.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>True, если пользователь существует, иначе false.</returns>
+    public static bool UserExists(long chatId)
+    {
+      var exists = userRepository.UserExists(chatId);
+      LogInformation($"Проверка существования пользователя с ChatId {chatId}: {exists}");
+      return exists;
+    }
+
+    /// <summary>
+    /// Возвращает пользователя по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Объект User или null, если пользователь не найден.</returns>
+    public static User GetUserByChatId(long chatId)
+    {
+      var user = userRepository.GetUserByChatId(chatId);
+      if (user != null)
+      {
+        LogInformation($"Найден пользователь с ChatId {chatId}");
+      }
+      else
+      {
+        LogWarning($"Пользователь с ChatId {chatId} не найден.");
+      }
+      return user;
     }
   }
 }

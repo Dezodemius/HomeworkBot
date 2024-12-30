@@ -1,16 +1,9 @@
-﻿using HomeWorkTelegramBot.Config;
-using Microsoft.AspNetCore.Components.Forms;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using Telegram.Bot.Types;
-using Telegram.Bot;
-using static HomeWorkTelegramBot.Config.Logger;
+﻿using HomeWorkTelegramBot.Bot.Function.Administrator;
+using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Core;
-using HomeWorkTelegramBot.Bot.Function.Administrator;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot.Bot.Function.Processing
 {
@@ -30,7 +23,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Processing
 
       if (chatId == ApplicationData.ConfigApp.AdminId)
       {
-        new AdministratorHandler().HandleMessage(message);
+        new AdministratorHandler().HandleMessageAsync(botClient, message);
         return;
       }
 
@@ -41,7 +34,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Processing
 
         if (handler != null)
         {
-          handler.HandleMessage(message);
+          handler.HandleMessageAsync(botClient, message);
           LogInformation($"Сообщение обработано для роли: {userRole}");
         }
         else
