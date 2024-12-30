@@ -50,5 +50,16 @@ namespace HomeWorkTelegramBot.DataBase
     {
       return ApplicationData.DbContext.CourseEnrollments.ToList();
     }
+
+    /// <summary>
+    /// Получает все записи о зачислении пользователя на курсы.
+    /// </summary>
+    /// <returns>Список записей о зачислении.</returns>
+    public List<CourseEnrollment> GetAllUserCourseEnrollments(long chatId)
+    {
+      return ApplicationData.DbContext.CourseEnrollments
+        .Where(ce => ce.UserId == chatId)
+        .ToList();
+    }
   }
 }

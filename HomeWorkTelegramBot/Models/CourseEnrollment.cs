@@ -25,6 +25,7 @@ namespace HomeWorkTelegramBot.Models
     /// Идентификатор пользователя.
     /// </summary>
     public long UserId { get; set; }
+
     /// <summary>
     /// Навигационное свойство для курса.
     /// </summary>

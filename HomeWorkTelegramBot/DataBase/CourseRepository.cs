@@ -28,5 +28,17 @@ namespace HomeWorkTelegramBot.DataBase
     {
       return ApplicationData.DbContext.Courses.FirstOrDefault(c => c.Id == courseId);
     }
+
+    /// <summary>
+    /// Получает все курсы, относящиеся к преподавателю по его идентификатору чата.
+    /// </summary>
+    /// <param name="teacherId">Идентификатор чата преподавателя.</param>
+    /// <returns>Список курсов или null, если куры не найдены.</returns>
+    public List<Courses> GetCoursesByTeacherId(long teacherId)
+    {
+      return ApplicationData.DbContext.Courses
+        .Where(c => c.TeacherId == teacherId)
+        .ToList();
+    }
   }
 }

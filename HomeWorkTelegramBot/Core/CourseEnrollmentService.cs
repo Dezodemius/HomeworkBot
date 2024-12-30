@@ -90,5 +90,24 @@ namespace HomeWorkTelegramBot.Core
         throw;
       }
     }
+
+    /// <summary>
+    /// Получает все записи о зачислении пользователя на курсы и логирует это действие.
+    /// </summary>
+    /// <returns>Список записей о зачислении.</returns>
+    public static List<CourseEnrollment> GetAllUserCourseEnrollments(long chatId)
+    {
+      try
+      {
+        var enrollments = enrollmentRepository.GetAllUserCourseEnrollments(chatId);
+        LogInformation($"Получено {enrollments.Count} записей о зачислении.");
+        return enrollments;
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при получении всех записей о зачислении: {ex.Message}");
+        throw;
+      }
+    }
   }
 }

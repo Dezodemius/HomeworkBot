@@ -13,14 +13,14 @@ namespace HomeWorkTelegramBot
       try
       {
         var config = ApplicationData.ConfigApp;
-        //LogInformation($"Строка подключения к базе данных: {config.DataPath}");
-        //LogInformation($"Токен бота: {config.BotToken}");
-        //LogInformation($"ID администратора: {config.AdminId}");
+        LogInformation($"Строка подключения к базе данных: {config.DataPath}");
+        LogInformation($"Токен бота: {config.BotToken}");
+        LogInformation($"ID администратора: {config.AdminId}");
 
         using var dbContext = new ApplicationDbContext();
         ApplicationData.DbContext = dbContext;
 
-        dbContext.DeleteDatabase();
+        //dbContext.DeleteDatabase();
         dbContext.CheckDatabaseAndTables();
 
         var seeder = new DataSeeder(dbContext);
