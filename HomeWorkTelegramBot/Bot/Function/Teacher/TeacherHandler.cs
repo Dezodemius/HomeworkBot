@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using HomeWorkTelegramBot.DataBase;
+using Microsoft.EntityFrameworkCore;
+using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -16,7 +18,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       else
       {
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine("Добро пожаловать в панель преподавателя");
+        sb.AppendLine("Добро пожаловать в панель преподавателя. Выберите действие:");
         var keyboard = new InlineKeyboardMarkup(new[]
         {
         new[]
@@ -38,25 +40,26 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
+      if (callbackQuery.Data.StartsWith("page_"))
+      {
+        int page = int.Parse(callbackQuery.Data.Split('_')[1]);
+        await HandlePagination(botClient, callbackQuery, page);
+        return;
+      }
+
       var commandHandlers = new Dictionary<string, Func<Task>>
       {
         { "/createhw", async () => await new NewTaskWork().HandleCallback(botClient, callbackQuery) },
-        { "/studhwstat", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
-        { "/hwstatistics", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
-      };
+        { "/selectcourse_nt", async () => await new NewTaskWork().HandleCallback(botClient, callbackQuery) },
 
-      if (CreateTaskWork._creationData.Count != 0 && callbackQuery.Data.StartsWith("/selectcourse_"))
-      {
-        await new NewTaskWork().HandleCallback(botClient, callbackQuery);
-      }
-      else if (callbackQuery.Data.StartsWith("/selectcourse_"))
-      {
-        await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery);
-      }
-      else if (callbackQuery.Data.StartsWith("/selecttask_"))
-      {
-        await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery);
-      }
+        { "/studhwstat", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/selectcourse_sd", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/selectuser_", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+
+        { "/hwstatistics", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/selectcourse_tw", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/selecttask_", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+      };
 
       foreach (var command in commandHandlers.Keys)
       {
@@ -65,6 +68,39 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           await commandHandlers[command]();
           return;
         }
+      }
+    }
+
+    public async Task HandlePagination(ITelegramBotClient botClient, CallbackQuery callbackQuery, int page)
+    {
+      var messageText = callbackQuery.Message.Text;
+      InlineKeyboardMarkup newKeyboard = null;
+
+      using (var context = new ApplicationDbContext())
+      {
+        if (messageText.Contains("курс"))
+        {
+          var courses = await context.Courses
+            .Where(c => c.TeacherId == callbackQuery.From.Id)
+            .ToListAsync();
+          string commandText = messageText.Contains("статистика") ? "selectcourse_tw" : "selectcourse_sd";
+          newKeyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, commandText, page);
+        }
+        else if (messageText.Contains("студент"))
+        {
+          var users = await context.Users.ToListAsync();
+          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(users, page);
+        }
+        else if (messageText.Contains("задани"))
+        {
+          var tasks = await context.TaskWorks.ToListAsync();
+          newKeyboard = GetInlineKeyboard.GetTaskKeyboard(tasks, page);
+        }
+      }
+
+      if (newKeyboard != null)
+      {
+        await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.Message.Chat.Id, callbackQuery.Message.Text, newKeyboard, callbackQuery.Message.Id);
       }
     }
 

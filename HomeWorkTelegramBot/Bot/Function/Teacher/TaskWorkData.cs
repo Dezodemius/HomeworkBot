@@ -174,7 +174,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       _taskData[chatId] = new TaskWork();
       LogInformation($"Начало получения статистики выполнения задания преподавателем с ChatId {chatId}");
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
-      var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses);
+      var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, "selectcourse_tw");
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard);
     }
   }

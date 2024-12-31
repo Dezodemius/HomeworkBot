@@ -127,7 +127,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, введите описание задания:");
     }
 
-
     /// <summary>
     /// Завершает создание нового задания.
     /// </summary>
@@ -204,7 +203,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       _creationData[chatId] = new TaskWork();
       LogInformation($"Начало создания нового задания преподавателем с ChatId {chatId}");
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
-      var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses);
+      var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, "selectcourse_nt");
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard);
     }
   }
