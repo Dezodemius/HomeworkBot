@@ -148,12 +148,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     private static string GetMessageData(long chatId, TaskWork task)
     {
       var allStudentAnswers = AnswerService.GetAnswersByTaskId(task.Id);
+      var taskName = TaskWorkService.GetTaskWorkById(task.Id).Name;
       var studentsData = GetTaskStudents(allStudentAnswers);
       if (studentsData.Count > 0)
       {
         var sb = new StringBuilder();
         var status = string.Empty;
-        sb.AppendLine($"Статистика выполнения задания \"{task.Name}\"\n");
+        sb.AppendLine($"Статистика выполнения задания \"{taskName}\"\n");
         foreach (var answerData in studentsData)
         {
           status = allStudentAnswers

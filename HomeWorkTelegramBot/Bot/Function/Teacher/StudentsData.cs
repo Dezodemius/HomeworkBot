@@ -135,7 +135,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _userSteps[chatId] = CreationStep.Completed;
         string messageData = GetMessageData(answer);
 
-        LogInformation($"Студен с chatId {userId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
+        LogInformation($"Студент с chatId {userId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
         await CompleteStudentCheck(botClient, chatId, userId, messageData);
       }
     }

@@ -1,4 +1,6 @@
-﻿using HomeWorkTelegramBot.DataBase;
+﻿using HomeWorkTelegramBot.Core;
+using HomeWorkTelegramBot.DataBase;
+using HomeWorkTelegramBot.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Telegram.Bot;
@@ -10,6 +12,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
   internal class TeacherHandler : IRoleHandler
   {
+    private static int _selectedCourseId = -1;
     public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message)
     {
       if (CreateTaskWork._creationData.Count != 0)
@@ -46,6 +49,15 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         int page = int.Parse(callbackQuery.Data.Split('_')[1]);
         await HandlePagination(botClient, callbackQuery, page);
         return;
+      }
+
+      if (callbackQuery.Data.StartsWith("/selectcourse_"))
+      {
+        string[] parts = callbackQuery.Data.Split('_');
+        if (parts.Length > 2 && int.TryParse(parts[2], out int courseId))
+        {
+          _selectedCourseId = courseId;
+        }
       }
 
       var commandHandlers = new Dictionary<string, Func<Task>>
@@ -88,14 +100,28 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           string commandText = messageText.Contains("статистики") ? "selectcourse_tw" : "selectcourse_sd";
           newKeyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, commandText, page);
         }
+
+        // TODO: студенты и задания должны получаться в соответствии с выбранным курсом
         else if (messageText.Contains("студент"))
         {
-          var users = await context.Users.ToListAsync();
-          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(users, page);
+          var studentsId = CourseEnrollmentService.GetAllUsersCourseEnrollments(_selectedCourseId);
+          var students = new List<Models.User>();
+          foreach (var student in studentsId)
+          {
+            var foundStudent = UserService.GetUserById(student.Id);
+            if (foundStudent != null)
+            {
+              students.Add(foundStudent);
+            }
+          }
+
+          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(students, page);
         }
         else if (messageText.Contains("задание"))
         {
-          var tasks = await context.TaskWorks.ToListAsync();
+          var tasks = await context.TaskWorks
+            .Where(tw => tw.CourseId == _selectedCourseId)
+            .ToListAsync();
           newKeyboard = GetInlineKeyboard.GetTaskKeyboard(tasks, page);
         }
       }
