@@ -21,7 +21,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       await CreateTaskWork.ProcessCreationStep(botClient, message);
     }
 
-    public Task HandleStartButton()
+    public Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
       throw new NotImplementedException();
     }

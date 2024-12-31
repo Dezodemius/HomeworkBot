@@ -36,7 +36,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
 
     }
 
-    public async Task HandleStartButton()
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
       throw new NotImplementedException();
     }

@@ -63,6 +63,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         case CreationStep.TaskSelection:
           await HandleTaskSelection(botClient, chatId, callbackQuery, answer);
           break;
+
+        case CreationStep.Completed:
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Произошла ошибка при просмотре данных о выполнении задания. Повторите попытку позднее.");
+          _taskData.Remove(chatId);
+          _userSteps.Remove(chatId);
+          break;
       }
     }
 
@@ -79,7 +85,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       string data = callbackQuery.Data;
       if (data.StartsWith("/selectcourse_"))
       {
-        int courseId = int.Parse(data.Replace("/selectcourse_", string.Empty));
+        int courseId = int.Parse(data.Replace("/selectcourse_tw_", string.Empty));
         task.CourseId = courseId;
         _userSteps[chatId] = CreationStep.TaskSelection;
         var courseTasks = TaskWorkService.GetTaskWorksByCourseId(courseId);
@@ -108,8 +114,28 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _userSteps[chatId] = CreationStep.Completed;
         string messageData = GetMessageData(chatId, task);
 
+        // TODO: добавить кнопку на главную
         LogInformation($"Студен с chatId {taskId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData);
+        await CompleteStudentCheck(botClient, chatId, taskId, messageData);
+      }
+    }
+
+    /// <summary>
+    /// Завершает создание нового задания.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
+    private static async Task CompleteStudentCheck(ITelegramBotClient botClient, long chatId, int taskId, string messageData)
+    {
+      if (_taskData.TryGetValue(chatId, out var task))
+      {
+        LogInformation($"Получена статистика выполнения задания {taskId} студентами преподавателем с ChatId {chatId}");
+        var callbackModels = new CallbackModel("На главную", "/start");
+        var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard);
+        _taskData.Remove(chatId);
+        _userSteps.Remove(chatId);
       }
     }
 
@@ -123,19 +149,24 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     {
       var allStudentAnswers = AnswerService.GetAnswersByTaskId(task.Id);
       var studentsData = GetTaskStudents(allStudentAnswers);
-      var sb = new StringBuilder();
-      var status = string.Empty;
-      sb.AppendLine($"Статистика выполнения задания \"{task.Name}\"\n");
-      foreach (var answerData in studentsData)
+      if (studentsData.Count > 0)
       {
-        status = allStudentAnswers
-          .FirstOrDefault(a => a.UserId == answerData.Value.ChatId)
-          .Status
-          .ToString();
-        sb.AppendLine($"Студент: {answerData.Value.Surname} {answerData.Value.Name}.\nСтатус: {status}");
+        var sb = new StringBuilder();
+        var status = string.Empty;
+        sb.AppendLine($"Статистика выполнения задания \"{task.Name}\"\n");
+        foreach (var answerData in studentsData)
+        {
+          status = allStudentAnswers
+            .FirstOrDefault(a => a.UserId == answerData.Value.ChatId)
+            .Status
+            .ToString();
+          sb.AppendLine($"Студент: {answerData.Value.Surname} {answerData.Value.Name}.\nСтатус: {status}");
+        }
+
+        return sb.ToString();
       }
 
-      return sb.ToString();
+      return $"Не найдены студенты, записанные на этот курс";
     }
 
     /// <summary>
@@ -146,10 +177,9 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     private static Dictionary<long, Models.User> GetTaskStudents(List<Answer> answers)
     {
       var students = new Dictionary<long, Models.User>();
-      var userRepository = new UserRepository();
       foreach (var answer in answers)
       {
-        var foundStudent = userRepository.GetUserByChatId(answer.UserId);
+        var foundStudent = UserService.GetUserByChatId(answer.UserId);
         if (foundStudent != null)
         {
           if (!students.ContainsKey(foundStudent.ChatId))
@@ -175,7 +205,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       LogInformation($"Начало получения статистики выполнения задания преподавателем с ChatId {chatId}");
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
       var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, "selectcourse_tw");
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard);
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Для получения статистики выполнения задания, пожалуйста, выберите курс:", keyboard);
     }
   }
 }

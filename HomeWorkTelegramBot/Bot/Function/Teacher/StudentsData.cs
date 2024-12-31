@@ -47,7 +47,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
       if (!_userSteps.ContainsKey(chatId))
       {
-        await InitializeGetTasks(botClient, chatId);
+        await InitializeGetCourse(botClient, chatId);
         return;
       }
 
@@ -62,6 +62,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
         case CreationStep.StudentSelection:
           await HandleStudentSelection(botClient, chatId, callbackQuery, answer);
+          break;
+
+        case CreationStep.Completed:
+          TelegramBotHandler.SendMessageAsync(botClient, chatId, "Вы только что просматривали информацию о студентах. Повторите попытку позднее");
+          _answerData.Remove(chatId);
+          _userSteps.Remove(chatId);
           break;
       }
     }
@@ -130,7 +136,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         string messageData = GetMessageData(answer);
 
         LogInformation($"Студен с chatId {userId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
-        await CompleteCreation(botClient, chatId, userId, messageData);
+        await CompleteStudentCheck(botClient, chatId, userId, messageData);
       }
     }
 
@@ -140,7 +146,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
-    private static async Task CompleteCreation(ITelegramBotClient botClient, long chatId, long userId, string messageData)
+    private static async Task CompleteStudentCheck(ITelegramBotClient botClient, long chatId, long userId, string messageData)
     {
       if (_answerData.TryGetValue(chatId, out var task))
       {
@@ -165,14 +171,19 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       var studentAnswers = allStudentAnswers
         .Where(a => a.CourseId == answer.CourseId)
         .ToList();
-      var sb = new StringBuilder();
-      foreach (var answerData in studentAnswers)
+      if (studentAnswers.Count > 0)
       {
-        var task = TaskWorkService.GetTaskWorkById(answerData.TaskId);
-        sb.AppendLine($"Название: {task.Name}\nСтатус: {answerData.Status}\n");
+        var sb = new StringBuilder();
+        foreach (var answerData in studentAnswers)
+        {
+          var task = TaskWorkService.GetTaskWorkById(answerData.TaskId);
+          sb.AppendLine($"Название: {task.Name}\nСтатус: {answerData.Status}\n");
+        }
+
+        return sb.ToString();
       }
 
-      return sb.ToString();
+      return $"Не найдены студенты, записанные на этот курс";
     }
 
     /// <summary>
@@ -181,7 +192,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
-    private static async Task InitializeGetTasks(ITelegramBotClient botClient, long chatId)
+    private static async Task InitializeGetCourse(ITelegramBotClient botClient, long chatId)
     {
       _userSteps[chatId] = CreationStep.CourseSelection;
       _answerData[chatId] = new Answer();

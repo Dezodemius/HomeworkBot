@@ -4,6 +4,7 @@ using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
@@ -65,6 +66,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         if (callbackQuery.Data.StartsWith(command))
         {
+          LogInformation($"Выполняется обработчик для команды: {command}");
           await commandHandlers[command]();
           return;
         }
@@ -78,12 +80,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
       using (var context = new ApplicationDbContext())
       {
-        if (messageText.Contains("курс"))
+        if (messageText.Contains("выберите курс"))
         {
           var courses = await context.Courses
             .Where(c => c.TeacherId == callbackQuery.From.Id)
             .ToListAsync();
-          string commandText = messageText.Contains("статистика") ? "selectcourse_tw" : "selectcourse_sd";
+          string commandText = messageText.Contains("статистики") ? "selectcourse_tw" : "selectcourse_sd";
           newKeyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, commandText, page);
         }
         else if (messageText.Contains("студент"))
@@ -91,7 +93,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           var users = await context.Users.ToListAsync();
           newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(users, page);
         }
-        else if (messageText.Contains("задани"))
+        else if (messageText.Contains("задание"))
         {
           var tasks = await context.TaskWorks.ToListAsync();
           newKeyboard = GetInlineKeyboard.GetTaskKeyboard(tasks, page);
@@ -104,7 +106,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
-    public async Task HandleStartButton()
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
       throw new NotImplementedException();
     }
