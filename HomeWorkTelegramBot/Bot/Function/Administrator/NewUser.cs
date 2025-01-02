@@ -104,6 +104,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
           TaskId = task.Id,
           Date = DateTime.Now,
           Status = Answer.TaskStatus.NotAnswered,
+          UserId = userId,
         };
         AnswerService.AddAnswer(answer);
       }

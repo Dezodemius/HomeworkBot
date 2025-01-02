@@ -42,7 +42,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
           return;
         }
       }
-
     }
 
     public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
