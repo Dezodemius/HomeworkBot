@@ -46,5 +46,16 @@ namespace HomeWorkTelegramBot.DataBase
     {
       return ApplicationData.DbContext.Users.FirstOrDefault(u => u.ChatId == chatId);
     }
+
+    /// <summary>
+    /// Возвращает список всех преподавателей.
+    /// </summary>
+    /// <returns>Список пользователей с ролью преподавателя.</returns>
+    public List<User> GetAllTeachers()
+    {
+      return ApplicationData.DbContext.Users
+        .Where(u => u.UserRole == User.Role.Teacher)
+        .ToList();
+    }
   }
 }

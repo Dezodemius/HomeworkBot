@@ -1,6 +1,7 @@
 ﻿using HomeWorkTelegramBot.Bot.Function.Administrator;
 using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Core;
+using System.Threading;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using static HomeWorkTelegramBot.Config.Logger;
@@ -33,8 +34,14 @@ namespace HomeWorkTelegramBot.Bot
 
         if (handler != null)
         {
-          handler.HandleCallback(botClient, callbackQuery);
+
           LogInformation($"Сообщение обработано для роли: {userRole}");
+          if (messageText.ToLower().Contains("/start"))
+          {
+            await handler.HandleStartButton(botClient, chatId);
+            return;
+          }
+          await handler.HandleCallback(botClient, callbackQuery);
         }
         else
         {

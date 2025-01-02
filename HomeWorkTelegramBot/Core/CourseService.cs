@@ -38,5 +38,23 @@ namespace HomeWorkTelegramBot.Core
       }
       return course;
     }
+
+    /// <summary>
+    /// Добавляет новый курс и логирует это действие.
+    /// </summary>
+    /// <param name="course">Объект курса для добавления.</param>
+    public static void AddCourse(Courses course)
+    {
+      try
+      {
+        courseRepository.AddCourse(course);
+        LogInformation($"Добавлен новый курс: {course.Name}");
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при добавлении курса: {ex.Message}");
+        throw;
+      }
+    }
   }
 }
