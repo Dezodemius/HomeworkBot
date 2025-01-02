@@ -12,9 +12,15 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
   {
     public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message)
     {
-      StringBuilder sb = new StringBuilder();
-      sb.AppendLine("Добро пожаловать в административную панель");
-      await TelegramBotHandler.SendMessageAsync(botClient, message.Chat.Id, sb.ToString());
+      if (message.Text == "/start")
+      {
+        await HandleStartButton(botClient, message.Chat.Id);
+      }
+
+      if (Mode.CreateCourse)
+      {
+        await new CreateCourse().ProcessCourseCreationStep(botClient, message);
+      }
     }
 
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
@@ -23,6 +29,9 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
       {
         { "/approve_", async () => await new NewUser().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/reject_", async () => await new NewUser().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/newCource", async () => await new CreateCourse().ProcessCourseCreationStep(botClient, callbackQuery) },
+        { "/selectteacher_", async () => await new CreateCourse().HandleTeacherSelection(botClient, callbackQuery) },
+        { "/start", async () => await HandleStartButton(botClient, callbackQuery.From.Id) },
       };
 
       foreach (var command in commandHandlers.Keys)
@@ -37,6 +46,11 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
 
     public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
+      Mode.AllReset();
+      List<CallbackModel> callbackModels = new List<CallbackModel>();
+      callbackModels.Add(new CallbackModel("Создать курс", "/newCource"));
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Выберите действие:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
       throw new NotImplementedException();
     }
   }

@@ -65,5 +65,16 @@ namespace HomeWorkTelegramBot.Core
       }
       return user;
     }
+
+    /// <summary>
+    /// Возвращает список всех преподавателей и логирует это действие.
+    /// </summary>
+    /// <returns>Список пользователей с ролью преподавателя.</returns>
+    public static List<User> GetAllTeachers()
+    {
+      var teachers = userRepository.GetAllTeachers();
+      LogInformation($"Получено {teachers.Count} преподавателей.");
+      return teachers;
+    }
   }
 }
