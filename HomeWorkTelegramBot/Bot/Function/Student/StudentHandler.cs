@@ -34,12 +34,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
       var commandHandlers = new Dictionary<string, Func<Task>>
       {
         { "/start", async () => await HandleStartButton(botClient, callbackQuery.From.Id)},
+        { "/viewHomework_id", async () => await new HomeworkHandler().HandleHomeworkSelection(botClient, callbackQuery) },
         { "/viewHomework", async () => await new HomeworkHandler().DisplayHomework(botClient, callbackQuery) },
       };
 
       foreach (var command in commandHandlers.Keys)
       {
-        if (callbackQuery.Data.StartsWith(command))
+        if (callbackQuery.Data.ToLower().Contains(command.ToLower()))
         {
           await commandHandlers[command]();
           return;

@@ -24,12 +24,32 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
         var taskWork = TaskWorkService.GetTaskWorkById(taskId);
         if (taskWork != null)
         {
-          string command = $"viewHomework_id{taskWork.Id}";
+          string command = $"/viewHomework_id{taskWork.Id}";
           callbackModels.Add(new CallbackModel(taskWork.Name, command));
         }
       }
 
-      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите домашнее задание:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
+      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите домашнее задание:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
+    }
+
+    public async Task HandleHomeworkSelection(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+    {
+      string data = callbackQuery.Data;
+      if (data.StartsWith("/viewHomework_id"))
+      {
+        int taskId = int.Parse(data.Replace("/viewHomework_id", ""));
+        var taskWork = TaskWorkService.GetTaskWorkById(taskId);
+
+        if (taskWork != null)
+        {
+          string message = $"Задание: {taskWork.Name}\nОписание: {taskWork.Description}";
+          await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, message, null, callbackQuery.Message.Id);
+        }
+        else
+        {
+          await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Задание не найдено.", null, callbackQuery.Message.Id);
+        }
+      }
     }
   }
 }
