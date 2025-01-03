@@ -100,8 +100,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           string commandText = messageText.Contains("статистики") ? "selectcourse_tw" : "selectcourse_sd";
           newKeyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, commandText, page);
         }
-
-        // TODO: студенты и задания должны получаться в соответствии с выбранным курсом
         else if (messageText.Contains("студент"))
         {
           var studentsId = CourseEnrollmentService.GetAllUsersCourseEnrollments(_selectedCourseId);
