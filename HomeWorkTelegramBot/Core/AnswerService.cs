@@ -82,5 +82,14 @@ namespace HomeWorkTelegramBot.Core
       LogInformation($"Получено {answers.Count} ответов.");
       return answers;
     }
+
+    /// <summary>
+    /// Обновляет данные об ответе и логирует это действие.
+    /// </summary>
+    public static void UpdateAnswer(Answer answer)
+    {
+      answerRepository.UpdateAnswer(answer);
+      LogInformation($"Данные об ответе с id {answer.Id} изменены. Статус ответа: {answer.Status}");
+    }
   }
 }

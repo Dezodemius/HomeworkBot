@@ -68,10 +68,15 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         { "/studhwstat", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectcourse_sd", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectuser_", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/selectanswer_", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
 
         { "/hwstatistics", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectcourse_tw", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selecttask_", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/useransw_", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+
+        { "/correct_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/incorrect_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
       };
 
       foreach (var command in commandHandlers.Keys)
@@ -113,7 +118,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
             }
           }
 
-          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(students, page);
+          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(students, "selectuser", page);
         }
         else if (messageText.Contains("задание"))
         {

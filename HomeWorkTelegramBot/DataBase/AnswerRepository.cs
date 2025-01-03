@@ -72,5 +72,15 @@ namespace HomeWorkTelegramBot.DataBase
     {
       return ApplicationData.DbContext.Answers.ToList();
     }
+
+    /// <summary>
+    /// Обновляет ответ в таблице.
+    /// </summary>
+    /// <param name="answer">Экземпляр класса Answer.</param>
+    public void UpdateAnswer(Answer answer)
+    {
+      ApplicationData.DbContext.Answers.Update(answer);
+      ApplicationData.DbContext.SaveChanges();
+    }
   }
 }
