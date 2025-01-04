@@ -81,7 +81,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           break;
 
         case GetTaskStep.AnswerSelection:
-          await HandleAnswerSelection(botClient, callbackQuery, currentStep, task);
+          await HandleAnswerSelection(botClient, callbackQuery, currentStep);
           break;
 
         case GetTaskStep.UpdateAnswerStatus:
@@ -96,9 +96,21 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
-    private static async Task HandleAnswerSelection(ITelegramBotClient botClient, CallbackQuery callbackQuery, GetTaskStep currentStep, TaskWork task)
+    private static async Task HandleAnswerSelection(ITelegramBotClient botClient, CallbackQuery callbackQuery, GetTaskStep currentStep)
     {
-      await RateTaskWork.ProcessUpdateAnswer(botClient, callbackQuery, task.Id);
+      if (callbackQuery.Data.StartsWith("/useransw_"))
+      {
+        var userId = int.Parse(callbackQuery.Data.Replace("/useransw_", string.Empty));
+        var foundAnswers = AnswerService.GetAnswersByUserId(userId);
+        if (foundAnswers != null)
+        {
+          var foundAnswer = foundAnswers
+            .Where(a => a.TaskId == _taskData[callbackQuery.From.Id].Id)
+            .FirstOrDefault();
+          await RateTaskWork.ProcessUpdateAnswer(botClient, callbackQuery, foundAnswer.TaskId);
+        }
+      }
+
       currentStep = GetTaskStep.UpdateAnswerStatus;
     }
 
