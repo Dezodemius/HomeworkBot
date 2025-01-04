@@ -176,12 +176,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         string messageData = GetMessageData(chatId, task);
         var users = GetUsersByChatId(task);
         var keyboard = GetInlineKeyboard.GetStudentsKeyboard(users, "useransw");
-        // TODO: добавить кнопку на главную
         LogInformation($"Студент с chatId {taskId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
-
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
-        //_taskData.Remove(chatId);
-        //_userSteps.Remove(chatId);
       }
     }
 
@@ -247,15 +243,15 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       if (studentsData.Count > 0)
       {
         var sb = new StringBuilder();
-        var status = string.Empty;
+        var status = Answer.TaskStatus.NotAnswered;
         sb.AppendLine($"Статистика выполнения задания \"{taskName}\"\n");
         foreach (var answerData in studentsData)
         {
           status = allStudentAnswers
             .FirstOrDefault(a => a.UserId == answerData.Value.ChatId)
-            .Status
-            .ToString();
-          sb.AppendLine($"Студент: {answerData.Value.Surname} {answerData.Value.Name}.\nСтатус: {status}");
+            .Status;
+          sb.AppendLine($"Студент: {answerData.Value.Surname} {answerData.Value.Name}.");
+          sb.AppendLine($"Статус: {EnumExtentions.GetDescription(status)}");
         }
 
         return sb.ToString();

@@ -180,7 +180,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       var students = new List<Models.User>();
       foreach (var student in studentsId)
       {
-        var foundStudent = UserService.GetUserById(student.Id);
+        // TODO: в программе student.UserId - long и должен быть chatId, в бд внешний ключ к user.id 
+        var foundStudent = UserService.GetUserByChatId(student.UserId);
         if (foundStudent != null)
         {
           students.Add(foundStudent);
@@ -262,13 +263,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         foreach (var answerData in studentAnswers)
         {
           var task = TaskWorkService.GetTaskWorkById(answerData.TaskId);
-          sb.AppendLine($"Название: {task.Name}\nСтатус: {answerData.Status}\n");
+          sb.AppendLine($"Название: {task.Name}\nСтатус: {EnumExtentions.GetDescription(answerData.Status)}\n");
         }
 
         return sb.ToString();
       }
 
-      return $"Не найдены студенты, записанные на этот курс";
+      return $"Не найдено заданий на проверку, выполненных студентом";
     }
 
     /// <summary>

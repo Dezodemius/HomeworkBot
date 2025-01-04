@@ -118,7 +118,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         _answerData[chatId].Status = status;
         AnswerService.UpdateAnswer(_answerData[chatId]);
-        LogInformation($"Статус ответа на задание с id {answerId} изменен на {_answerData[chatId].Status} преподавателем с ChatId {chatId}");
+        LogInformation($"Статус ответа на задание с id {answerId} изменен на {EnumExtentions.GetDescription(_answerData[chatId].Status)}" +
+          $" преподавателем с ChatId {chatId}");
         await SendNotificationToStudent(botClient, chatId);
       }
       else
@@ -138,13 +139,33 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       var task = TaskWorkService.GetTaskWorkById(_answerData[chatId].TaskId);
       if (task != null)
       {
-        var messageText = $"Задание \"{task.Name}\" проверено. Статус задания: {_answerData[chatId].Status}";
+        var messageText = GetMessageText(chatId, task);
         var student = UserService.GetUserByChatId(_answerData[chatId].UserId);
         if (student != null)
         {
           await TelegramBotHandler.SendMessageAsync(botClient, student.ChatId, messageText);
         }
       }
+    }
+
+    /// <summary>
+    /// Формирует текст сообщения для студента.
+    /// </summary>
+    /// <param name="chatId">Уникальный идентификатор чата преподавателя.</param>
+    /// <param name="task">Объект класса taskWork, представляющий собой задание.</param>
+    /// <returns>Текст сообщения, которое нужно отправить пользователю.</returns>
+    private static string GetMessageText(long chatId, TaskWork task)
+    {
+      var status =_answerData[chatId].Status;
+      var sb = new StringBuilder();
+      sb.AppendLine($"Задание \"{task.Name}\" проверено. Статус задания: {EnumExtentions.GetDescription(status)}");
+      if (status == Answer.TaskStatus.IncorrectAnswer)
+      {
+        sb.AppendLine("Задание требует доработки");
+        sb.AppendLine($"Текст ответа: {_answerData[chatId].AnswerText}");
+      }
+
+      return sb.ToString();
     }
 
     /// <summary>
