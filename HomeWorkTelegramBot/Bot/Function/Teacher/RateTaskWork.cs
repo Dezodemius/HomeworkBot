@@ -100,7 +100,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         answerId = int.Parse(data.Replace("/incorrect_", string.Empty));
       }
 
-      TryChangeAnswerStatus(chatId, answerId, status);
+      TryChangeAnswerStatus(botClient, chatId, answerId, status);
 
       var messageData = $"Данные об ответе на задание с id {answerId} изменены";
       await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, messageId, messageData);
@@ -112,17 +112,38 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <param name="chatId">Идентификатор чата преподавателя.</param>
     /// <param name="answerId">Идентификатор ответа на задание.</param>
     /// <param name="status">Новый статус ответа на задание.</param>
-    private static void TryChangeAnswerStatus(long chatId, int answerId, Answer.TaskStatus status)
+    private static async void TryChangeAnswerStatus(ITelegramBotClient botClient, long chatId, int answerId, Answer.TaskStatus status)
     {
       if (_answerData[chatId].Id == answerId && answerId != -1)
       {
         _answerData[chatId].Status = status;
         AnswerService.UpdateAnswer(_answerData[chatId]);
         LogInformation($"Статус ответа на задание с id {answerId} изменен на {_answerData[chatId].Status} преподавателем с ChatId {chatId}");
+        await SendNotificationToStudent(botClient, chatId);
       }
       else
       {
         LogWarning($"Статус ответа на задание не был изменен");
+      }
+    }
+
+    /// <summary>
+    /// Отправляет студенту уведомление о том, что ответ на задание был проверен.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="chatId">Уникальный идентификатор чата преподавателя.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
+    private static async Task SendNotificationToStudent(ITelegramBotClient botClient, long chatId)
+    {
+      var task = TaskWorkService.GetTaskWorkById(_answerData[chatId].TaskId);
+      if (task != null)
+      {
+        var messageText = $"Задание \"{task.Name}\" проверено. Статус задания: {_answerData[chatId].Status}";
+        var student = UserService.GetUserByChatId(_answerData[chatId].UserId);
+        if (student != null)
+        {
+          await TelegramBotHandler.SendMessageAsync(botClient, student.ChatId, messageText);
+        }
       }
     }
 
