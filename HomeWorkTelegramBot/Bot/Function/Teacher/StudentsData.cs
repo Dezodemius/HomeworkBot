@@ -92,8 +92,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     {
       if (callbackQuery.Data.StartsWith("/selectanswer_"))
       {
-        var taskId = int.Parse(callbackQuery.Data.Replace("/selectanswer_", string.Empty));
-        await RateTaskWork.ProcessUpdateAnswer(botClient, callbackQuery, taskId);
+        var answerId = int.Parse(callbackQuery.Data.Replace("/selectanswer_", string.Empty));
+        var foundAnswer = AnswerService.GetAnswerById(answerId);
+        if (foundAnswer != null)
+        {
+          await RateTaskWork.ProcessUpdateAnswer(botClient, callbackQuery, foundAnswer.TaskId);
+        }
       }
 
       currentStep = GetStudentDataStep.UpdateAnswerStatus;
@@ -182,10 +186,17 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _userSteps[chatId] = GetStudentDataStep.AnswerSelection;
         string messageData = GetMessageData(answer);
         var keyboard = GetMessageButtons(answer);
+        if (keyboard != null)
+        {
+          LogInformation($"Студент с chatId {userId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
+          await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
+        }
+        else
+        {
+          _userSteps[chatId] = GetStudentDataStep.Completed;
+          CompleteStudentCheck(botClient, chatId, userId, messageId, messageData);
+        }
 
-        LogInformation($"Студент с chatId {userId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
-
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
       }
     }
 
@@ -195,13 +206,17 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
-    private static async Task CompleteStudentCheck(ITelegramBotClient botClient, long chatId, long userId, int messageId)
+    private static async Task CompleteStudentCheck(ITelegramBotClient botClient, long chatId, long userId, int messageId, string messageData = null)
     {
       if (_answerData.TryGetValue(chatId, out var answer))
       {
         LogInformation($"Получена статистика выполнения заданий студентом {userId} преподавателем с ChatId {chatId}");
-        var messageData = $"Данные об ответе на задание с id {answer.TaskId} изменены";
-        var callbackModels = new CallbackModel("На главную", "/start");
+        if (messageData == null)
+        {
+          messageData = $"Данные об ответе на задание с id {answer.TaskId} изменены";
+        }
+
+        var callbackModels = new CallbackModel("В главное меню", "/menu");
         var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
         _answerData.Remove(chatId);

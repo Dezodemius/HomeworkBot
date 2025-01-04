@@ -39,7 +39,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     public static async Task ProcessUpdateAnswer(ITelegramBotClient botClient, CallbackQuery callbackQuery, int taskId)
     {
-      
       long chatId = callbackQuery.From.Id;
       string data = callbackQuery.Data;
       if (taskId == -1)
@@ -75,9 +74,11 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       string data = callbackQuery.Data;
       int messageId = callbackQuery.Message.MessageId;
       int answerId = -1;
+      var status = Answer.TaskStatus.IncorrectAnswer;
       if (data.StartsWith("/correct_"))
       {
         answerId = int.Parse(data.Replace("/correct_", string.Empty));
+        status = Answer.TaskStatus.CorrectAnswer;
       }
 
       if (data.StartsWith("/incorrect_"))
@@ -85,15 +86,29 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         answerId = int.Parse(data.Replace("/incorrect_", string.Empty));
       }
 
+      TryChangeAnswerStatus(chatId, answerId, status);
+
+      await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, messageId);
+    }
+
+    /// <summary>
+    /// Пытается изменить статус ответа.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата преподавателя.</param>
+    /// <param name="answerId">Идентификатор ответа на задание.</param>
+    /// <param name="status">Новый статус ответа на задание.</param>
+    private static void TryChangeAnswerStatus(long chatId, int answerId, Answer.TaskStatus status)
+    {
       if (_answerData[chatId].Id == answerId && answerId != -1)
       {
-        _answerData[chatId].Status = Answer.TaskStatus.IncorrectAnswer;
+        _answerData[chatId].Status = status;
         AnswerService.UpdateAnswer(_answerData[chatId]);
-        LogInformation($"Статус ответа на вопрос с id {answerId} изменен на {_answerData[chatId].Status} преподавателем с ChatId {chatId}");
+        LogInformation($"Статус ответа на задание с id {answerId} изменен на {_answerData[chatId].Status} преподавателем с ChatId {chatId}");
       }
-
-      LogWarning($"Статус ответа на вопрос не был изменен");
-      await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, messageId);
+      else
+      {
+        LogWarning($"Статус ответа на задание не был изменен");
+      }
     }
 
     /// <summary>
@@ -117,7 +132,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     }
 
     private static async Task GetAvailableActions(ITelegramBotClient botClient, long chatId, int taskId, int messageId, Models.User user, List<Answer> foundAnswers)
-    {
+    {// тут с поиском ответом что-то не  так
       var answer = foundAnswers
                   .Where(a => a.UserId == user.ChatId)
                   .FirstOrDefault();
@@ -187,9 +202,9 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     private static async Task CompleteAnswerUpdate(ITelegramBotClient botClient, long chatId, int taskId, int messageId)
     {
-      if (_answerData.TryGetValue(chatId, out var task))
+      if (_answerData.TryGetValue(chatId, out var answer))
       {
-        var messageData = $"Данные об ответе на задание с id {task.Id} изменены";
+        var messageData = $"Данные об ответе на задание с id {answer.Id} изменены";
         LogInformation($"{messageData} преподавателем с ChatId {chatId}");
         var callbackModels = new CallbackModel("В главное меню", "/menu");
         var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);

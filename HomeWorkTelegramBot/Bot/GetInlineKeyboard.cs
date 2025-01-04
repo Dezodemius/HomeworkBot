@@ -151,7 +151,14 @@ namespace HomeWorkTelegramBot.Bot
         callbackModels.Add(new CallbackModel("◀️", $"page_{page - 1}"));
       }
 
-      callbackModels.Add(new CallbackModel($"{page}/{totalPages}", "current_page"));
+      if (page == totalPages)
+      {
+        callbackModels.Add(new CallbackModel($"В главное меню", "main"));
+      }
+      else
+      {
+        callbackModels.Add(new CallbackModel($"{page}/{totalPages}", "current_page"));
+      }
 
       if (page < totalPages)
       {
