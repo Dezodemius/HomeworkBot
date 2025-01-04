@@ -100,7 +100,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     {
       if (callbackQuery.Data.StartsWith("/useransw_"))
       {
-        var userId = int.Parse(callbackQuery.Data.Replace("/useransw_", string.Empty));
+        var userId = long.Parse(callbackQuery.Data.Replace("/useransw_", string.Empty));
         var foundAnswers = AnswerService.GetAnswersByUserId(userId);
         if (foundAnswers != null)
         {
@@ -180,8 +180,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         LogInformation($"Студент с chatId {taskId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
 
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
-        _taskData.Remove(chatId);
-        _userSteps.Remove(chatId);
+        //_taskData.Remove(chatId);
+        //_userSteps.Remove(chatId);
       }
     }
 

@@ -3,6 +3,7 @@ using Telegram.Bot;
 using HomeWorkTelegramBot.Models;
 using HomeWorkTelegramBot.Core;
 using System.Text;
+using Telegram.Bot.Types.ReplyMarkups;
 using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot.Bot.Function.Teacher
@@ -75,6 +76,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
+    /// <summary>
+    /// Обрабатывает нажатие выбранной кнопки с оценкой задания.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="callbackQuery">Callback-запрос, полученный от пользователя.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     private static async Task HandleAnswerSelection(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       long chatId = callbackQuery.From.Id;
@@ -124,6 +131,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// </summary>
     /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
+    /// <param name="taskId">Уникальный идентификатор задания.</param>
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     private static async Task InitializeUpdateAnswer(ITelegramBotClient botClient, long chatId, CallbackQuery callbackQuery, int taskId)
     {
@@ -135,12 +143,23 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       var foundAnswers = AnswerService.GetAnswersByTaskId(taskId);
       if (foundAnswers != null && foundAnswers.Count > 0)
       {
-        await GetAvailableActions(botClient, chatId, taskId, messageId, user, foundAnswers);
+        await GetAvailableActions(botClient, callbackQuery, taskId, user, foundAnswers);
       }
     }
 
-    private static async Task GetAvailableActions(ITelegramBotClient botClient, long chatId, int taskId, int messageId, Models.User user, List<Answer> foundAnswers)
-    {// тут с поиском ответом что-то не  так
+    /// <summary>
+    /// Формирует клавиатуру с доступными действиями для найденных ответов.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="callbackQuery">Callback-запрос, полученный от пользователя.</param>
+    /// <param name="taskId">Уникальный идентификатор задания.</param>
+    /// <param name="user">Студент, чей ответ на задание нужно получить.</param>
+    /// <param name="foundAnswers">Найденные ответы выбранного студента.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
+    private static async Task GetAvailableActions(ITelegramBotClient botClient, CallbackQuery callbackQuery, int taskId, Models.User user, List<Answer> foundAnswers)
+    {
+      var chatId = callbackQuery.From.Id;
+      var messageId = callbackQuery.Message.MessageId;
       var answer = foundAnswers
                   .Where(a => a.UserId == user.ChatId)
                   .FirstOrDefault();
@@ -150,13 +169,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _answerData[chatId] = answer;
         LogInformation($"Начало обновления статуса ответа на задание с id {taskId} преподавателем с ChatId {chatId}");
         var messageData = GetMessageData(user, chatId, taskId);
-        var callbackModels = new List<CallbackModel>
-          {
-          new ("Правильный ответ", $"/correct_{_answerData[chatId].Id}"),
-          new ("Неправильный ответ", $"/incorrect_{_answerData[chatId].Id}"),
-          new ("В главное меню", "/menu"),
-          };
-        var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+        InlineKeyboardMarkup keyboard = GetActionsKeyboard(chatId);
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
       }
       else
@@ -166,6 +179,28 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
+    /// <summary>
+    /// Создает клавиатуру с действиями для оценки задания студента. 
+    /// </summary>
+    /// <param name="chatId">Уникальный идентификатор чата преподавателя.</param>
+    /// <returns>Возвращает Inline-клавиатуру.</returns>
+    private static InlineKeyboardMarkup GetActionsKeyboard(long chatId)
+    {
+      var callbackModels = new List<CallbackModel>
+          {
+          new ("Правильный ответ", $"/correct_{_answerData[chatId].Id}"),
+          new ("Неправильный ответ", $"/incorrect_{_answerData[chatId].Id}"),
+          new ("В главное меню", "/menu"),
+          };
+      var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+      return keyboard;
+    }
+
+    /// <summary>
+    /// Получает данные о выбранном студенте.
+    /// </summary>
+    /// <param name="data">Данные, полученные из callback query.</param>
+    /// <returns>Объект класса Models.User, представляющий собой выбранного студента.</returns>
     private static Models.User GetUser(string data)
     {
       Models.User user = new Models.User();
@@ -181,23 +216,30 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
       if (data.StartsWith("/useransw"))
       {
-        long userId = int.Parse(data.Replace("/useransw_", string.Empty));
+        long userId = long.Parse(data.Replace("/useransw_", string.Empty));
         user = UserService.GetUserByChatId(userId);
       }
 
       return user;
     }
 
+    /// <summary>
+    /// Формирует сообщение с данными о непроверенном задании студента.
+    /// </summary>
+    /// <param name="user">Студент.</param>
+    /// <param name="chatId">Уникальный идентификатор чата преподавателя.</param>
+    /// <param name="taskId">Уникальный идентификатор задания.</param>
+    /// <returns>Строка с текстом сообщения.</returns>
     private static string GetMessageData(Models.User user, long chatId, int taskId)
     {
       var sb = new StringBuilder();
       var answer = _answerData[chatId];
       var task = TaskWorkService.GetTaskWorkById(taskId);
-      sb.AppendLine($"{task.Name}");
-      sb.AppendLine($"{user.Surname} {user.Name}");
-      sb.AppendLine(answer.AnswerText);
-      sb.AppendLine(answer.Date.ToShortDateString());
-      sb.AppendLine("\nОцените ответ");
+      sb.AppendLine($"Название задания: {task.Name}");
+      sb.AppendLine($"Студент: {user.Surname} {user.Name}");
+      sb.AppendLine($"Текст ответа: {answer.AnswerText}");
+      sb.AppendLine($"Текст ответа: {answer.Date.ToShortDateString()}");
+      sb.AppendLine("\nОцените ответ:");
 
       return sb.ToString();
     }
@@ -216,10 +258,14 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         var callbackModels = new CallbackModel("В главное меню", "/menu");
         var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
-        _answerData.Remove(chatId);
-        _userSteps.Remove(chatId);
+        await ClearData();
       }
     }
+
+    /// <summary>
+    /// Очищает временные данные.
+    /// </summary>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     public static async Task ClearData()
     {
       _answerData.Clear();

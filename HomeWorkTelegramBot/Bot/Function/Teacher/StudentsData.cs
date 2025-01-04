@@ -5,10 +5,12 @@ using HomeWorkTelegramBot.Core;
 using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 using static HomeWorkTelegramBot.Config.Logger;
-using System.Threading.Tasks;
 
 namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
+  /// <summary>
+  /// Класс для получения статистики по студентам.
+  /// </summary>
   public static class StudentsData
   {
     private static readonly Dictionary<long, Answer> _answerData = new Dictionary<long, Answer>();
@@ -95,6 +97,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
+    /// <summary>
+    /// Обрабатывает выбор ответа на задание.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="callbackQuery">Callback-запрос, полученный от пользователя.</param>
+    /// <param name="currentStep">Текущий шаг получения данных о студенте.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     private static async Task HandleAnswerSelection(ITelegramBotClient botClient, CallbackQuery callbackQuery, GetStudentDataStep currentStep)
     {
       if (callbackQuery.Data.StartsWith("/selectanswer_"))
@@ -110,12 +119,19 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       currentStep = GetStudentDataStep.UpdateAnswerStatus;
     }
 
+    /// <summary>
+    /// Обрабатывает процесс обновления статуса ответа на задание.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="callbackQuery">Callback-запрос, полученный от пользователя.</param>
+    /// <param name="currentStep">Текущий шаг получения данных о студенте.</param>
+    /// <param name="taskId">Уникальный идентификатор задания.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     private static async Task HandleUpdateAnswerStatus(ITelegramBotClient botClient, CallbackQuery callbackQuery, GetStudentDataStep currentStep, int taskId)
     {
       await RateTaskWork.ProcessUpdateAnswer(botClient, callbackQuery, taskId);
       currentStep = GetStudentDataStep.Completed;
       await CompleteStudentCheck(botClient, callbackQuery.From.Id, taskId, callbackQuery.Message.MessageId);
-
     }
 
     /// <summary>
@@ -203,7 +219,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           _userSteps[chatId] = GetStudentDataStep.Completed;
           CompleteStudentCheck(botClient, chatId, userId, messageId, messageData);
         }
-
       }
     }
 
@@ -226,15 +241,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         var callbackModels = new CallbackModel("В главное меню", "/menu");
         var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
-        _answerData.Remove(chatId);
-        _userSteps.Remove(chatId);
+        await ClearData();
       }
     }
 
     /// <summary>
     /// Подготавливает данные по статистике выполнений заданий студентом курса.
     /// </summary>
-    /// <param name="chatId">Идентификатор чата студента.</param>
     /// <param name="answer">Объект класс Answer.</param>
     /// <returns>Строку, с данными о выполнении заданий студентом.</returns>
     private static string GetMessageData(Answer answer)
