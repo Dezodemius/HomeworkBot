@@ -59,7 +59,7 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="page">Текущая страница.</param>
     /// <param name="itemsPerPage">Количество элементов на странице.</param>
     /// <returns>Клавиатура с кнопками и навигацией.</returns>
-    private static InlineKeyboardMarkup GetPagination<T>(List<T> items, string commandText, int page = 1, int itemsPerPage = 5)
+    private static InlineKeyboardMarkup GetPagination<T>(List<T> items, string commandText, int page = 1, int itemsPerPage = 2)
     {
       List<CallbackModel> callbackModels = new List<CallbackModel>();
 
@@ -146,23 +146,25 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="totalPages">Общее число страниц.</param>
     private static void GetNavigationButtons(int page, List<CallbackModel> callbackModels, int totalPages)
     {
-      if (page > 1)
+      if (totalPages != 0)
       {
-        callbackModels.Add(new CallbackModel("◀️", $"page_{page - 1}"));
-      }
+        if (page > 1)
+        {
+          callbackModels.Add(new CallbackModel("◀️", $"page_{page - 1}"));
+        }
 
-      if (page == totalPages)
-      {
-        callbackModels.Add(new CallbackModel($"В главное меню", "main"));
+        callbackModels.Add(new CallbackModel($"{page}/{totalPages}", "current_page"));
+
+        if (page < totalPages)
+        {
+          callbackModels.Add(new CallbackModel("▶️", $"page_{page + 1}"));
+        }
+
+        callbackModels.Add(new CallbackModel($"В главное меню", "/menu"));
       }
       else
       {
-        callbackModels.Add(new CallbackModel($"{page}/{totalPages}", "current_page"));
-      }
-
-      if (page < totalPages)
-      {
-        callbackModels.Add(new CallbackModel("▶️", $"page_{page + 1}"));
+        callbackModels.Add(new CallbackModel($"В главное меню", "/menu"));
       }
     }
   }

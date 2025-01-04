@@ -9,5 +9,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     {
       await TaskWorkData.ProcessGetTasks(botClient, callbackQuery);
     }
+
+    public async Task ClearData()
+    {
+      await TaskWorkData.ClearData();
+    }
   }
 }

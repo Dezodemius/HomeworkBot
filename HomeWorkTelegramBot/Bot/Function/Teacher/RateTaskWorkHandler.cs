@@ -14,5 +14,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     {
       await RateTaskWork.ProcessUpdateAnswer(botClient, callbackQuery, taskId);
     }
+
+    public async Task ClearData()
+    {
+      await RateTaskWork.ClearData();
+    }
   }
 }

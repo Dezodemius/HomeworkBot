@@ -52,6 +52,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         return;
       }
 
+      if (data == "/menu" && _userSteps.ContainsKey(chatId))
+      {
+        var messageData = $"Обновление данных об ответе на задание с id {_answerData[chatId].Id} прервано";
+        await CompleteAnswerUpdate(botClient, chatId, taskId, callbackQuery.Message.MessageId, messageData);
+      }
+
       var currentStep = _userSteps[chatId];
       var answer = _answerData[chatId];
 
@@ -63,7 +69,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           break;
 
         case UpdateAnswerStatus.Completed:
-          await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, callbackQuery.Message.MessageId);
+          var messageData = $"Данные об ответе на задание с id {answer.Id} изменены";
+          await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, callbackQuery.Message.MessageId, messageData);
           break;
       }
     }
@@ -88,7 +95,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
       TryChangeAnswerStatus(chatId, answerId, status);
 
-      await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, messageId);
+      var messageData = $"Данные об ответе на задание с id {answerId} изменены";
+      await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, messageId, messageData);
     }
 
     /// <summary>
@@ -200,11 +208,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
-    private static async Task CompleteAnswerUpdate(ITelegramBotClient botClient, long chatId, int taskId, int messageId)
+    private static async Task CompleteAnswerUpdate(ITelegramBotClient botClient, long chatId, int taskId, int messageId, string messageData)
     {
       if (_answerData.TryGetValue(chatId, out var answer))
       {
-        var messageData = $"Данные об ответе на задание с id {answer.Id} изменены";
         LogInformation($"{messageData} преподавателем с ChatId {chatId}");
         var callbackModels = new CallbackModel("В главное меню", "/menu");
         var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
@@ -212,6 +219,11 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _answerData.Remove(chatId);
         _userSteps.Remove(chatId);
       }
+    }
+    public static async Task ClearData()
+    {
+      _answerData.Clear();
+      _userSteps.Clear();
     }
   }
 }

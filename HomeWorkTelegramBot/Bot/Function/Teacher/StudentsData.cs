@@ -5,6 +5,7 @@ using HomeWorkTelegramBot.Core;
 using System.Text;
 using Telegram.Bot.Types.ReplyMarkups;
 using static HomeWorkTelegramBot.Config.Logger;
+using System.Threading.Tasks;
 
 namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
@@ -59,6 +60,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         await InitializeGetCourse(botClient, chatId, callbackQuery);
         return;
+      }
+
+      if (data == "/menu" && _userSteps.ContainsKey(chatId))
+      {
+        var messageData = $"Обновление данных об ответе на задание с id {_answerData[chatId].Id} прервано";
+        await CompleteStudentCheck(botClient, chatId, _answerData[chatId].UserId, callbackQuery.Message.MessageId, messageData);
       }
 
       var currentStep = _userSteps[chatId];
@@ -286,6 +293,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
       var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, "selectcourse_sd");
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс для просмотра статусов домашних заданий студента:", keyboard, messageId);
+    }
+
+    public static async Task ClearData()
+    {
+      _answerData.Clear();
+      _userSteps.Clear();
     }
   }
 }
