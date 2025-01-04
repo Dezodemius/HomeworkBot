@@ -25,5 +25,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     {
       throw new NotImplementedException();
     }
+
+    public async Task ClearData()
+    {
+      await CreateTaskWork.ClearData();
+    }
   }
 }

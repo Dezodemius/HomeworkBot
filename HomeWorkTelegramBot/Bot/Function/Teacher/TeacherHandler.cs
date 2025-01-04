@@ -161,6 +161,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       await new RateTaskWorkHandler().ClearData();
       await new GetStudentStatistics().ClearData();
       await new GetTaskWorkStatistics().ClearData();
+      await new NewTaskWork().ClearData();
 
       await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, sb.ToString(), keyboard, callbackQuery.Message.Id);
     }
