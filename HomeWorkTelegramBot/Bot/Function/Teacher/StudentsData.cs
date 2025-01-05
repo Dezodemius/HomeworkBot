@@ -181,10 +181,18 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       foreach (var student in studentsId)
       {
         // TODO: в программе student.UserId - long и должен быть chatId, в бд внешний ключ к user.id 
-        var foundStudent = UserService.GetUserByChatId(student.UserId);
-        if (foundStudent != null)
+        if (student.UserId <= int.MaxValue && student.UserId >= int.MinValue)
         {
-          students.Add(foundStudent);
+          int studentId = (int)student.UserId;
+          var foundStudent = UserService.GetUserById(studentId); // student.UserId - int user.id
+          if (foundStudent != null)
+          {
+            students.Add(foundStudent);
+          }
+        }
+        else
+        {
+          throw new OverflowException("Number is too large for int");
         }
       }
 

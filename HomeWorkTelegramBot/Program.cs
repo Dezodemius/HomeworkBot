@@ -20,7 +20,7 @@ namespace HomeWorkTelegramBot
         using var dbContext = new ApplicationDbContext();
         ApplicationData.DbContext = dbContext;
 
-        dbContext.DeleteDatabase();
+        // dbContext.DeleteDatabase();
         dbContext.CheckDatabaseAndTables();
 
         var seeder = new DataSeeder(dbContext);

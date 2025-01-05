@@ -280,7 +280,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       sb.AppendLine($"Название задания: {task.Name}");
       sb.AppendLine($"Студент: {user.Surname} {user.Name}");
       sb.AppendLine($"Текст ответа: {answer.AnswerText}");
-      sb.AppendLine($"Текст ответа: {answer.Date.ToShortDateString()}");
+      sb.AppendLine($"Дата загрузки ответа: {answer.Date.ToShortDateString()}");
       sb.AppendLine("\nОцените ответ:");
 
       return sb.ToString();
