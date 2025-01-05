@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -33,10 +29,9 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
           return;
         }
       }
-
     }
 
-    public async Task HandleStartButton()
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
       throw new NotImplementedException();
     }

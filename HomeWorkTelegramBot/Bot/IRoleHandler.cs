@@ -16,7 +16,7 @@ namespace HomeWorkTelegramBot.Bot.Function
     /// <summary>
     /// Обрабатывает нажатие кнопки "Старт".
     /// </summary>
-    Task HandleStartButton();
+    Task HandleStartButton(ITelegramBotClient botClient, long chatId);
 
     /// <summary>
     /// Обрабатывает входящие сообщения.

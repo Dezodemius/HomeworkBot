@@ -1,29 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Telegram.Bot.Types;
+﻿using Telegram.Bot.Types;
 using Telegram.Bot;
-using HomeWorkTelegramBot.Core;
 
 namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
-  public class NewTaskWork : IRoleHandler
+  /// <summary>
+  /// Класс, управляющий процессом создания нового задания.
+  /// </summary>
+  public class NewTaskWork 
   {
+    /// <summary>
+    /// Обрабатывает callback-запрос, полученный от пользователя.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="callbackQuery">Callback-запрос, полученный от пользователя.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       await CreateTaskWork.ProcessCreationStep(botClient, callbackQuery);
     }
 
+    /// <summary>
+    /// Обрабатывает сообщение, полученное от пользователя.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="message">Сообщение, полученное от пользователя.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message)
     {
       await CreateTaskWork.ProcessCreationStep(botClient, message);
     }
 
-    public Task HandleStartButton()
+    /// <summary>
+    /// Очищает временные данные.
+    /// </summary>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
+    public async Task ClearData()
     {
-      throw new NotImplementedException();
+      await CreateTaskWork.ClearData();
     }
   }
 }

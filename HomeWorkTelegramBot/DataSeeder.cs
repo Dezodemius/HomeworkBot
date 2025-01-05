@@ -1,9 +1,6 @@
 ﻿using Bogus;
 using HomeWorkTelegramBot.DataBase;
 using HomeWorkTelegramBot.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace HomeWorkTelegramBot
 {
