@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HomeWorkTelegramBot.Models
+﻿namespace HomeWorkTelegramBot.Models
 {
   public class UserRegistration
   {
@@ -43,6 +37,9 @@ namespace HomeWorkTelegramBot.Models
     /// </summary>
     public DateOnly BirthDate { get; set; }
 
+    /// <summary>
+    /// Уникальный идентификатор курса.
+    /// </summary>
     public int CourseId { get; set; }
   }
 }

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HomeWorkTelegramBot.DataBase
+namespace HomeWorkTelegramBot.DataBase.Repository
 {
   internal class CourseRepository
   {

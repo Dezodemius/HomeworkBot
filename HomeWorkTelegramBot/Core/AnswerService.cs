@@ -1,5 +1,5 @@
 ﻿using HomeWorkTelegramBot.Bot.Function.Teacher;
-using HomeWorkTelegramBot.DataBase;
+using HomeWorkTelegramBot.DataBase.Repository;
 using HomeWorkTelegramBot.Models;
 using System.Collections.Generic;
 using static HomeWorkTelegramBot.Config.Logger;

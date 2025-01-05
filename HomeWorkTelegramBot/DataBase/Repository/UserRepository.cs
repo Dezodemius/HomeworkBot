@@ -1,7 +1,7 @@
 ﻿using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Models;
 
-namespace HomeWorkTelegramBot.DataBase
+namespace HomeWorkTelegramBot.DataBase.Repository
 {
   internal class UserRepository
   {

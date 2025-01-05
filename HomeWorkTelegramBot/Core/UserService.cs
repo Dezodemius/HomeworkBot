@@ -1,4 +1,4 @@
-﻿using HomeWorkTelegramBot.DataBase;
+﻿using HomeWorkTelegramBot.DataBase.Repository;
 using HomeWorkTelegramBot.Models;
 using static HomeWorkTelegramBot.Config.Logger;
 

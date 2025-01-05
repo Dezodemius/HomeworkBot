@@ -3,7 +3,7 @@ using HomeWorkTelegramBot.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace HomeWorkTelegramBot.DataBase
+namespace HomeWorkTelegramBot.DataBase.Repository
 {
   internal class TaskWorkRepository
   {
