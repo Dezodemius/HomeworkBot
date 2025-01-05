@@ -2,10 +2,14 @@
 using HomeWorkTelegramBot.Models;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
+  /// <summary>
+  /// Класс создания нового задания.
+  /// </summary>
   internal class CreateTaskWork
   {
     public static readonly Dictionary<long, TaskWork> _creationData = new Dictionary<long, TaskWork>();
@@ -139,12 +143,21 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         TaskWorkService.AddTaskWork(task);
         LogInformation($"Создание нового задания с названием {task.Name} курса {task.CourseId} завершено преподавателем с ChatId {chatId}");
-        var callbackModels = new CallbackModel("На главную", "/start");
-        var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+        InlineKeyboardMarkup keyboard = GetMenuKeyboard();
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Создание нового задания завершено!", keyboard);
-        _creationData.Remove(chatId);
-        _userSteps.Remove(chatId);
+        await ClearData();
       }
+    }
+
+    /// <summary>
+    /// Создает клавиатуру с кнопкой для выхода в главное меню.
+    /// </summary>
+    /// <returns>Возвращает созданную Inline-клавиатуру.</returns>
+    private static InlineKeyboardMarkup GetMenuKeyboard()
+    {
+      var callbackModels = new CallbackModel("В главное меню", "/menu");
+      var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+      return keyboard;
     }
 
     /// <summary>
@@ -182,12 +195,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       string data = callbackQuery.Data;
       if (data.StartsWith("/selectcourse_"))
       {
-        int courseId = int.Parse(data.Replace("/selectcourse_", string.Empty));
+        int courseId = int.Parse(data.Replace("/selectcourse_nt_", string.Empty));
         task.CourseId = courseId;
         _userSteps[chatId] = CreationStep.Name;
+        InlineKeyboardMarkup keyboard = GetMenuKeyboard();
         LogInformation($"Курс {courseId} выбран для нового задания, которое создает преподаватель с ChatId {chatId}");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Был выбран курс: {courseId}. " +
-          $"Пожалуйста, введите название для нового задания.", null, callbackQuery.Message.Id);
+        var messageData = $"Был выбран курс: {courseId}. Пожалуйста, введите название для нового задания.";
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, callbackQuery.Message.Id);
       }
     }
 
@@ -205,6 +219,16 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
       var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, "selectcourse_nt");
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard);
+    }
+
+    /// <summary>
+    /// Очищает временные данные.
+    /// </summary>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
+    public static async Task ClearData()
+    {
+      _creationData.Clear();
+      _userSteps.Clear();
     }
   }
 }

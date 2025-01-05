@@ -13,6 +13,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
   internal class TeacherHandler : IRoleHandler
   {
     private static int _selectedCourseId = -1;
+
     public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message)
     {
       if (CreateTaskWork._creationData.Count != 0)
@@ -21,24 +22,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
       else
       {
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine("Добро пожаловать в панель преподавателя. Выберите действие:");
-        var keyboard = new InlineKeyboardMarkup(new[]
+        if (message.Text == "/start")
         {
-        new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Создать новое домашнее задание", "/createhw"),
-            },
-        new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Посмотреть статусы домашних заданий студента", "/studhwstat"),
-            },
-        new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Посмотреть выполнение домашнего задания", "/hwstatistics"),
-            },
-        });
-        await TelegramBotHandler.SendMessageAsync(botClient, message.Chat.Id, sb.ToString(), keyboard);
+          await HandleStartButton(botClient, message.Chat.Id);
+        }
       }
     }
 
@@ -68,10 +55,17 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         { "/studhwstat", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectcourse_sd", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectuser_", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/selectanswer_", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
 
         { "/hwstatistics", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectcourse_tw", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selecttask_", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/useransw_", async () => await new GetTaskWorkStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
+
+        { "/correct_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/incorrect_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
+
+        { "/menu", async () => await new TeacherHandler().HandleMenuCommand(botClient, callbackQuery) },
       };
 
       foreach (var command in commandHandlers.Keys)
@@ -113,7 +107,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
             }
           }
 
-          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(students, page);
+          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(students, "selectuser", page);
         }
         else if (messageText.Contains("задание"))
         {
@@ -132,7 +126,43 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
     public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
-      throw new NotImplementedException();
+      StringBuilder sb = new StringBuilder();
+      sb.AppendLine("Добро пожаловать в панель преподавателя. Выберите действие:");
+      InlineKeyboardMarkup keyboard = CreateDefaultKeyboard();
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, sb.ToString(), keyboard);
+    }
+
+    private static InlineKeyboardMarkup CreateDefaultKeyboard()
+    {
+      return new InlineKeyboardMarkup(new[]
+            {
+        new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Создать новое домашнее задание", "/createhw"),
+            },
+        new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Посмотреть статусы домашних заданий студента", "/studhwstat"),
+            },
+        new[]
+            {
+                InlineKeyboardButton.WithCallbackData("Посмотреть выполнение домашнего задания", "/hwstatistics"),
+            },
+      });
+    }
+
+    private async Task HandleMenuCommand(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+    {
+      StringBuilder sb = new StringBuilder();
+      sb.AppendLine("Выберите действие:");
+      InlineKeyboardMarkup keyboard = CreateDefaultKeyboard();
+      await new RateTaskWorkHandler().ClearData();
+      await new GetStudentStatistics().ClearData();
+      await new GetTaskWorkStatistics().ClearData();
+      await new NewTaskWork().ClearData();
+
+      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, sb.ToString(), keyboard, callbackQuery.Message.Id);
     }
   }
 }

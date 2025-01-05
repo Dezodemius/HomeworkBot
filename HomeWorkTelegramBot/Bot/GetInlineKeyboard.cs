@@ -3,6 +3,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Text;
+using HomeWorkTelegramBot.Core;
 
 namespace HomeWorkTelegramBot.Bot
 {
@@ -23,19 +25,29 @@ namespace HomeWorkTelegramBot.Bot
     /// </summary>
     /// <param name="users">Список студентов курса.</param>
     /// <returns>Клавиатуру с данными о студентах.</returns>
-    public static InlineKeyboardMarkup GetStudentsKeyboard(List<Models.User> users, int page = 0)
+    public static InlineKeyboardMarkup GetStudentsKeyboard(List<Models.User> users, string commandText, int page = 0)
     {
-      return GetPagination(users, "selectuser", page);
+      return GetPagination(users, commandText, page);
     }
 
     /// <summary>
-    /// Создает клавиатуру со студентами.
+    /// Создает клавиатуру с заданиями.
     /// </summary>
-    /// <param name="tasks">Список студентов курса.</param>
-    /// <returns>Клавиатуру с данными о студентах.</returns>
+    /// <param name="tasks">Список заданий курса.</param>
+    /// <returns>Клавиатуру с данными о заданиях.</returns>
     public static InlineKeyboardMarkup GetTaskKeyboard(List<TaskWork> tasks, int page = 0)
     {
       return GetPagination(tasks, "selecttask", page);
+    }
+
+    /// <summary>
+    /// Создает клавиатуру с заданиями.
+    /// </summary>
+    /// <param name="tasks">Список заданий курса.</param>
+    /// <returns>Клавиатуру с данными о заданиях.</returns>
+    public static InlineKeyboardMarkup GetAnswersKeyboard(List<Answer> answers, int page = 0)
+    {
+      return GetPagination(answers, "selectanswer", page);
     }
 
     /// <summary>
@@ -94,12 +106,36 @@ namespace HomeWorkTelegramBot.Bot
             command = $"/{commandText}_{course.Id}";
             break;
 
+          case Answer answer:
+            buttonText = GetButtonData(answer);
+            command = $"/{commandText}_{answer.Id}";
+            break;
+
           default:
             continue;
         }
 
         callbackModels.Add(new CallbackModel(buttonText, command));
       }
+    }
+
+    /// <summary>
+    /// Получает данные для кнопки.
+    /// </summary>
+    /// <param name="answer">Объект класса Answer.</param>
+    /// <returns>Строку с данными.</returns>
+    private static string GetButtonData(Answer answer)
+    {
+      var sb = new StringBuilder();
+      var task = TaskWorkService.GetTaskWorkById(answer.TaskId);
+      if (task != null)
+      {
+        sb.AppendLine(task.Name);
+
+        return sb.ToString();
+      }
+
+      return $"Для ответа с id {answer.Id} не найдено задание.";
     }
 
     /// <summary>
@@ -110,16 +146,25 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="totalPages">Общее число страниц.</param>
     private static void GetNavigationButtons(int page, List<CallbackModel> callbackModels, int totalPages)
     {
-      if (page > 1)
+      if (totalPages != 0)
       {
-        callbackModels.Add(new CallbackModel("◀️", $"page_{page - 1}"));
+        if (page > 1)
+        {
+          callbackModels.Add(new CallbackModel("◀️", $"page_{page - 1}"));
+        }
+
+        callbackModels.Add(new CallbackModel($"{page}/{totalPages}", "current_page"));
+
+        if (page < totalPages)
+        {
+          callbackModels.Add(new CallbackModel("▶️", $"page_{page + 1}"));
+        }
+
+        callbackModels.Add(new CallbackModel($"В главное меню", "/menu"));
       }
-
-      callbackModels.Add(new CallbackModel($"{page}/{totalPages}", "current_page"));
-
-      if (page < totalPages)
+      else
       {
-        callbackModels.Add(new CallbackModel("▶️", $"page_{page + 1}"));
+        callbackModels.Add(new CallbackModel($"В главное меню", "/menu"));
       }
     }
   }
