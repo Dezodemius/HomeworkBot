@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HomeWorkTelegramBot.Models
+﻿namespace HomeWorkTelegramBot.Models
 {
-  internal class User
+  public class User
   {
     /// <summary>
     /// Перечисление, представляющее роли пользователей в системе.
@@ -73,5 +67,25 @@ namespace HomeWorkTelegramBot.Models
     /// Роль пользователя.
     /// </summary>
     public Role UserRole { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с регистрацией.
+    /// </summary>
+    public UserRegistration UserRegistration { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с записью на курс.
+    /// </summary>
+    public CourseEnrollment CourseEnrollment { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с ответами.
+    /// </summary>
+    public Answer Answer { get; set; }
+
+    /// <summary>
+    /// Курсы, где пользователь является преподавателем
+    /// </summary>
+    public ICollection<Courses> TeachingCourses { get; set; }
   }
 }

@@ -41,5 +41,15 @@
     /// Уникальный идентификатор курса.
     /// </summary>
     public int CourseId { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с курсом.
+    /// </summary>
+    public Courses Course { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с пользователем.
+    /// </summary>
+    public Models.User User { get; set; }
   }
 }

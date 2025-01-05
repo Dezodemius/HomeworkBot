@@ -6,7 +6,7 @@ namespace HomeWorkTelegramBot.Models
   /// <summary>
   /// Представляет ответ на задание в системе.
   /// </summary>
-  internal class Answer
+  public class Answer
   {
     /// <summary>
     /// Статус ответа.
@@ -72,5 +72,20 @@ namespace HomeWorkTelegramBot.Models
     /// Статус работы.
     /// </summary>
     public TaskStatus Status { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с заданием.
+    /// </summary>
+    public TaskWork TaskWork { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с курсом.
+    /// </summary>
+    public Courses Course { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с пользователем.
+    /// </summary>
+    public Models.User User { get; set; }
   }
 }
