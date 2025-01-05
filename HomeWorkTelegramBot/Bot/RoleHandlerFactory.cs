@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using HomeWorkTelegramBot.Models;
+using HomeWorkTelegramBot.Bot.Function.UnregisteredUser;
 
 namespace HomeWorkTelegramBot.Bot
 {
@@ -20,6 +21,7 @@ namespace HomeWorkTelegramBot.Bot
         User.Role.Admin => new AdministratorHandler(),
         User.Role.Teacher => new TeacherHandler(),
         User.Role.Student => new StudentHandler(),
+        User.Role.UnregisteredUser => new UnregisteredUserHandler(),
         _ => null,
       };
     }

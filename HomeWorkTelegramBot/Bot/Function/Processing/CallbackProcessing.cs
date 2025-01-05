@@ -22,7 +22,7 @@ namespace HomeWorkTelegramBot.Bot
 
       if (chatId == ApplicationData.ConfigApp.AdminId)
       {
-        new AdministratorHandler().HandleCallback(callbackQuery);
+        new AdministratorHandler().HandleCallback(botClient, callbackQuery);
         return;
       }
 
@@ -33,7 +33,7 @@ namespace HomeWorkTelegramBot.Bot
 
         if (handler != null)
         {
-          handler.HandleCallback(callbackQuery);
+          handler.HandleCallback(botClient, callbackQuery);
           LogInformation($"Сообщение обработано для роли: {userRole}");
         }
         else
