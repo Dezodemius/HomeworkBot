@@ -22,64 +22,41 @@ namespace HomeWorkTelegramBot
     /// </summary>
     public void SeedData()
     {
-      try
+      if (!_context.Users.Any())
       {
-        // Сначала создаем пользователей (включая преподавателей)
-        if (!_context.Users.Any())
-        {
-          var users = GenerateUsers(10);
-
-          // Убеждаемся, что среди пользователей есть хотя бы один преподаватель
-          if (!users.Any(u => u.UserRole == User.Role.Teacher))
-          {
-            var teacher = new User
-            {
-              ChatId = BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 0),
-              Name = "Default",
-              Surname = "Teacher",
-              Email = "teacher@example.com",
-              UserRole = User.Role.Teacher,
-              BirthDate = DateOnly.FromDateTime(DateTime.Now.AddYears(-30))
-            };
-            users.Add(teacher);
-          }
-
-          _context.Users.AddRange(users);
-          _context.SaveChanges();
-        }
-
-        if (!_context.Courses.Any())
-        {
-          var courses = GenerateCourses(5);
-          _context.Courses.AddRange(courses);
-          _context.SaveChanges();
-        }
-
-        if (!_context.TaskWorks.Any())
-        {
-          var tasks = GenerateTaskWorks(20);
-          _context.TaskWorks.AddRange(tasks);
-          _context.SaveChanges();
-        }
-
-        if (!_context.Answers.Any())
-        {
-          var userIds = _context.Users.Select(u => u.ChatId).ToList();
-          var courseIds = _context.Courses.Select(c => c.Id).ToList();
-          var taskWorkIds = _context.TaskWorks.Select(t => t.Id).ToList();
-
-          if (userIds.Any() && courseIds.Any() && taskWorkIds.Any())
-          {
-            var answers = GenerateAnswers(50, userIds, courseIds, taskWorkIds);
-            _context.Answers.AddRange(answers);
-            _context.SaveChanges();
-          }
-        }
+        var users = GenerateUsers(10);
+        _context.Users.AddRange(users);
+        _context.SaveChanges();
       }
-      catch (Exception ex)
+
+      if (!_context.Courses.Any())
       {
-        Console.WriteLine($"Error in SeedData: {ex.Message}");
-        throw;
+        var existingTeacherIds = _context.Users
+          .Where(u => u.UserRole == User.Role.Teacher)
+          .Select(u => u.ChatId)
+          .ToList();
+        var courses = GenerateCourses(5, existingTeacherIds);
+        _context.Courses.AddRange(courses);
+        _context.SaveChanges();
+      }
+
+      if (!_context.TaskWorks.Any())
+      {
+        // Получаем существующие CourseId
+        var existingCourseIds = _context.Courses.Select(c => c.Id).ToList();
+        var tasks = GenerateTaskWorks(20, existingCourseIds);
+        _context.TaskWorks.AddRange(tasks);
+        _context.SaveChanges(); // Сохраняем задания, чтобы получить их реальные ID
+      }
+
+      if (!_context.Answers.Any())
+      {
+        // Получаем существующие TaskId и UserId
+        var existingTaskIds = _context.TaskWorks.Select(t => t.Id).ToList();
+        var existingUserIds = _context.Users.Select(u => u.ChatId).ToList();
+        var answers = GenerateAnswers(50, existingTaskIds, existingUserIds);
+        _context.Answers.AddRange(answers);
+        _context.SaveChanges(); // Сохраняем ответы
       }
     }
 
@@ -97,44 +74,23 @@ namespace HomeWorkTelegramBot
         .RuleFor(u => u.Lastname, f => f.Name.LastName())
         .RuleFor(u => u.Email, f => f.Internet.Email())
         .RuleFor(u => u.BirthDate, f => DateOnly.FromDateTime(f.Date.Past(30, DateTime.Now.AddYears(-18))))
-        .RuleFor(u => u.UserRole, f => f.Random.Int(1, 10) <= 3 ? User.Role.Teacher : User.Role.Student);
+        .RuleFor(u => u.UserRole, f => f.PickRandom<User.Role>());
 
       return faker.Generate(count);
     }
+
 
     /// <summary>
     /// Генерирует список курсов.
     /// </summary>
     /// <param name="count">Количество курсов для генерации.</param>
     /// <returns>Список курсов.</returns>
-    private List<Courses> GenerateCourses(int count)
+    private List<Courses> GenerateCourses(int count, List<long> teacherIds)
     {
-      var teacherIds = _context.Users
-          .Where(u => u.UserRole == User.Role.Teacher)
-          .Select(u => u.ChatId)
-          .ToList();
-
-      // Если преподавателей нет, создаем хотя бы одного
-      if (!teacherIds.Any())
-      {
-        var teacher = new User
-        {
-          ChatId = BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 0),
-          Name = "Default",
-          Surname = "Teacher",
-          Email = "teacher@example.com",
-          UserRole = User.Role.Teacher,
-          BirthDate = DateOnly.FromDateTime(DateTime.Now.AddYears(-30))
-        };
-        _context.Users.Add(teacher);
-        _context.SaveChanges();
-        teacherIds.Add(teacher.ChatId);
-      }
-
       var faker = new Faker<Courses>()
+        .RuleFor(c => c.TeacherId, f => f.PickRandom(teacherIds)) // Используем существующие TeacherId
         .RuleFor(c => c.Name, f => f.Commerce.Department())
-        .RuleFor(c => c.Description, f => f.Lorem.Sentence())
-        .RuleFor(c => c.TeacherId, f => f.PickRandom(teacherIds));
+        .RuleFor(c => c.Description, f => f.Lorem.Sentence());
 
       return faker.Generate(count);
     }
@@ -144,10 +100,8 @@ namespace HomeWorkTelegramBot
     /// </summary>
     /// <param name="count">Количество заданий для генерации.</param>
     /// <returns>Список заданий.</returns>
-    private List<TaskWork> GenerateTaskWorks(int count)
+    private List<TaskWork> GenerateTaskWorks(int count, List<int> courseIds)
     {
-      var courseIds = _context.Courses.Select(c => c.Id).ToList();
-
       var faker = new Faker<TaskWork>()
         .RuleFor(t => t.CourseId, f => f.PickRandom(courseIds))
         .RuleFor(t => t.Name, f => f.Commerce.ProductName())
@@ -161,13 +115,12 @@ namespace HomeWorkTelegramBot
     /// </summary>
     /// <param name="count">Количество ответов для генерации.</param>
     /// <returns>Список ответов.</returns>
-    private List<Answer> GenerateAnswers(int count, List<long> userIds, List<int> courseIds, List<int> taskWorkIds)
+    private List<Answer> GenerateAnswers(int count, List<int> taskIds, List<long> userIds)
     {
       var faker = new Faker<Answer>()
-        .RuleFor(a => a.AnswerText, f => f.Lorem.Sentence()).RuleFor(a => a.CourseId, f => f.PickRandom(courseIds))
-        .RuleFor(a => a.CourseId, f => f.PickRandom(courseIds))
-        .RuleFor(a => a.TaskId, f => f.PickRandom(taskWorkIds))
-        .RuleFor(a => a.UserId, f => f.PickRandom(userIds))
+        .RuleFor(a => a.AnswerText, f => f.Lorem.Sentence())
+        .RuleFor(a => a.TaskId, f => f.PickRandom(taskIds)) // Используем существующие TaskId
+        .RuleFor(a => a.UserId, f => f.PickRandom(userIds)) // Используем существующие UserId
         .RuleFor(a => a.Date, f => f.Date.Recent())
         .RuleFor(a => a.Status, f => f.PickRandom<Answer.TaskStatus>());
 
