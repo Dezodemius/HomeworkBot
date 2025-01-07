@@ -56,5 +56,26 @@ namespace HomeWorkTelegramBot.Core
         throw;
       }
     }
+
+    /// <summary>
+    /// Получает все курсы, принадлежащие преподавателю по идентификатору его чата и логирует это действие.
+    /// </summary>
+    /// <param name="teacherId">Идентификатор курса.</param>
+    /// <returns>Список курсов или null, если курсы не найдены.</returns>
+    public static List<Courses> GetAllCoursesByTeacherId(long teacherId)
+    {
+      var courses = courseRepository.GetCoursesByTeacherId(teacherId);
+      if (courses != null)
+      {
+        LogInformation($"Найдено {courses.Count} у преподавателя с ChatId {teacherId}");
+      }
+      else
+      {
+        LogWarning($"Для преподавателя с ChatId {teacherId} курсы не найдены.");
+      }
+
+      return courses;
+
+    }
   }
 }

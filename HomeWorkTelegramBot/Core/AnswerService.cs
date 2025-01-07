@@ -1,4 +1,5 @@
-﻿using HomeWorkTelegramBot.DataBase;
+﻿using HomeWorkTelegramBot.Bot.Function.Teacher;
+using HomeWorkTelegramBot.DataBase;
 using HomeWorkTelegramBot.Models;
 using System.Collections.Generic;
 using static HomeWorkTelegramBot.Config.Logger;
@@ -61,6 +62,18 @@ namespace HomeWorkTelegramBot.Core
     }
 
     /// <summary>
+    /// Получает все ответы для указанного пользователя и логирует это действие.
+    /// </summary>
+    /// <param name="userId">Идентификатор чата пользователя.</param>
+    /// <returns>Список ответов для задания.</returns>
+    public static List<Answer> GetAnswersByUserId(long userId)
+    {
+      var answers = answerRepository.GetAnswersByUserId(userId);
+      LogInformation($"Получено {answers.Count} ответов для пользователя с chatId {userId}");
+      return answers;
+    }
+
+    /// <summary>
     /// Получает все ответы и логирует это действие.
     /// </summary>
     /// <returns>Список всех ответов.</returns>
@@ -69,6 +82,15 @@ namespace HomeWorkTelegramBot.Core
       var answers = answerRepository.GetAllAnswers();
       LogInformation($"Получено {answers.Count} ответов.");
       return answers;
+    }
+
+    /// <summary>
+    /// Обновляет данные об ответе и логирует это действие.
+    /// </summary>
+    public static void UpdateAnswer(Answer answer)
+    {
+      answerRepository.UpdateAnswer(answer);
+      LogInformation($"Данные об ответе с id {answer.Id} изменены. Статус ответа: {EnumExtentions.GetDescription(answer.Status)}");
     }
 
     /// <summary>

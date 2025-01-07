@@ -67,6 +67,25 @@ namespace HomeWorkTelegramBot.Core
     }
 
     /// <summary>
+    /// Возвращает пользователя по уникальному идентификатору.
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Объект User или null, если пользователь не найден.</returns>
+    public static User GetUserById(int userId)
+    {
+      var user = userRepository.GetUserById(userId);
+      if (user != null)
+      {
+        LogInformation($"Найден пользователь с Id {userId}");
+      }
+      else
+      {
+        LogWarning($"Пользователь с Id {userId} не найден.");
+      }
+      return user;
+    }
+
+    /// <summary>
     /// Возвращает список всех преподавателей и логирует это действие.
     /// </summary>
     /// <returns>Список пользователей с ролью преподавателя.</returns>

@@ -48,6 +48,16 @@ namespace HomeWorkTelegramBot.DataBase
     }
 
     /// <summary>
+    /// Возвращает пользователя по уникальному идентификатору.
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Объект User или null, если пользователь не найден.</returns>
+    public User GetUserById(int userId)
+    {
+      return ApplicationData.DbContext.Users.FirstOrDefault(u => u.Id == userId);
+    }
+
+    /// <summary>
     /// Возвращает список всех преподавателей.
     /// </summary>
     /// <returns>Список пользователей с ролью преподавателя.</returns>
