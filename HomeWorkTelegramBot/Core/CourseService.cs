@@ -58,5 +58,37 @@ namespace HomeWorkTelegramBot.Core
 
       return courses;
     }
+
+    /// <summary>
+    /// Добавляет новый курс и логирует это действие.
+    /// </summary>
+    /// <param name="course">Объект курса для добавления.</param>
+    public static void AddCourse(Courses course)
+    {
+      try
+      {
+        courseRepository.AddCourse(course);
+        LogInformation($"Добавлен новый курс: {course.Name}");
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при добавлении курса: {ex.Message}. Inner Exception: {ex.InnerException?.Message}");
+        throw;
+      }
+    }
+
+    public static void RemoveCourse(int courseId)
+    {
+      try
+      {
+        courseRepository.DeleteCourse(courseId);
+        LogInformation($"Курс с Id {courseId} удален.");
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при удалении курса: {ex.Message}");
+        throw;
+      }
+    }
   }
 }

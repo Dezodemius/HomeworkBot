@@ -53,6 +53,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
 
       EnrollUserInCourse(newUser, user.CourseId);
       AddDefaultAnswersForUser(user.CourseId, newUser.Id);
+      UserRegistrationService.DeleteUserRegistration(userId);
 
       LogInformation($"Пользователь с ChatId {userId} был принят.");
       await NotifyUserAndAdmin(botClient, callbackQuery, adminChatId, userId, "принят");
@@ -82,7 +83,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
     {
       var courseEnrollment = new CourseEnrollment
       {
-        UserId = user.Id,
+        UserId = user.ChatId,
         CourseId = courseId,
       };
       CourseEnrollmentService.AddCourseEnrollment(courseEnrollment);

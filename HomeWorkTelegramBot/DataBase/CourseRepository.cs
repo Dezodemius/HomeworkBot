@@ -40,5 +40,25 @@ namespace HomeWorkTelegramBot.DataBase
         .Where(c => c.TeacherId == teacherId)
         .ToList();
     }
+
+    /// <summary>
+    /// Добавляет новый курс в базу данных.
+    /// </summary>
+    /// <param name="course">Объект курса для добавления.</param>
+    public void AddCourse(Courses course)
+    {
+      ApplicationData.DbContext.Courses.Add(course);
+      ApplicationData.DbContext.SaveChanges();
+    }
+
+    public void DeleteCourse(int courseId)
+    {
+      var course = ApplicationData.DbContext.Courses.FirstOrDefault(c => c.Id == courseId);
+      if (course != null)
+      {
+        ApplicationData.DbContext.Courses.Remove(course);
+        ApplicationData.DbContext.SaveChanges();
+      }
+    }
   }
 }
