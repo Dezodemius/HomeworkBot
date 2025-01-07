@@ -22,6 +22,9 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
       var answers = AnswerService.GetAnswersByChatId(callbackQuery.From.Id);
       var taskIds = answers.Select(a => a.TaskId).Distinct().ToList();
 
+      StringBuilder stringBuilder = new StringBuilder();
+      stringBuilder.AppendLine($"Выберите домашнее задание:\r\n");
+
       var callbackModels = new List<CallbackModel>();
 
       foreach (var taskId in taskIds)
@@ -31,10 +34,14 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
         {
           string command = $"/viewHomework_id{taskWork.Id}";
           callbackModels.Add(new CallbackModel(taskWork.Name, command));
+
+          var answer = AnswerService.GetAnswerByChatIdAndTaskId(callbackQuery.From.Id, taskId);
+          stringBuilder.AppendLine($"Задание: {taskWork.Name}");
+          stringBuilder.AppendLine($"Статус: {answer.Status}\r\n");
         }
       }
 
-      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите домашнее задание:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
+      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, stringBuilder.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
     }
 
     /// <summary>

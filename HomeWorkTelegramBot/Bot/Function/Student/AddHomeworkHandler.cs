@@ -112,7 +112,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
       {
         UserTaskMap.Remove(callbackQuery.From.Id);
         UserAnswerMap.Remove(callbackQuery.From.Id);
-        await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Ответ отменен.");
+        await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Ответ отменен.", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
       }
     }
   }
