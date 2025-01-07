@@ -29,24 +29,28 @@ namespace HomeWorkTelegramBot
       {
         var users = GenerateUsers(10);
         _context.Users.AddRange(users);
+        _context.SaveChanges();
       }
 
       if (!_context.Courses.Any())
       {
         var courses = GenerateCourses(5);
         _context.Courses.AddRange(courses);
+        _context.SaveChanges();
       }
 
       if (!_context.TaskWorks.Any())
       {
         var tasks = GenerateTaskWorks(20);
         _context.TaskWorks.AddRange(tasks);
+        _context.SaveChanges();
       }
 
       if (!_context.Answers.Any())
       {
         var answers = GenerateAnswers(50);
         _context.Answers.AddRange(answers);
+        _context.SaveChanges();
       }
 
       //if (!_context.CourseEnrollments.Any())
