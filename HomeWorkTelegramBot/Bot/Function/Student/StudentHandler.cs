@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HomeWorkTelegramBot.Bot.Function.Administrator;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,17 +13,48 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
   {
     public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message)
     {
-      throw new NotImplementedException();
+
+      var commandHandlers = new Dictionary<string, Func<Task>>
+      {
+        { "/start", async () => await HandleStartButton(botClient, message.Chat.Id)},
+      };
+
+      foreach (var command in commandHandlers.Keys)
+      {
+        if (message.Text.StartsWith(command))
+        {
+          await commandHandlers[command]();
+          return;
+        }
+      }
     }
 
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
-      throw new NotImplementedException();
+      var commandHandlers = new Dictionary<string, Func<Task>>
+      {
+        { "/start", async () => await HandleStartButton(botClient, callbackQuery.From.Id)},
+        { "/viewHomework_id", async () => await new HomeworkHandler().HandleHomeworkSelection(botClient, callbackQuery) },
+        { "/viewHomework", async () => await new HomeworkHandler().DisplayHomework(botClient, callbackQuery) },
+      };
+
+      foreach (var command in commandHandlers.Keys)
+      {
+        if (callbackQuery.Data.ToLower().Contains(command.ToLower()))
+        {
+          await commandHandlers[command]();
+          return;
+        }
+      }
     }
 
     public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
-      throw new NotImplementedException();
+      string message = $"{Utils.TimeGreeting.GetGreeting()}. Выберите функцию:";
+      List<CallbackModel> callbacks = new List<CallbackModel>();
+      callbacks.Add(new CallbackModel("Домашние задания", "/viewHomework"));
+
+      await TelegramBotHandler.SendMessageAsync(botClient, chatId, message, TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks));
     }
   }
 }
