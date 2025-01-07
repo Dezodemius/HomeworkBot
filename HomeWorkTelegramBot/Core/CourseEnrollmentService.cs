@@ -1,4 +1,4 @@
-﻿using HomeWorkTelegramBot.DataBase;
+﻿using HomeWorkTelegramBot.DataBase.Repository;
 using HomeWorkTelegramBot.Models;
 using System.Collections.Generic;
 using static HomeWorkTelegramBot.Config.Logger;
@@ -82,6 +82,44 @@ namespace HomeWorkTelegramBot.Core
       {
         var enrollments = enrollmentRepository.GetAllCourseEnrollments();
         LogInformation($"Получено {enrollments.Count} записей о зачислении.");
+        return enrollments;
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при получении всех записей о зачислении: {ex.Message}");
+        throw;
+      }
+    }
+
+    /// <summary>
+    /// Получает все записи о зачислении пользователя на курсы и логирует это действие.
+    /// </summary>
+    /// <returns>Список записей о зачислении.</returns>
+    public static List<CourseEnrollment> GetAllUserCourseEnrollments(long chatId)
+    {
+      try
+      {
+        var enrollments = enrollmentRepository.GetAllUserCourseEnrollments(chatId);
+        LogInformation($"Получено {enrollments.Count} записей о зачислении.");
+        return enrollments;
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при получении всех записей о зачислении: {ex.Message}");
+        throw;
+      }
+    }
+
+    /// <summary>
+    /// Получает все записи о зачислении пользователей на курс с указанным id и логирует это действие.
+    /// </summary>
+    /// <returns>Список записей о зачислении.</returns>
+    public static List<CourseEnrollment> GetAllUsersCourseEnrollments(int courseId)
+    {
+      try
+      {
+        var enrollments = enrollmentRepository.GetAllUsersCourseEnrollments(courseId);
+        LogInformation($"Получено {enrollments.Count} записей о зачислении на курс {courseId}.");
         return enrollments;
       }
       catch (Exception ex)

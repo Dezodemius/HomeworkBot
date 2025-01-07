@@ -3,7 +3,7 @@ using HomeWorkTelegramBot.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace HomeWorkTelegramBot.DataBase
+namespace HomeWorkTelegramBot.DataBase.Repository
 {
   internal class CourseEnrollmentRepository
   {
@@ -49,6 +49,28 @@ namespace HomeWorkTelegramBot.DataBase
     public List<CourseEnrollment> GetAllCourseEnrollments()
     {
       return ApplicationData.DbContext.CourseEnrollments.ToList();
+    }
+
+    /// <summary>
+    /// Получает все записи о зачислении пользователя на курсы.
+    /// </summary>
+    /// <returns>Список записей о зачислении.</returns>
+    public List<CourseEnrollment> GetAllUserCourseEnrollments(long chatId)
+    {
+      return ApplicationData.DbContext.CourseEnrollments
+        .Where(ce => ce.UserId == chatId)
+        .ToList();
+    }
+
+    /// <summary>
+    /// Получает все записи о зачислении пользователя на курс по id курса.
+    /// </summary>
+    /// <returns>Список записей о зачислении.</returns>
+    public List<CourseEnrollment> GetAllUsersCourseEnrollments(int courseId)
+    {
+      return ApplicationData.DbContext.CourseEnrollments
+        .Where(ce => ce.CourseId == courseId)
+        .ToList();
     }
   }
 }

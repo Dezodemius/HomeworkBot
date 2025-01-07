@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HomeWorkTelegramBot.Models
+﻿namespace HomeWorkTelegramBot.Models
 {
-  internal class TaskWork
+  public class TaskWork
   {
     /// <summary>
     /// Уникальный идентификатор задания.
@@ -27,5 +21,15 @@ namespace HomeWorkTelegramBot.Models
     /// Описание задания.
     /// </summary>
     public string Description { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с курсом.
+    /// </summary>
+    public Courses Course { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство для связи с ответами.
+    /// </summary>
+    public ICollection<Answer> Answers { get; set; }
   }
 }

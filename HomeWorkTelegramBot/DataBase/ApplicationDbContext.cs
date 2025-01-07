@@ -1,7 +1,7 @@
 ﻿using HomeWorkTelegramBot.Config;
+using HomeWorkTelegramBot.DataBase.Configurations;
 using HomeWorkTelegramBot.Models;
 using Microsoft.EntityFrameworkCore;
-using System.IO;
 using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot.DataBase
@@ -42,6 +42,23 @@ namespace HomeWorkTelegramBot.DataBase
     public DbSet<UserRegistration> UserRegistrations { get; set; }
 
     /// <summary>
+    /// Настройки модели базы данных.
+    /// </summary>
+    /// <param name="modelBuilder">Объект для настройки модели.</param>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+      modelBuilder.ApplyConfiguration(new UserConfiguration());
+      modelBuilder.ApplyConfiguration(new CoursesConfiguration());
+      modelBuilder.ApplyConfiguration(new TaskWorConfiguration());
+
+      modelBuilder.ApplyConfiguration(new AnswerConfiguration());
+      modelBuilder.ApplyConfiguration(new UserRegistrationConfiguration());
+      modelBuilder.ApplyConfiguration(new CourseEnrollmentConfiguration());
+
+      base.OnModelCreating(modelBuilder);
+    }
+
+    /// <summary>
     /// Настраивает подключение к базе данных.
     /// </summary>
     /// <param name="optionsBuilder">Параметры конфигурации.</param>
@@ -53,10 +70,14 @@ namespace HomeWorkTelegramBot.DataBase
         throw new ArgumentNullException(nameof(ApplicationData.ConfigApp.DataPath), "Путь к базе данных не может быть null.");
       }
 
-      var dbPath = Path.Combine(Directory.GetCurrentDirectory(), ApplicationData.ConfigApp.DataPath);
+      //var dbPath = Path.Combine(Directory.GetCurrentDirectory(), ApplicationData.ConfigApp.DataPath);
+      var dbPath = Path.Combine(AppContext.BaseDirectory, ApplicationData.ConfigApp.DataPath);
       var connectionString = $"Data Source={dbPath}";
       LogInformation($"Используется строка подключения: {connectionString}");
-      optionsBuilder.UseSqlite(connectionString);
+      optionsBuilder
+        .UseSqlite(connectionString)
+        .EnableSensitiveDataLogging()
+        .EnableDetailedErrors();
     }
 
     /// <summary>

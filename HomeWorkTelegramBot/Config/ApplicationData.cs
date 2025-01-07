@@ -24,7 +24,7 @@ namespace HomeWorkTelegramBot.Config
     {
       const string configFilePath = "config.yaml";
 
-      ConfigApp = new Config(configFilePath);
+      ConfigApp = new Config(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.yaml"));
       LogInformation("Конфигурация загружена из файла.");
     }
   }

@@ -2,7 +2,7 @@
 using HomeWorkTelegramBot.Models;
 using System.Linq;
 
-namespace HomeWorkTelegramBot.DataBase
+namespace HomeWorkTelegramBot.DataBase.Repository
 {
   internal class UserRegistrationRepository
   {

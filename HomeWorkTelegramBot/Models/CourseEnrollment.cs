@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HomeWorkTelegramBot.Models
+﻿namespace HomeWorkTelegramBot.Models
 {
   /// <summary>
   /// Модель, представляющая запись пользователя на курс.
   /// </summary>
-  internal class CourseEnrollment
+  public class CourseEnrollment
   {
     /// <summary>
     /// Уникальный идентификатор записи.
@@ -25,6 +19,7 @@ namespace HomeWorkTelegramBot.Models
     /// Идентификатор пользователя.
     /// </summary>
     public long UserId { get; set; }
+
     /// <summary>
     /// Навигационное свойство для курса.
     /// </summary>
@@ -34,6 +29,5 @@ namespace HomeWorkTelegramBot.Models
     /// Навигационное свойство для пользователя.
     /// </summary>
     public User User { get; set; }
-
   }
 }

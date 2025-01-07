@@ -1,9 +1,6 @@
 ﻿using Bogus;
 using HomeWorkTelegramBot.DataBase;
 using HomeWorkTelegramBot.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace HomeWorkTelegramBot
 {
@@ -25,31 +22,65 @@ namespace HomeWorkTelegramBot
     /// </summary>
     public void SeedData()
     {
-      if (!_context.Users.Any())
+      try
       {
-        var users = GenerateUsers(10);
-        _context.Users.AddRange(users);
-      }
+        // Сначала создаем пользователей (включая преподавателей)
+        if (!_context.Users.Any())
+        {
+          var users = GenerateUsers(10);
 
-      if (!_context.Courses.Any())
+          // Убеждаемся, что среди пользователей есть хотя бы один преподаватель
+          if (!users.Any(u => u.UserRole == User.Role.Teacher))
+          {
+            var teacher = new User
+            {
+              ChatId = BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 0),
+              Name = "Default",
+              Surname = "Teacher",
+              Email = "teacher@example.com",
+              UserRole = User.Role.Teacher,
+              BirthDate = DateOnly.FromDateTime(DateTime.Now.AddYears(-30))
+            };
+            users.Add(teacher);
+          }
+
+          _context.Users.AddRange(users);
+          _context.SaveChanges();
+        }
+
+        if (!_context.Courses.Any())
+        {
+          var courses = GenerateCourses(5);
+          _context.Courses.AddRange(courses);
+          _context.SaveChanges();
+        }
+
+        if (!_context.TaskWorks.Any())
+        {
+          var tasks = GenerateTaskWorks(20);
+          _context.TaskWorks.AddRange(tasks);
+          _context.SaveChanges();
+        }
+
+        if (!_context.Answers.Any())
+        {
+          var userIds = _context.Users.Select(u => u.ChatId).ToList();
+          var courseIds = _context.Courses.Select(c => c.Id).ToList();
+          var taskWorkIds = _context.TaskWorks.Select(t => t.Id).ToList();
+
+          if (userIds.Any() && courseIds.Any() && taskWorkIds.Any())
+          {
+            var answers = GenerateAnswers(50, userIds, courseIds, taskWorkIds);
+            _context.Answers.AddRange(answers);
+            _context.SaveChanges();
+          }
+        }
+      }
+      catch (Exception ex)
       {
-        var courses = GenerateCourses(5);
-        _context.Courses.AddRange(courses);
+        Console.WriteLine($"Error in SeedData: {ex.Message}");
+        throw;
       }
-
-      if (!_context.TaskWorks.Any())
-      {
-        var tasks = GenerateTaskWorks(20);
-        _context.TaskWorks.AddRange(tasks);
-      }
-
-      if (!_context.Answers.Any())
-      {
-        var answers = GenerateAnswers(50);
-        _context.Answers.AddRange(answers);
-      }
-
-      _context.SaveChanges();
     }
 
     /// <summary>
@@ -66,7 +97,7 @@ namespace HomeWorkTelegramBot
         .RuleFor(u => u.Lastname, f => f.Name.LastName())
         .RuleFor(u => u.Email, f => f.Internet.Email())
         .RuleFor(u => u.BirthDate, f => DateOnly.FromDateTime(f.Date.Past(30, DateTime.Now.AddYears(-18))))
-        .RuleFor(u => u.UserRole, f => f.PickRandom<User.Role>());
+        .RuleFor(u => u.UserRole, f => f.Random.Int(1, 10) <= 3 ? User.Role.Teacher : User.Role.Student);
 
       return faker.Generate(count);
     }
@@ -78,9 +109,32 @@ namespace HomeWorkTelegramBot
     /// <returns>Список курсов.</returns>
     private List<Courses> GenerateCourses(int count)
     {
+      var teacherIds = _context.Users
+          .Where(u => u.UserRole == User.Role.Teacher)
+          .Select(u => u.ChatId)
+          .ToList();
+
+      // Если преподавателей нет, создаем хотя бы одного
+      if (!teacherIds.Any())
+      {
+        var teacher = new User
+        {
+          ChatId = BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 0),
+          Name = "Default",
+          Surname = "Teacher",
+          Email = "teacher@example.com",
+          UserRole = User.Role.Teacher,
+          BirthDate = DateOnly.FromDateTime(DateTime.Now.AddYears(-30))
+        };
+        _context.Users.Add(teacher);
+        _context.SaveChanges();
+        teacherIds.Add(teacher.ChatId);
+      }
+
       var faker = new Faker<Courses>()
         .RuleFor(c => c.Name, f => f.Commerce.Department())
-        .RuleFor(c => c.Description, f => f.Lorem.Sentence());
+        .RuleFor(c => c.Description, f => f.Lorem.Sentence())
+        .RuleFor(c => c.TeacherId, f => f.PickRandom(teacherIds));
 
       return faker.Generate(count);
     }
@@ -92,8 +146,10 @@ namespace HomeWorkTelegramBot
     /// <returns>Список заданий.</returns>
     private List<TaskWork> GenerateTaskWorks(int count)
     {
+      var courseIds = _context.Courses.Select(c => c.Id).ToList();
+
       var faker = new Faker<TaskWork>()
-        .RuleFor(t => t.CourseId, f => f.Random.Int(1, 5))
+        .RuleFor(t => t.CourseId, f => f.PickRandom(courseIds))
         .RuleFor(t => t.Name, f => f.Commerce.ProductName())
         .RuleFor(t => t.Description, f => f.Lorem.Paragraph());
 
@@ -105,12 +161,13 @@ namespace HomeWorkTelegramBot
     /// </summary>
     /// <param name="count">Количество ответов для генерации.</param>
     /// <returns>Список ответов.</returns>
-    private List<Answer> GenerateAnswers(int count)
+    private List<Answer> GenerateAnswers(int count, List<long> userIds, List<int> courseIds, List<int> taskWorkIds)
     {
       var faker = new Faker<Answer>()
-        .RuleFor(a => a.AnswerText, f => f.Lorem.Sentence())
-        .RuleFor(a => a.CourseId, f => f.Random.Int(1, 5))
-        .RuleFor(a => a.TaskId, f => f.Random.Int(1, 20))
+        .RuleFor(a => a.AnswerText, f => f.Lorem.Sentence()).RuleFor(a => a.CourseId, f => f.PickRandom(courseIds))
+        .RuleFor(a => a.CourseId, f => f.PickRandom(courseIds))
+        .RuleFor(a => a.TaskId, f => f.PickRandom(taskWorkIds))
+        .RuleFor(a => a.UserId, f => f.PickRandom(userIds))
         .RuleFor(a => a.Date, f => f.Date.Recent())
         .RuleFor(a => a.Status, f => f.PickRandom<Answer.TaskStatus>());
 

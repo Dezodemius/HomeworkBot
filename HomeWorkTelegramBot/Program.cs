@@ -2,6 +2,7 @@
 using HomeWorkTelegramBot.Bot;
 using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.DataBase;
+using Microsoft.EntityFrameworkCore;
 using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot
@@ -22,6 +23,7 @@ namespace HomeWorkTelegramBot
 
         // dbContext.DeleteDatabase();
         dbContext.CheckDatabaseAndTables();
+        await dbContext.Database.MigrateAsync();
 
         // var seeder = new DataSeeder(dbContext);
         // seeder.SeedData();
