@@ -52,7 +52,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
       UserService.AddUser(newUser);
 
       EnrollUserInCourse(newUser, user.CourseId);
-
       AddDefaultAnswersForUser(user.CourseId, newUser.Id);
 
       LogInformation($"Пользователь с ChatId {userId} был принят.");
@@ -104,6 +103,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
           TaskId = task.Id,
           Date = DateTime.Now,
           Status = Answer.TaskStatus.NotAnswered,
+          UserId = userId,
         };
         AnswerService.AddAnswer(answer);
       }

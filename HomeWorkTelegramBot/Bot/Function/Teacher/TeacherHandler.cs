@@ -124,7 +124,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
-    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int messgaId = -1)
     {
       StringBuilder sb = new StringBuilder();
       sb.AppendLine("Добро пожаловать в панель преподавателя. Выберите действие:");

@@ -82,5 +82,41 @@ namespace HomeWorkTelegramBot.DataBase
       ApplicationData.DbContext.Answers.Update(answer);
       ApplicationData.DbContext.SaveChanges();
     }
+
+    /// <summary>
+    /// Получает все ответы для пользователя по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Список ответов для пользователя.</returns>
+    public List<Answer> GetAnswersByChatId(long chatId)
+    {
+      var user = ApplicationData.DbContext.Users.FirstOrDefault(u => u.ChatId == chatId);
+      if (user == null)
+      {
+        return new List<Answer>();
+      }
+
+      return ApplicationData.DbContext.Answers
+        .Where(a => a.UserId == user.Id)
+        .ToList();
+    }
+
+    /// <summary>
+    /// Получает ответ для указанного пользователя и задания.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <param name="taskId">Идентификатор задания.</param>
+    /// <returns>Ответ для пользователя и задания или null, если не найден.</returns>
+    public Answer GetAnswerByChatIdAndTaskId(long chatId, int taskId)
+    {
+      var user = ApplicationData.DbContext.Users.FirstOrDefault(u => u.ChatId == chatId);
+      if (user == null)
+      {
+        return null;
+      }
+
+      return ApplicationData.DbContext.Answers
+        .FirstOrDefault(a => a.UserId == user.Id && a.TaskId == taskId);
+    }
   }
 }
