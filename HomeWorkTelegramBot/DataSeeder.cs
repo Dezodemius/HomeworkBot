@@ -1,9 +1,6 @@
 ﻿using Bogus;
 using HomeWorkTelegramBot.DataBase;
 using HomeWorkTelegramBot.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace HomeWorkTelegramBot
 {
@@ -52,12 +49,6 @@ namespace HomeWorkTelegramBot
         _context.Answers.AddRange(answers);
         _context.SaveChanges();
       }
-
-      //if (!_context.CourseEnrollments.Any())
-      //{
-      //  var enrollments = GenerateCourseEnrollments();
-      //  _context.CourseEnrollments.AddRange(enrollments);
-      //}
 
       _context.SaveChanges();
     }
@@ -127,39 +118,5 @@ namespace HomeWorkTelegramBot
 
       return faker.Generate(count);
     }
-
-    ///// <summary>
-    ///// Генерирует записи о зачислении на курсы, используя существующих пользователей и курсы.
-    ///// </summary>
-    ///// <returns>Список зачислений на курсы.</returns>
-    //private List<CourseEnrollment> GenerateCourseEnrollments()
-    //{
-    //  var enrollments = new List<CourseEnrollment>();
-    //  var faker = new Faker();
-
-    //  var users = _context.Users.ToList();
-    //  var courses = _context.Courses.ToList();
-
-    //  foreach (var user in users)
-    //  {
-    //    var numberOfCourses = faker.Random.Int(2, Math.Min(3, courses.Count));
-
-    //    var selectedCourses = faker.Random.Shuffle(courses)
-    //        .Take(numberOfCourses);
-
-    //    foreach (var course in selectedCourses)
-    //    {
-    //      var enrollment = new CourseEnrollment
-    //      {
-    //        UserId = user.ChatId,
-    //        CourseId = course.Id
-    //      };
-
-    //      enrollments.Add(enrollment);
-    //    }
-    //  }
-
-    //  return enrollments;
-    //}
   }
 }

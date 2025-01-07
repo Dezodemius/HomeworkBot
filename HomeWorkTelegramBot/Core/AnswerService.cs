@@ -1,4 +1,5 @@
-﻿using HomeWorkTelegramBot.DataBase;
+﻿using HomeWorkTelegramBot.Bot.Function.Teacher;
+using HomeWorkTelegramBot.DataBase;
 using HomeWorkTelegramBot.Models;
 using System.Collections.Generic;
 using static HomeWorkTelegramBot.Config.Logger;
@@ -89,7 +90,7 @@ namespace HomeWorkTelegramBot.Core
     public static void UpdateAnswer(Answer answer)
     {
       answerRepository.UpdateAnswer(answer);
-      LogInformation($"Данные об ответе с id {answer.Id} изменены. Статус ответа: {answer.Status}");
+      LogInformation($"Данные об ответе с id {answer.Id} изменены. Статус ответа: {EnumExtentions.GetDescription(answer.Status)}");
     }
   }
 }

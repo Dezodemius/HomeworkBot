@@ -7,6 +7,9 @@ using static HomeWorkTelegramBot.Config.Logger;
 
 namespace HomeWorkTelegramBot.Bot.Function.Teacher
 {
+  /// <summary>
+  /// Класс создания нового задания.
+  /// </summary>
   internal class CreateTaskWork
   {
     public static readonly Dictionary<long, TaskWork> _creationData = new Dictionary<long, TaskWork>();
@@ -142,11 +145,14 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         LogInformation($"Создание нового задания с названием {task.Name} курса {task.CourseId} завершено преподавателем с ChatId {chatId}");
         InlineKeyboardMarkup keyboard = GetMenuKeyboard();
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Создание нового задания завершено!", keyboard);
-        _creationData.Remove(chatId);
-        _userSteps.Remove(chatId);
+        await ClearData();
       }
     }
 
+    /// <summary>
+    /// Создает клавиатуру с кнопкой для выхода в главное меню.
+    /// </summary>
+    /// <returns>Возвращает созданную Inline-клавиатуру.</returns>
     private static InlineKeyboardMarkup GetMenuKeyboard()
     {
       var callbackModels = new CallbackModel("В главное меню", "/menu");
@@ -194,8 +200,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _userSteps[chatId] = CreationStep.Name;
         InlineKeyboardMarkup keyboard = GetMenuKeyboard();
         LogInformation($"Курс {courseId} выбран для нового задания, которое создает преподаватель с ChatId {chatId}");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Был выбран курс: {courseId}. " +
-          $"Пожалуйста, введите название для нового задания.", keyboard, callbackQuery.Message.Id);
+        var messageData = $"Был выбран курс: {courseId}. Пожалуйста, введите название для нового задания.";
+        await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, callbackQuery.Message.Id);
       }
     }
 
@@ -215,6 +221,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard);
     }
 
+    /// <summary>
+    /// Очищает временные данные.
+    /// </summary>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
     public static async Task ClearData()
     {
       _creationData.Clear();

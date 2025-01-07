@@ -29,7 +29,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
-
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       if (callbackQuery.Data.StartsWith("page_"))
