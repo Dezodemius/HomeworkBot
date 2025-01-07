@@ -40,6 +40,23 @@ namespace HomeWorkTelegramBot.Core
     }
 
     /// <summary>
+    /// Добавляет новый курс и логирует это действие.
+    /// </summary>
+    /// <param name="course">Объект курса для добавления.</param>
+    public static void AddCourse(Courses course)
+    {
+      try
+      {
+        courseRepository.AddCourse(course);
+        LogInformation($"Добавлен новый курс: {course.Name}");
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при добавлении курса: {ex.Message}");
+        throw;
+      }
+
+    /// <summary>
     /// Получает все курсы, принадлежащие преподавателю по идентификатору его чата и логирует это действие.
     /// </summary>
     /// <param name="teacherId">Идентификатор курса.</param>

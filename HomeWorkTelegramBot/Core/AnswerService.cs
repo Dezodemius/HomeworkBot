@@ -92,5 +92,17 @@ namespace HomeWorkTelegramBot.Core
       answerRepository.UpdateAnswer(answer);
       LogInformation($"Данные об ответе с id {answer.Id} изменены. Статус ответа: {EnumExtentions.GetDescription(answer.Status)}");
     }
+
+    /// <summary>
+    /// Получает все ответы для пользователя по идентификатору чата и логирует это действие.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Список ответов для пользователя.</returns>
+    public static List<Answer> GetAnswersByChatId(long chatId)
+    {
+      var answers = answerRepository.GetAnswersByChatId(chatId);
+      LogInformation($"Получено {answers.Count} ответов для пользователя с ChatId {chatId}");
+      return answers;
+    }
   }
 }

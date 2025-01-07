@@ -1,4 +1,4 @@
-﻿using HomeWorkTelegramBot.Config;
+﻿  using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Models;
 using System;
 using System.Collections.Generic;
@@ -39,6 +39,16 @@ namespace HomeWorkTelegramBot.DataBase
       return ApplicationData.DbContext.Courses
         .Where(c => c.TeacherId == teacherId)
         .ToList();
+    }
+
+    /// <summary>
+    /// Добавляет новый курс в базу данных.
+    /// </summary>
+    /// <param name="course">Объект курса для добавления.</param>
+    public void AddCourse(Courses course)
+    {
+      ApplicationData.DbContext.Courses.Add(course);
+      ApplicationData.DbContext.SaveChanges();
     }
   }
 }
