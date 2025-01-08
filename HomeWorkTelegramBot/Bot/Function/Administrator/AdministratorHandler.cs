@@ -67,6 +67,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
         { "/log", async () => { if (callbackQuery.From.Id != ApplicationData.ConfigApp.AdminId) { await SendAccessDeniedMessageAsync(botClient, callbackQuery.From.Id); return; } await LogViewer.DisplayLogFilesAsync(botClient, callbackQuery.From.Id); }},
         { "/viewLog", () => LogViewer.SendErrorLogsAsync(botClient, callbackQuery) },
         { "/page:", async () => await TelegramBotHandler.HandlePaginationCallbackAsync(botClient, callbackQuery) },
+        { "/select:", async () => await new Calendar().StartDateSelectionAsync(botClient, callbackQuery) },
+        { "/select", async () => await new Calendar().HandleDateSelectionAsync(botClient, callbackQuery) },
       };
 
       foreach (var command in commandHandlers.Keys)
@@ -91,6 +93,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
       callbacks.Add(new CallbackModel("Сменить роль пользователя", "/changeRole"));
       callbacks.Add(new CallbackModel("Удалить курс", "/deleteCourse"));
       callbacks.Add(new CallbackModel("Просмотреть логи", "/log"));
+      callbacks.Add(new CallbackModel("Тест календаря", "/select:"));
 
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, sb.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks), messgaId);
     }
