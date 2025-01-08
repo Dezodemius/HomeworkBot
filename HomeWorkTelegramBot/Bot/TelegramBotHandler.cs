@@ -24,6 +24,9 @@ namespace HomeWorkTelegramBot.Bot
     /// </summary>
     private readonly ITelegramBotClient _botClient;
 
+    // Кэш для хранения данных о страницах для каждого чата и сообщения
+    private static readonly ConcurrentDictionary<long, ConcurrentDictionary<int, List<CallbackModel>>> PaginationCache = new ConcurrentDictionary<long, ConcurrentDictionary<int, List<CallbackModel>>>();
+
     /// <summary>
     /// Инициализирует новый экземпляр класса TelegramBotHandler.
     /// </summary>
@@ -103,31 +106,31 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="inlineKeyboardMarkup">Опциональная встроенная клавиатура.</param>
     /// <param name="messageId">Идентификатор сообщения для редактирования (если есть).</param>
     /// <returns>Задача, представляющая асинхронную операцию отправки или редактирования сообщения.</returns>
-    internal static async Task SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
+    internal static async Task<Message> SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
     {
       try
       {
         if (inlineKeyboardMarkup == null && messageId == null)
         {
-          await botClient.SendMessage(chatId, message);
+          return await botClient.SendMessage(chatId, message);
         }
         else if (inlineKeyboardMarkup == null && messageId.HasValue)
         {
-          await botClient.EditMessageText(chatId, messageId.Value, message);
+          return await botClient.EditMessageText(chatId, messageId.Value, message);
         }
         else if (messageId.HasValue)
         {
-          await botClient.EditMessageText(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
+          return await botClient.EditMessageText(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
         }
         else
         {
-          await botClient.SendMessage(chatId, message, replyMarkup: inlineKeyboardMarkup);
+          return await botClient.SendMessage(chatId, message, replyMarkup: inlineKeyboardMarkup);
         }
       }
       catch (Exception ex)
       {
         Console.WriteLine(ex.ToString());
-        await SendMessageAsync(botClient, chatId, "Произошла системная ошибка! Повторите попытку позже...");
+        return await SendMessageAsync(botClient, chatId, "Произошла системная ошибка! Повторите попытку позже...");
       }
     }
 
@@ -172,7 +175,7 @@ namespace HomeWorkTelegramBot.Bot
     internal static InlineKeyboardMarkup GetPaginatedInlineKeyboardMarkup(
         List<CallbackModel> items,
         int currentPage = 0,
-        int itemsPerPage = 9)
+        int itemsPerPage = 3)
     {
       // Вычисляем общее количество страниц
       var totalPages = (int)Math.Ceiling(items.Count / (double)itemsPerPage);

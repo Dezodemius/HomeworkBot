@@ -63,16 +63,18 @@ namespace HomeWorkTelegramBot.Bot
     {
       List<CallbackModel> callbackModels = new List<CallbackModel>();
 
-      var totalPages = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
-      page = Math.Max(1, Math.Min(page, totalPages));
-      var pageItems = items
-        .Skip((page - 1) * itemsPerPage)
-        .Take(itemsPerPage);
+      //var totalPages = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
+      //page = Math.Max(1, Math.Min(page, totalPages));
+      //var pageItems = items
+      //  .Skip((page - 1) * itemsPerPage)
+      //  .Take(itemsPerPage);
 
-      GetDataButtons(commandText, callbackModels, pageItems);
-      GetNavigationButtons(page, callbackModels, totalPages);
 
-      return TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+      GetDataButtons(commandText, callbackModels, items);
+      return TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbackModels);
+      //GetNavigationButtons(page, callbackModels, totalPages);
+
+      //return TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
     }
 
     /// <summary>

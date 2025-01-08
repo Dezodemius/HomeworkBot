@@ -31,12 +31,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
-      if (callbackQuery.Data.StartsWith("page_"))
-      {
-        int page = int.Parse(callbackQuery.Data.Split('_')[1]);
-        await HandlePagination(botClient, callbackQuery, page);
-        return;
-      }
+      //if (callbackQuery.Data.StartsWith("page_"))
+      //{
+      //  int page = int.Parse(callbackQuery.Data.Split('_')[1]);
+      //  //await HandlePagination(botClient, callbackQuery, page);
+      //  return;
+      //}
 
       if (callbackQuery.Data.StartsWith("/selectcourse_"))
       {
@@ -66,6 +66,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         { "/incorrect_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
 
         { "/menu", async () => await new TeacherHandler().HandleMenuCommand(botClient, callbackQuery) },
+        { "/page:", async () => await TelegramBotHandler.HandlePaginationCallbackAsync(botClient, callbackQuery) },
+
       };
 
       foreach (var command in commandHandlers.Keys)
@@ -79,7 +81,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
-    public async Task HandlePagination(ITelegramBotClient botClient, CallbackQuery callbackQuery, int page)
+    /*public async Task HandlePagination(ITelegramBotClient botClient, CallbackQuery callbackQuery, int page)
     {
       var messageText = callbackQuery.Message.Text;
       InlineKeyboardMarkup newKeyboard = null;
@@ -122,7 +124,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.Message.Chat.Id, callbackQuery.Message.Text, newKeyboard, callbackQuery.Message.Id);
       }
-    }
+    }*/
 
     public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
