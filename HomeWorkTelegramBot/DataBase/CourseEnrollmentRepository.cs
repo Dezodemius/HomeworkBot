@@ -72,5 +72,7 @@ namespace HomeWorkTelegramBot.DataBase
         .Where(ce => ce.CourseId == courseId)
         .ToList();
     }
+
+
   }
 }

@@ -56,5 +56,39 @@ namespace HomeWorkTelegramBot.DataBase
     {
       return ApplicationData.DbContext.Users.FirstOrDefault(u => u.Id == userId);
     }
+
+    /// <summary>
+    /// Возвращает список всех пользователей.
+    /// </summary>
+    /// <returns>Список объектов User.</returns>
+    public List<User> GetAllUsers()
+    {
+      return ApplicationData.DbContext.Users.ToList();
+    }
+
+    /// <summary>
+    /// Обновляет информацию о пользователе в базе данных.
+    /// </summary>
+    /// <param name="user">Объект пользователя для обновления.</param>
+    public void UpdateUser(User user)
+    {
+      ApplicationData.DbContext.Users.Update(user);
+      ApplicationData.DbContext.SaveChanges();
+    }
+
+    /// <summary>
+    /// Удаляет пользователя из базы данных по идентификатору чата.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    public void DeleteUser(long chatId)
+    {
+      var user = ApplicationData.DbContext.Users.FirstOrDefault(u => u.ChatId == chatId);
+      if (user != null)
+      {
+        ApplicationData.DbContext.Users.Remove(user);
+        ApplicationData.DbContext.SaveChanges();
+      }
+    }
+
   }
 }

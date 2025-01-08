@@ -2,32 +2,18 @@
 using HomeWorkTelegramBot.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using static HomeWorkTelegramBot.Config.Logger;
-using Telegram.Bot.Types.ReplyMarkups;
-using HomeWorkTelegramBot.Config;
 
-namespace HomeWorkTelegramBot.Bot.Function
+namespace HomeWorkTelegramBot.Bot.Function.Registration
 {
-  static internal class Registration
+  internal partial class Registration
   {
-    static private readonly Dictionary<long, UserRegistration> _registrationData = new Dictionary<long, UserRegistration>();
-    static private readonly Dictionary<long, RegistrationStep> _userSteps = new Dictionary<long, RegistrationStep>();
-
-    private enum RegistrationStep
-    {
-      Name,
-      Surname,
-      Lastname,
-      BirthDate,
-      Email,
-      CourseSelection,
-      Completed
-    }
-
     /// <summary>
     /// Обрабатывает шаг регистрации для пользователя.
     /// </summary>
@@ -45,6 +31,12 @@ namespace HomeWorkTelegramBot.Bot.Function
       var currentStep = _userSteps[chatId];
       var user = _registrationData[chatId];
 
+      if (_hasChanges.TryGetValue(chatId, out bool hasChanges) && hasChanges)
+      {
+        await CheckAndCompleteRegistration(botClient, chatId, input);
+        return;
+      }
+
       switch (currentStep)
       {
         case RegistrationStep.Name:
@@ -56,11 +48,12 @@ namespace HomeWorkTelegramBot.Bot.Function
           break;
 
         case RegistrationStep.Lastname:
-          await ProcessLastnameStep(botClient, chatId, input, user);
+          await ProcessLastnameStep(botClient, message, chatId, input, user);
           break;
 
-        case RegistrationStep.BirthDate:
-          await ProcessBirthDateStep(botClient, chatId, input, user);
+
+        case RegistrationStep.BirthYear:
+          await ProcessBirthYearStep(botClient, message, chatId, input, user);
           break;
 
         case RegistrationStep.Email:
@@ -100,21 +93,34 @@ namespace HomeWorkTelegramBot.Bot.Function
           await HandleCourseSelection(botClient, chatId, callbackQuery, user);
           break;
 
+
+        case RegistrationStep.BirthMonth:
+          await ProcessBirthMonthStep(botClient, callbackQuery, chatId, data, user);
+          break;
+
+        case RegistrationStep.BirthDay:
+          await ProcessBirthDayStep(botClient, callbackQuery, chatId, data, user);
+          break;
+
+        case RegistrationStep.BirthDate:
+          await ProcessBirthDateStep(botClient, callbackQuery, chatId, data, user);
+          break;
+
         case RegistrationStep.Completed:
-          LogInformation($"Регистрация пользователя {chatId} уже завершена.");
+          if (callbackQuery.Data.Contains("/submit_"))
+          {
+            await HandleSubmit(botClient, callbackQuery, chatId);
+          }
+          else if (callbackQuery.Data.Contains("/edit"))
+          {
+            await HandleEdit(botClient, callbackQuery, chatId);
+          }
+          break;
+
+        case RegistrationStep.Edit:
+          await HandleEdit(botClient, callbackQuery, chatId);
           break;
       }
-    }
-
-    /// <summary>
-    /// Инициализирует процесс регистрации для нового пользователя.
-    /// </summary>
-    static private async Task InitializeRegistration(ITelegramBotClient botClient, long chatId)
-    {
-      _userSteps[chatId] = RegistrationStep.Name;
-      _registrationData[chatId] = new UserRegistration { ChatId = chatId };
-      LogInformation($"Начало регистрации для пользователя с ChatId {chatId}");
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, введите ваше имя:");
     }
 
     /// <summary>
@@ -154,7 +160,7 @@ namespace HomeWorkTelegramBot.Bot.Function
     /// <summary>
     /// Обрабатывает ввод отчества пользователя.
     /// </summary>
-    static private async Task ProcessLastnameStep(ITelegramBotClient botClient, long chatId, string input, UserRegistration user)
+    static private async Task ProcessLastnameStep(ITelegramBotClient botClient, Message message, long chatId, string input, UserRegistration user)
     {
       if (string.IsNullOrWhiteSpace(input) || !Regex.IsMatch(input, @"^[a-zA-Zа-яА-Я]+$"))
       {
@@ -163,19 +169,49 @@ namespace HomeWorkTelegramBot.Bot.Function
       }
 
       user.Lastname = input;
-      _userSteps[chatId] = RegistrationStep.BirthDate;
+      _userSteps[chatId] = RegistrationStep.BirthYear;
       LogInformation($"Отчество пользователя {chatId} установлено: {input}");
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, введите вашу дату рождения (гггг-мм-дд):");
+      ProcessBirthYearStep(botClient, message, chatId, input, user);
+    }
+
+    /// <summary>
+    /// Обрабатывает выбор года рождения пользователя.
+    /// </summary>
+    static private async Task ProcessBirthYearStep(ITelegramBotClient botClient, Message message, long chatId, string input, UserRegistration user)
+    {
+      await new Administrator.Calendar().StartDateSelectionAsync(botClient, message);
+      _userSteps[chatId] = RegistrationStep.BirthMonth;
+    }
+
+    /// <summary>
+    /// Обрабатывает выбор месяца рождения пользователя.
+    /// </summary>
+    static private async Task ProcessBirthMonthStep(ITelegramBotClient botClient, CallbackQuery callbackQuery, long chatId, string input, UserRegistration user)
+    {
+      await new Administrator.Calendar().HandleDateSelectionAsync(botClient, callbackQuery);
+      _userSteps[chatId] = RegistrationStep.BirthDay;
+    }
+
+    /// <summary>
+    /// Обрабатывает выбор дня рождения пользователя.
+    /// </summary>
+    static private async Task ProcessBirthDayStep(ITelegramBotClient botClient, CallbackQuery callbackQuery, long chatId, string input, UserRegistration user)
+    {
+      await new Administrator.Calendar().HandleDateSelectionAsync(botClient, callbackQuery);
+      _userSteps[chatId] = RegistrationStep.BirthDate;
     }
 
     /// <summary>
     /// Обрабатывает ввод даты рождения пользователя.
     /// </summary>
-    static private async Task ProcessBirthDateStep(ITelegramBotClient botClient, long chatId, string input, UserRegistration user)
+    static private async Task ProcessBirthDateStep(ITelegramBotClient botClient, CallbackQuery callbackQuery, long chatId, string input, UserRegistration user)
     {
-      if (DateOnly.TryParse(input, out var birthDate))
+      await new Administrator.Calendar().HandleDateSelectionAsync(botClient, callbackQuery);
+      var date = new Function.Administrator.Calendar().ReturnBirthDate(botClient, chatId).ToDateOnly();
+
+      if (date != null)
       {
-        user.BirthDate = birthDate;
+        user.BirthDate = date;
         _userSteps[chatId] = RegistrationStep.Email;
         LogInformation($"Дата рождения пользователя {chatId} установлена: {input}");
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, введите вашу электронную почту:");
@@ -187,6 +223,9 @@ namespace HomeWorkTelegramBot.Bot.Function
       }
     }
 
+    /// <summary>
+    /// Обрабатывает ввод электронной почты пользователя.
+    /// </summary>
     static private async Task ProcessEmailStep(ITelegramBotClient botClient, long chatId, string input, UserRegistration user)
     {
       if (string.IsNullOrWhiteSpace(input) || !input.Contains("@"))
@@ -218,59 +257,5 @@ namespace HomeWorkTelegramBot.Bot.Function
       await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
     }
 
-    /// <summary>
-    /// Обрабатывает нажатие на выбранный курс.
-    /// </summary>
-    static private async Task HandleCourseSelection(ITelegramBotClient botClient, long chatId, CallbackQuery callbackQuery, UserRegistration user)
-    {
-      string data = callbackQuery.Data;
-      if (data.StartsWith("/selectcourse_"))
-      {
-        int courseId = int.Parse(data.Replace("/selectcourse_", ""));
-        user.CourseId = courseId;
-        _userSteps[chatId] = RegistrationStep.Completed;
-        LogInformation($"Курс {courseId} выбран для пользователя с ChatId {chatId}");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, $"Был выбран курс: {courseId}", null, callbackQuery.Message.Id);
-        await CompleteRegistration(botClient, chatId);
-      }
-    }
-
-    /// <summary>
-    /// Завершает регистрацию пользователя.
-    /// </summary>
-    static private async Task CompleteRegistration(ITelegramBotClient botClient, long chatId)
-    {
-      if (_registrationData.TryGetValue(chatId, out var user))
-      {
-        UserRegistrationService.AddUserRegistration(user);
-        LogInformation($"Регистрация завершена для пользователя с ChatId {chatId}");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Регистрация завершена. Ожидайте подтверждение от администратора!");
-        _registrationData.Remove(chatId);
-        _userSteps.Remove(chatId);
-        await SendRegistrationToAdmin(botClient, user);
-      }
-    }
-
-    /// <summary>
-    /// Отправляет информацию о пользователе администратору для подтверждения.
-    /// </summary>
-    static private async Task SendRegistrationToAdmin(ITelegramBotClient botClient, UserRegistration user)
-    {
-      long adminChatId = ApplicationData.ConfigApp.AdminId;
-
-      string userInfo = $"Новая регистрация:\n" +
-                        $"Имя: {user.Name}\n" +
-                        $"Фамилия: {user.Surname}\n" +
-                        $"Отчество: {user.Lastname}\n" +
-                        $"Дата рождения: {user.BirthDate}\n" +
-                        $"Email: {user.Email}\n" +
-                        $"Курс: {user.CourseId}";
-
-      List<CallbackModel> callbacks = new List<CallbackModel>();
-      callbacks.Add(new CallbackModel("Принять", $"/approve_{user.ChatId}"));
-      callbacks.Add(new CallbackModel("Отказать", $"/reject_{user.ChatId}"));
-
-      await TelegramBotHandler.SendMessageAsync(botClient, adminChatId, userInfo, TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbacks));
-    }
   }
 }

@@ -84,5 +84,44 @@ namespace HomeWorkTelegramBot.Core
       }
       return user;
     }
+
+    /// <summary>
+    /// Возвращает список всех пользователей.
+    /// </summary>
+    /// <returns>Список объектов User.</returns>
+    public static List<User> GetAllUsers()
+    {
+      var users = userRepository.GetAllUsers();
+      LogInformation($"Получено {users.Count} пользователей из базы данных.");
+      return users;
+    }
+
+    /// <summary>
+    /// Обновляет информацию о пользователе.
+    /// </summary>
+    /// <param name="user">Объект пользователя для обновления.</param>
+    public static void UpdateUser(User user)
+    {
+      userRepository.UpdateUser(user);
+      LogInformation($"Обновлена информация о пользователе: ChatId - {user.ChatId}");
+    }
+
+    /// <summary>
+    /// Удаляет пользователя по идентификатору чата и логирует это действие.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    public static void DeleteUser(long chatId)
+    {
+      try
+      {
+        userRepository.DeleteUser(chatId);
+        LogInformation($"Пользователь с ChatId {chatId} удален.");
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при удалении пользователя: {ex.Message}");
+        throw;
+      }
+    }
   }
 }

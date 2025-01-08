@@ -74,7 +74,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
       }
     }
 
-    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int messgaId = -1)
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int? messgaId = null)
     {
       string message = $"{Utils.TimeGreeting.GetGreeting()}. Выберите функцию:";
       List<CallbackModel> callbacks = new List<CallbackModel>();

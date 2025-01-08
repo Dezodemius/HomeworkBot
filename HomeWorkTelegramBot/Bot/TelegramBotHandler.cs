@@ -2,6 +2,7 @@
 using HomeWorkTelegramBot.Config;
 using HomeWorkTelegramBot.Utils;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +23,9 @@ namespace HomeWorkTelegramBot.Bot
     /// Клиент Telegram бота.
     /// </summary>
     private readonly ITelegramBotClient _botClient;
+
+    // Кэш для хранения данных о страницах для каждого чата и сообщения
+    private static readonly ConcurrentDictionary<long, ConcurrentDictionary<int, List<CallbackModel>>> PaginationCache = new ConcurrentDictionary<long, ConcurrentDictionary<int, List<CallbackModel>>>();
 
     /// <summary>
     /// Инициализирует новый экземпляр класса TelegramBotHandler.
@@ -82,14 +86,20 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="cancellationToken">Токен отмены.</param>
     private Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
-      var ErrorMessage = exception switch
+      var errorMessage = exception switch
       {
-        ApiRequestException apiRequestException
-            => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-        _ => exception.ToString()
+        ApiRequestException apiRequestException =>
+            $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+        HttpRequestException httpRequestException =>
+            $"HTTP Request Error:\n{httpRequestException.Message}",
+        TaskCanceledException taskCanceledException =>
+            "Task was canceled. This might be due to a timeout or a manual cancellation.",
+        OperationCanceledException operationCanceledException =>
+            "Operation was canceled. This might be due to a timeout or a manual cancellation.",
+        _ => $"An unexpected error occurred:\n{exception}"
       };
 
-      LogError(ErrorMessage);
+      LogError(errorMessage);
       return Task.CompletedTask;
     }
 
@@ -102,31 +112,31 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="inlineKeyboardMarkup">Опциональная встроенная клавиатура.</param>
     /// <param name="messageId">Идентификатор сообщения для редактирования (если есть).</param>
     /// <returns>Задача, представляющая асинхронную операцию отправки или редактирования сообщения.</returns>
-    internal static async Task SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
+    internal static async Task<Message> SendMessageAsync(ITelegramBotClient botClient, long chatId, string message, InlineKeyboardMarkup inlineKeyboardMarkup = null, int? messageId = null)
     {
       try
       {
         if (inlineKeyboardMarkup == null && messageId == null)
         {
-          await botClient.SendMessage(chatId, message);
+          return await botClient.SendMessage(chatId, message);
         }
         else if (inlineKeyboardMarkup == null && messageId.HasValue)
         {
-          await botClient.EditMessageText(chatId, messageId.Value, message);
+          return await botClient.EditMessageText(chatId, messageId.Value, message);
         }
         else if (messageId.HasValue)
         {
-          await botClient.EditMessageText(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
+          return await botClient.EditMessageText(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
         }
         else
         {
-          await botClient.SendMessage(chatId, message, replyMarkup: inlineKeyboardMarkup);
+          return await botClient.SendMessage(chatId, message, replyMarkup: inlineKeyboardMarkup);
         }
       }
       catch (Exception ex)
       {
         Console.WriteLine(ex.ToString());
-        await SendMessageAsync(botClient, chatId, "Произошла системная ошибка! Повторите попытку позже...");
+        return await SendMessageAsync(botClient, chatId, "Произошла системная ошибка! Повторите попытку позже...");
       }
     }
 
@@ -159,6 +169,104 @@ namespace HomeWorkTelegramBot.Bot
       buttons.Add(new List<InlineKeyboardButton> { InlineKeyboardButton.WithCallbackData(callbackModel.Name, callbackModel.Command) });
 
       return new InlineKeyboardMarkup(buttons);
+    }
+
+    /// <summary>
+    /// Создает разметку встроенной клавиатуры с пагинацией для списка элементов.
+    /// </summary>
+    /// <param name="items">Список объектов <see cref="CallbackModel"/>, которые нужно отобразить.</param>
+    /// <param name="currentPage">Текущая страница, которую нужно отобразить.</param>
+    /// <param name="itemsPerPage">Количество элементов на странице (по умолчанию 9).</param>
+    /// <returns>Объект <see cref="InlineKeyboardMarkup"/>, содержащий кнопки для текущей страницы и кнопки навигации.</returns>
+    internal static InlineKeyboardMarkup GetPaginatedInlineKeyboardMarkup(
+        List<CallbackModel> items,
+        int currentPage = 0)
+    {
+      int itemsPerPage = ApplicationData.ConfigApp.ItemsPerPage;
+      // Вычисляем общее количество страниц
+      var totalPages = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
+      currentPage = Math.Max(0, Math.Min(currentPage, totalPages - 1));
+
+      // Извлекаем элементы для текущей страницы
+      var paginatedItems = items
+          .Skip(currentPage * itemsPerPage)
+          .Take(itemsPerPage)
+          .ToList();
+
+      // Создаем кнопки для каждого элемента на текущей странице
+      var buttons = GetInlineKeyboardMarkupAsync(paginatedItems).InlineKeyboard.ToList();
+
+      // Добавляем кнопки навигации
+      var navigationButtons = new List<InlineKeyboardButton>();
+      if (currentPage > 0)
+      {
+        navigationButtons.Add(InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"/page:{currentPage - 1}:{itemsPerPage}"));
+      }
+      if (currentPage < totalPages - 1)
+      {
+        navigationButtons.Add(InlineKeyboardButton.WithCallbackData("Вперед ➡️", $"/page:{currentPage + 1}:{itemsPerPage}"));
+      }
+
+      if (navigationButtons.Any())
+      {
+        buttons.Add(navigationButtons);
+      }
+
+      return new InlineKeyboardMarkup(buttons);
+    }
+
+    /// <summary>
+    /// Инициализирует данные для пагинации и сохраняет их в кэше.
+    /// </summary>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <param name="messageId">Идентификатор сообщения.</param>
+    /// <param name="items">Список объектов <see cref="CallbackModel"/>, которые нужно отобразить.</param>
+    internal static void InitializePagination(long chatId, int messageId, List<CallbackModel> items)
+    {
+      var messageCache = PaginationCache.GetOrAdd(chatId, new ConcurrentDictionary<int, List<CallbackModel>>());
+      messageCache[messageId] = items;
+      LogInformation($"Инициализация пагинации для chatId: {chatId}, messageId: {messageId}");
+    }
+
+    /// <summary>
+    /// Обрабатывает нажатие на кнопки пагинации и обновляет отображаемую страницу.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram бота.</param>
+    /// <param name="callbackQuery">Объект callback-запроса.</param>
+    /// <param name="itemsPerPage">Количество элементов на странице (по умолчанию 9).</param>
+    /// <returns>Задача, представляющая асинхронную операцию обработки нажатия.</returns>
+    internal static async Task HandlePaginationCallbackAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+    {
+      if (callbackQuery.Data.StartsWith("/page:"))
+      {
+        // Извлекаем номер страницы и itemsPerPage из команды
+        var pageData = callbackQuery.Data.Split(':');
+        if (pageData.Length == 3 && int.TryParse(pageData[1], out int newPage) && int.TryParse(pageData[2], out int itemsPerPage))
+        {
+          LogInformation($"Обработка пагинации для chatId: {callbackQuery.Message.Chat.Id}, messageId: {callbackQuery.Message.MessageId}, новая страница: {newPage}, itemsPerPage: {itemsPerPage}");
+
+          // Получаем данные из кэша
+          if (PaginationCache.TryGetValue(callbackQuery.Message.Chat.Id, out var messageCache) && messageCache.TryGetValue(callbackQuery.Message.MessageId, out var items))
+          {
+            LogInformation("Данные для пагинации найдены в кэше.");
+
+            // Создаем новую разметку клавиатуры для новой страницы
+            var inlineKeyboard = GetPaginatedInlineKeyboardMarkup(items, newPage);
+
+            // Обновляем сообщение с новой клавиатурой
+            await botClient.EditMessageReplyMarkupAsync(
+                chatId: callbackQuery.Message.Chat.Id,
+                messageId: callbackQuery.Message.MessageId,
+                replyMarkup: inlineKeyboard
+            );
+
+          }
+          else
+          {
+            LogError("Данные для пагинации не найдены в кэше.");
+          }
+        }
+      }
     }
   }
 }

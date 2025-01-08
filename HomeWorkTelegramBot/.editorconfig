@@ -20,3 +20,6 @@ dotnet_diagnostic.SA1101.severity = none
 
 # SA1117: Parameters should be on same line or separate lines
 dotnet_diagnostic.SA1117.severity = silent
+
+# SA1309: Field names should not begin with underscore
+dotnet_diagnostic.SA1309.severity = none

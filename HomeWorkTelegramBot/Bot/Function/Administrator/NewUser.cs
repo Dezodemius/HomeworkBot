@@ -53,6 +53,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
 
       EnrollUserInCourse(newUser, user.CourseId);
       AddDefaultAnswersForUser(user.CourseId, newUser.Id);
+      UserRegistrationService.DeleteUserRegistration(userId);
 
       LogInformation($"Пользователь с ChatId {userId} был принят.");
       await NotifyUserAndAdmin(botClient, callbackQuery, adminChatId, userId, "принят");
@@ -82,7 +83,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
     {
       var courseEnrollment = new CourseEnrollment
       {
-        UserId = user.Id,
+        UserId = user.ChatId,
         CourseId = courseId,
       };
       CourseEnrollmentService.AddCourseEnrollment(courseEnrollment);
@@ -115,7 +116,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
     private async Task NotifyUserAndAdmin(ITelegramBotClient botClient, CallbackQuery callbackQuery, long adminChatId, long userId, string result)
     {
       await TelegramBotHandler.SendMessageAsync(botClient, adminChatId, $"Пользователь с ChatId {userId} был {result}.", null, callbackQuery.Message.Id);
-      await TelegramBotHandler.SendMessageAsync(botClient, userId, $"Ваша регистрация была {result} администратором.", null, callbackQuery.Message.Id);
+      await TelegramBotHandler.SendMessageAsync(botClient, userId, $"Ваша регистрация была {result} администратором.");
     }
 
     /// <summary>

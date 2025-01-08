@@ -15,7 +15,7 @@ namespace HomeWorkTelegramBot.Bot.Function.UnregisteredUser
     {
       if (!UserRegistrationService.UserRegistrationExists(callbackQuery.From.Id))
       {
-        await Registration.ProcessRegistrationStep(botClient, callbackQuery);
+        await Registration.Registration.ProcessRegistrationStep(botClient, callbackQuery);
       }
       else
       {
@@ -27,7 +27,7 @@ namespace HomeWorkTelegramBot.Bot.Function.UnregisteredUser
     {
       if (!UserRegistrationService.UserRegistrationExists(message.Chat.Id))
       {
-        await Registration.ProcessRegistrationStep(botClient, message);
+        await Registration.Registration.ProcessRegistrationStep(botClient, message);
       }
       else
       {
@@ -35,7 +35,7 @@ namespace HomeWorkTelegramBot.Bot.Function.UnregisteredUser
       }
     }
 
-    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int messgaId = -1)
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int? messgaId = null)
     {
       throw new NotImplementedException();
     }
