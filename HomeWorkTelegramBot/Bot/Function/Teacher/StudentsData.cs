@@ -217,11 +217,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         answer.UserId = userId;
         _userSteps[chatId] = GetStudentDataStep.AnswerSelection;
         string messageData = GetMessageData(answer);
+       // var callbacks = GetInlineKeyboard.GetDataButtons();
         var keyboard = GetMessageButtons(answer);
         if (keyboard != null)
         {
           LogInformation($"Студент с chatId {userId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
+          var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
+          TelegramBotHandler.InitializePagination(callbackQuery.From.Id, message.MessageId, keyboard);
         }
         else
         {

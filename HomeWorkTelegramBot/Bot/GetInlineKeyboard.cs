@@ -84,7 +84,7 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="commandText">Префикс команды.</param>
     /// <param name="callbackModels">Список объектов класса CallbackModel.</param>
     /// <param name="pageItems">Список элементов на странице.</param>
-    private static void GetDataButtons<T>(string commandText, List<CallbackModel> callbackModels, IEnumerable<T> pageItems)
+    public static void GetDataButtons<T>(string commandText, List<CallbackModel> callbackModels, IEnumerable<T> pageItems)
     {
       foreach (var item in pageItems)
       {
