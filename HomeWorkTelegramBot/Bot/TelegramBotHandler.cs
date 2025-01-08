@@ -174,9 +174,9 @@ namespace HomeWorkTelegramBot.Bot
     /// <returns>Объект <see cref="InlineKeyboardMarkup"/>, содержащий кнопки для текущей страницы и кнопки навигации.</returns>
     internal static InlineKeyboardMarkup GetPaginatedInlineKeyboardMarkup(
         List<CallbackModel> items,
-        int currentPage = 0,
-        int itemsPerPage = 9)
+        int currentPage = 0)
     {
+      int itemsPerPage = ApplicationData.ConfigApp.ItemsPerPage;
       // Вычисляем общее количество страниц
       var totalPages = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
       currentPage = Math.Max(0, Math.Min(currentPage, totalPages - 1));
@@ -245,7 +245,7 @@ namespace HomeWorkTelegramBot.Bot
             LogInformation("Данные для пагинации найдены в кэше.");
 
             // Создаем новую разметку клавиатуры для новой страницы
-            var inlineKeyboard = GetPaginatedInlineKeyboardMarkup(items, newPage, itemsPerPage);
+            var inlineKeyboard = GetPaginatedInlineKeyboardMarkup(items, newPage);
 
             // Обновляем сообщение с новой клавиатурой
             await botClient.EditMessageReplyMarkupAsync(

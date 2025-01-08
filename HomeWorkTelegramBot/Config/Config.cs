@@ -25,6 +25,11 @@ namespace HomeWorkTelegramBot.Config
     public long AdminId { get; set; }
 
     /// <summary>
+    /// Количество элементов на странице.
+    /// </summary>
+    public int ItemsPerPage { get; set; }
+
+    /// <summary>
     /// Загружает конфигурацию из указанного YAML файла.
     /// </summary>
     /// <param name="path">Путь к файлу конфигурации YAML.</param>
@@ -40,6 +45,7 @@ namespace HomeWorkTelegramBot.Config
       this.DataPath = data.DataPath;
       this.BotToken = data.BotToken;
       this.AdminId = data.AdminId;
+      this.ItemsPerPage = data.ItemsPerPage;
     }
 
     /// <summary>

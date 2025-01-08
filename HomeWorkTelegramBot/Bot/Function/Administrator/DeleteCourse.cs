@@ -24,7 +24,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
         callbacks.Add(new CallbackModel(course.Name, $"/deleteCourse:{course.Id}"));
       }
 
-      var inlineKeyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks, itemsPerPage: 2);
+      var inlineKeyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
       var message = await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите курс для удаления:", inlineKeyboard, callbackQuery.Message.Id);
       TelegramBotHandler.InitializePagination(callbackQuery.From.Id, message.MessageId, callbacks);
     }
