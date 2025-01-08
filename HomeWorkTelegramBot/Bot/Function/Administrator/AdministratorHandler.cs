@@ -66,6 +66,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
         { "/deleteCourse", async () => await new DeleteCourse().ShowCoursesForDeletionAsync(botClient, callbackQuery) },
         { "/log", async () => { if (callbackQuery.From.Id != ApplicationData.ConfigApp.AdminId) { await SendAccessDeniedMessageAsync(botClient, callbackQuery.From.Id); return; } await LogViewer.DisplayLogFilesAsync(botClient, callbackQuery.From.Id); }},
         { "/viewLog", () => LogViewer.SendErrorLogsAsync(botClient, callbackQuery) },
+        { "/page:", async () => await TelegramBotHandler.HandlePaginationCallbackAsync(botClient, callbackQuery) },
       };
 
       foreach (var command in commandHandlers.Keys)

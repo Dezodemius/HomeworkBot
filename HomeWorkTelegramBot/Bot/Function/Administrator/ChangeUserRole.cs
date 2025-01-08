@@ -7,6 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using HomeWorkTelegramBot.Core;
+using System.Collections.Concurrent;
 
 namespace HomeWorkTelegramBot.Bot.Function.Administrator
 {
@@ -27,13 +28,18 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
 
       var buttons = new List<List<InlineKeyboardButton>>();
 
+      List<CallbackModel> callbacks = new List<CallbackModel>();
+
       foreach (var user in users)
       {
-        buttons.Add(new List<InlineKeyboardButton> { InlineKeyboardButton.WithCallbackData($"{user.Surname} {user.Name} {user.Lastname}", $"/select_user:{user.ChatId}") });
+        callbacks.Add(new CallbackModel($"{user.Surname} {user.Name} {user.Lastname}", $"/select_user:{user.ChatId}"));
       }
 
-      var inlineKeyboard = new InlineKeyboardMarkup(buttons);
-      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите пользователя:", inlineKeyboard, callbackQuery.Message.Id);
+
+      var inlineKeyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
+      var message = await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите пользователя:", inlineKeyboard, callbackQuery.Message.Id);
+
+      TelegramBotHandler.InitializePagination(callbackQuery.From.Id, message.MessageId, callbacks);
     }
 
     /// <summary>
