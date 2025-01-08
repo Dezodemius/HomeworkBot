@@ -24,7 +24,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
     public async Task StartDateSelectionAsync(ITelegramBotClient botClient, Message message)
     {
       var yearKeyboard = CreateYearSelection();
-      await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, "Выберите год:", yearKeyboard);
+      await TelegramBotHandler.SendMessageAsync(botClient, message.Chat.Id, "Выберите год:", yearKeyboard);
     }
 
     public async Task HandleDateSelectionAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery)
@@ -93,7 +93,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
       {
         yearRow.Add(InlineKeyboardButton.WithCallbackData(year.ToString(), $"/selectYear:{year}"));
 
-        if (yearRow.Count == 8)
+        if (yearRow.Count == 6)
         {
           years.Add(yearRow);
           yearRow = new List<InlineKeyboardButton>();

@@ -86,14 +86,20 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="cancellationToken">Токен отмены.</param>
     private Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
-      var ErrorMessage = exception switch
+      var errorMessage = exception switch
       {
-        ApiRequestException apiRequestException
-            => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-        _ => exception.ToString()
+        ApiRequestException apiRequestException =>
+            $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+        HttpRequestException httpRequestException =>
+            $"HTTP Request Error:\n{httpRequestException.Message}",
+        TaskCanceledException taskCanceledException =>
+            "Task was canceled. This might be due to a timeout or a manual cancellation.",
+        OperationCanceledException operationCanceledException =>
+            "Operation was canceled. This might be due to a timeout or a manual cancellation.",
+        _ => $"An unexpected error occurred:\n{exception}"
       };
 
-      LogError(ErrorMessage);
+      LogError(errorMessage);
       return Task.CompletedTask;
     }
 
@@ -253,6 +259,7 @@ namespace HomeWorkTelegramBot.Bot
                 messageId: callbackQuery.Message.MessageId,
                 replyMarkup: inlineKeyboard
             );
+
           }
           else
           {
