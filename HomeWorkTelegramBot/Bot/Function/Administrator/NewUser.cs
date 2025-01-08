@@ -116,7 +116,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
     private async Task NotifyUserAndAdmin(ITelegramBotClient botClient, CallbackQuery callbackQuery, long adminChatId, long userId, string result)
     {
       await TelegramBotHandler.SendMessageAsync(botClient, adminChatId, $"Пользователь с ChatId {userId} был {result}.", null, callbackQuery.Message.Id);
-      await TelegramBotHandler.SendMessageAsync(botClient, userId, $"Ваша регистрация была {result} администратором.", null, callbackQuery.Message.Id);
+      await TelegramBotHandler.SendMessageAsync(botClient, userId, $"Ваша регистрация была {result} администратором.");
     }
 
     /// <summary>

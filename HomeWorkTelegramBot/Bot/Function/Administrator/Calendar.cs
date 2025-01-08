@@ -21,6 +21,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
       await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите год:", yearKeyboard, callbackQuery.Message.MessageId);
     }
 
+    public async Task StartDateSelectionAsync(ITelegramBotClient botClient, Message message)
+    {
+      var yearKeyboard = CreateYearSelection();
+      await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, "Выберите год:", yearKeyboard);
+    }
+
     public async Task HandleDateSelectionAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       var data = callbackQuery.Data.Split(':');
@@ -67,6 +73,12 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
     {
       var state = DateSelectionStates[callbackQuery.Message.Chat.Id];
       await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.Message.Chat.Id, $"Вы выбрали дату: {state.Day}/{state.Month}/{state.Year}", null, callbackQuery.Message.Id);
+    }
+
+    public DateSelectionState ReturnBirthDate(ITelegramBotClient botClient, long chatId)
+    {
+      DateSelectionStates.TryGetValue(chatId, out var state);
+      return state;
     }
 
     public static InlineKeyboardMarkup CreateYearSelection()
@@ -150,6 +162,11 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
       public int Year { get; set; }
       public int Month { get; set; }
       public int Day { get; set; }
+
+      public DateOnly ToDateOnly()
+      {
+        return new DateOnly(Year, Month, Day);
+      }
     }
   }
 }
