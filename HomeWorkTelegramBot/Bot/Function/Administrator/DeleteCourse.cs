@@ -18,13 +18,15 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
     public async Task ShowCoursesForDeletionAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       var courses = CourseService.GetAllCourses();
-      var buttons = courses.Select(course => new List<InlineKeyboardButton>
-            {
-                InlineKeyboardButton.WithCallbackData(course.Name, $"/deleteCourse:{course.Id}")
-            }).ToList();
+      List<CallbackModel> callbacks = new List<CallbackModel>();
+      foreach (var course in courses)
+      {
+        callbacks.Add(new CallbackModel(course.Name, $"/deleteCourse:{course.Id}"));
+      }
 
-      var inlineKeyboard = new InlineKeyboardMarkup(buttons);
-      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите курс для удаления:", inlineKeyboard, callbackQuery.Message.Id);
+      var inlineKeyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks, itemsPerPage: 2);
+      var message = await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите курс для удаления:", inlineKeyboard, callbackQuery.Message.Id);
+      TelegramBotHandler.InitializePagination(callbackQuery.From.Id, message.MessageId, callbacks);
     }
 
     /// <summary>

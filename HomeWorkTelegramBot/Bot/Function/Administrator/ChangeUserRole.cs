@@ -35,10 +35,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
         callbacks.Add(new CallbackModel($"{user.Surname} {user.Name} {user.Lastname}", $"/select_user:{user.ChatId}"));
       }
 
-
       var inlineKeyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
       var message = await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Выберите пользователя:", inlineKeyboard, callbackQuery.Message.Id);
-
       TelegramBotHandler.InitializePagination(callbackQuery.From.Id, message.MessageId, callbacks);
     }
 

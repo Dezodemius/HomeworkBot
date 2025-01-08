@@ -194,11 +194,11 @@ namespace HomeWorkTelegramBot.Bot
       var navigationButtons = new List<InlineKeyboardButton>();
       if (currentPage > 0)
       {
-        navigationButtons.Add(InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"/page:{currentPage - 1}"));
+        navigationButtons.Add(InlineKeyboardButton.WithCallbackData("⬅️ Назад", $"/page:{currentPage - 1}:{itemsPerPage}"));
       }
       if (currentPage < totalPages - 1)
       {
-        navigationButtons.Add(InlineKeyboardButton.WithCallbackData("Вперед ➡️", $"/page:{currentPage + 1}"));
+        navigationButtons.Add(InlineKeyboardButton.WithCallbackData("Вперед ➡️", $"/page:{currentPage + 1}:{itemsPerPage}"));
       }
 
       if (navigationButtons.Any())
@@ -229,15 +229,15 @@ namespace HomeWorkTelegramBot.Bot
     /// <param name="callbackQuery">Объект callback-запроса.</param>
     /// <param name="itemsPerPage">Количество элементов на странице (по умолчанию 9).</param>
     /// <returns>Задача, представляющая асинхронную операцию обработки нажатия.</returns>
-    internal static async Task HandlePaginationCallbackAsync(ITelegramBotClient botClient,  CallbackQuery callbackQuery, int itemsPerPage = 9)
+    internal static async Task HandlePaginationCallbackAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       if (callbackQuery.Data.StartsWith("/page:"))
       {
-        // Извлекаем номер страницы из команды
+        // Извлекаем номер страницы и itemsPerPage из команды
         var pageData = callbackQuery.Data.Split(':');
-        if (pageData.Length == 2 && int.TryParse(pageData[1], out int newPage))
+        if (pageData.Length == 3 && int.TryParse(pageData[1], out int newPage) && int.TryParse(pageData[2], out int itemsPerPage))
         {
-          LogInformation($"Обработка пагинации для chatId: {callbackQuery.Message.Chat.Id}, messageId: {callbackQuery.Message.MessageId}, новая страница: {newPage}");
+          LogInformation($"Обработка пагинации для chatId: {callbackQuery.Message.Chat.Id}, messageId: {callbackQuery.Message.MessageId}, новая страница: {newPage}, itemsPerPage: {itemsPerPage}");
 
           // Получаем данные из кэша
           if (PaginationCache.TryGetValue(callbackQuery.Message.Chat.Id, out var messageCache) && messageCache.TryGetValue(callbackQuery.Message.MessageId, out var items))
@@ -248,7 +248,7 @@ namespace HomeWorkTelegramBot.Bot
             var inlineKeyboard = GetPaginatedInlineKeyboardMarkup(items, newPage, itemsPerPage);
 
             // Обновляем сообщение с новой клавиатурой
-            await botClient.EditMessageReplyMarkup(
+            await botClient.EditMessageReplyMarkupAsync(
                 chatId: callbackQuery.Message.Chat.Id,
                 messageId: callbackQuery.Message.MessageId,
                 replyMarkup: inlineKeyboard
