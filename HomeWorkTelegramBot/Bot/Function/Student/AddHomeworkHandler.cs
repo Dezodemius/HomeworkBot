@@ -114,10 +114,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
       }
 
       return new List<CallbackModel>
-    {
-        new CallbackModel("Сохранить", $"/saveAnswer_{taskId}"),
-        new CallbackModel("Отменить", $"/cancelAnswer"),
-    };
+      {
+          new CallbackModel("Сохранить", $"/saveAnswer_{taskId}"),
+          new CallbackModel("Отменить", $"/cancelAnswer"),
+      };
     }
 
     /// <summary>
@@ -163,95 +163,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
     }
 
     /// <summary>
-    /// Запрашивает у пользователя ввод ответа на домашнее задание и отображает кнопки "Сохранить" и "Отменить".
-    /// </summary>
-    /// <param name="botClient">Клиент Telegram-бота для отправки сообщений.</param>
-    /// <param name="message">Сообщение, содержащее текст ответа от пользователя.</param>
-    /// <returns>Задача, представляющая асинхронную операцию.</returns>
-    public async Task RequestAnswerConfirmationAsync2(ITelegramBotClient botClient, Message message)
-    {
-      if (UserTaskMap.TryGetValue(message.From.Id, out int taskId))
-      {
-        UserAnswerMap[message.From.Id] = message.Text;
-        var taskWork = TaskWorkService.GetTaskWorkById(taskId);
-        var course = CourseService.GetCourseById(taskWork.CourseId);
-        var courseEnrollment = CourseEnrollmentService.GetCourseEnrollmentByCourseAndUser(course.Id, message.Chat.Id);
-        var answer = AnswerService.GetAnswerByChatIdAndTaskId(message.Chat.Id, taskId);
-
-        var messageLast = await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, "Идёт проверка ответа. Пожалуйста, подождите...");
-        var result = new GitRepositoryManager().CloneAndPrepareRepository(message.Text, courseEnrollment, answer);
-
-        string statusEmoji = result != ErrorCode.None ? "🔴" : "🟢";
-
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.AppendLine($"Задание: {taskWork.Name}");
-        stringBuilder.AppendLine($"\r\nОписание: {taskWork.Description}");
-        stringBuilder.AppendLine($"\r\nВаш ответ: {message.Text}");
-        stringBuilder.AppendLine($"\r\n{statusEmoji} Статус проверки: <b>{GitLinkValidator.GetErrorMessage(result)}</b>");
-        stringBuilder.AppendLine($"\r\nВы хотите сохранить этот ответ?");
-
-        List<CallbackModel>? callbackModels = new List<CallbackModel>
-        {
-          new CallbackModel("Сохранить", $"/saveAnswer_{taskId}"),
-          new CallbackModel("Отменить", $"/cancelAnswer"),
-        };
-
-        await Task.Delay(1000);
-        await botClient.DeleteMessage(message.From.Id, messageLast.MessageId);
-
-        if (result == ErrorCode.CompiletedError)
-        {
-          var user = UserService.GetUserByChatId(message.From.Id);
-          string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HomeWorkAnswers", course.Name, $"{user.Name} {user.Surname} {user.Lastname}", $"{taskWork.Name}.txt");
-
-          Console.WriteLine($"Путь к файлу: {filePath}");
-
-          if (System.IO.File.Exists(filePath))
-          {
-            try
-            {
-              using (var errorStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-              {
-                var errorInputFile = InputFile.FromStream(errorStream);
-
-                await botClient.SendDocument(
-                        chatId: user.ChatId,
-                        document: errorInputFile,
-                        caption: "Файл с ошибками");
-              }
-            }
-            catch (Exception ex)
-            {
-              Console.WriteLine($"Ошибка при открытии файла: {ex.Message}");
-              await TelegramBotHandler.SendMessageAsync(botClient, user.ChatId, "Не удалось открыть файл с ошибками. Пожалуйста, попробуйте позже.");
-            }
-          }
-          else
-          {
-            Console.WriteLine("Файл не найден.");
-            await TelegramBotHandler.SendMessageAsync(botClient, user.ChatId, "Файл с ошибками не найден.");
-          }
-        }
-        else if (result != ErrorCode.None)
-        {
-          int lastNewLineIndex = stringBuilder.ToString().LastIndexOf(Environment.NewLine);
-          if (lastNewLineIndex >= 0)
-          {
-            stringBuilder.Remove(lastNewLineIndex, stringBuilder.Length - lastNewLineIndex);
-          }
-
-          callbackModels = null;
-        }
-
-        await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, stringBuilder.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
-      }
-      else
-      {
-        await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, "Ошибка: не удалось найти задание. Пожалуйста, попробуйте снова.");
-      }
-    }
-
-    /// <summary>
     /// Обрабатывает выбор пользователя и сохраняет ответ, если выбрано "Сохранить".
     /// </summary>
     /// <param name="botClient">Клиент Telegram-бота для отправки сообщений.</param>
@@ -260,47 +171,81 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
     public async Task ProcessAnswerAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       string data = callbackQuery.Data;
-      List<CallbackModel> callbackModels =
-      [
-        new CallbackModel("Вернуться к списку домашних работ", $"/viewHomework"),
-        new CallbackModel("На главную", $"/start"),
-      ];
+      var callbackModels = GetDefaultCallbackModels();
 
       if (data.StartsWith("/saveAnswer_"))
       {
-        int taskId = int.Parse(data.Replace("/saveAnswer_", ""));
-        if (UserTaskMap.TryGetValue(callbackQuery.From.Id, out int storedTaskId) && storedTaskId == taskId)
-        {
-          if (UserAnswerMap.TryGetValue(callbackQuery.From.Id, out string answerText))
-          {
-            var answer = AnswerService.GetAnswerByChatIdAndTaskId(callbackQuery.From.Id, taskId);
-            answer.AnswerText = answerText;
-            answer.Status = Answer.TaskStatus.Answered;
-
-            AnswerService.UpdateAnswer(answer);
-
-            var taskWork = TaskWorkService.GetTaskWorkById(taskId);
-
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine($"Задание: {taskWork.Name}");
-            stringBuilder.AppendLine($"\r\nОписание: {taskWork.Description}");
-            stringBuilder.AppendLine($"\r\nСтатус: {answer.Status}");
-            stringBuilder.AppendLine($"\r\nОтвет: {answer.AnswerText}");
-            stringBuilder.AppendLine($"\r\nВаш ответ сохранен.");
-
-            await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, stringBuilder.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
-
-            UserTaskMap.Remove(callbackQuery.From.Id);
-            UserAnswerMap.Remove(callbackQuery.From.Id);
-          }
-        }
+        await SaveAnswerAsync(botClient, callbackQuery, data, callbackModels);
       }
       else if (data == "/cancelAnswer")
       {
-        UserTaskMap.Remove(callbackQuery.From.Id);
-        UserAnswerMap.Remove(callbackQuery.From.Id);
-        await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Ответ отменен.", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
+        await CancelAnswerAsync(botClient, callbackQuery, callbackModels);
       }
+    }
+
+    /// <summary>
+    /// Получает стандартные модели обратного вызова.
+    /// </summary>
+    /// <returns>Список моделей обратного вызова.</returns>
+    private List<CallbackModel> GetDefaultCallbackModels()
+    {
+      return new List<CallbackModel>
+      {
+          new CallbackModel("Вернуться к списку домашних работ", $"/viewHomework"),
+          new CallbackModel("На главную", $"/start"),
+      };
+    }
+
+    /// <summary>
+    /// Сохраняет ответ пользователя, если выбрано "Сохранить".
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram-бота для отправки сообщений.</param>
+    /// <param name="callbackQuery">Запрос обратного вызова, содержащий данные о пользователе и команде.</param>
+    /// <param name="data">Данные из запроса обратного вызова.</param>
+    /// <param name="callbackModels">Список моделей обратного вызова.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    private async Task SaveAnswerAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery, string data, List<CallbackModel> callbackModels)
+    {
+      int taskId = int.Parse(data.Replace("/saveAnswer_", ""));
+      if (UserTaskMap.TryGetValue(callbackQuery.From.Id, out int storedTaskId) && storedTaskId == taskId)
+      {
+        if (UserAnswerMap.TryGetValue(callbackQuery.From.Id, out string answerText))
+        {
+          var answer = AnswerService.GetAnswerByChatIdAndTaskId(callbackQuery.From.Id, taskId);
+          answer.AnswerText = answerText;
+          answer.Status = Answer.TaskStatus.Answered;
+
+          AnswerService.UpdateAnswer(answer);
+
+          var taskWork = TaskWorkService.GetTaskWorkById(taskId);
+
+          StringBuilder stringBuilder = new StringBuilder();
+          stringBuilder.AppendLine($"Задание: {taskWork.Name}");
+          stringBuilder.AppendLine($"\r\nОписание: {taskWork.Description}");
+          stringBuilder.AppendLine($"\r\nСтатус: {answer.Status}");
+          stringBuilder.AppendLine($"\r\nОтвет: {answer.AnswerText}");
+          stringBuilder.AppendLine($"\r\nВаш ответ сохранен.");
+
+          await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, stringBuilder.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
+
+          UserTaskMap.Remove(callbackQuery.From.Id);
+          UserAnswerMap.Remove(callbackQuery.From.Id);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Отменяет ответ пользователя, если выбрано "Отменить".
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram-бота для отправки сообщений.</param>
+    /// <param name="callbackQuery">Запрос обратного вызова, содержащий данные о пользователе и команде.</param>
+    /// <param name="callbackModels">Список моделей обратного вызова.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    private async Task CancelAnswerAsync(ITelegramBotClient botClient, CallbackQuery callbackQuery, List<CallbackModel> callbackModels)
+    {
+      UserTaskMap.Remove(callbackQuery.From.Id);
+      UserAnswerMap.Remove(callbackQuery.From.Id);
+      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, "Ответ отменен.", TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels), callbackQuery.Message.Id);
     }
   }
 }
