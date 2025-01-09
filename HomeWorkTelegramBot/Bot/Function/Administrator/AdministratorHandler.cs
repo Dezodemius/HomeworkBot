@@ -56,7 +56,8 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
         { "/changeRole", async () => await new ChangeUserRole().ShowUserButtonsAsync(botClient, callbackQuery) },
         { "/select_", async () => await new ChangeUserRole().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/createCourse_select_teacher", async () =>  await new CreateCourse().ProcessCourseCreationStep(botClient, callbackQuery)},
-        { "/createCourse", async () =>
+        {
+          "/createCourse", async () =>
           {
             AdminActions[callbackQuery.From.Id] = AdminAction.CreateCourse;
             await new CreateCourse().ProcessCourseCreationStep(botClient, callbackQuery);

@@ -6,7 +6,7 @@ namespace HomeWorkTelegramBot.Models
   /// <summary>
   /// Представляет ответ на задание в системе.
   /// </summary>
-  internal class Answer
+  public class Answer
   {
     /// <summary>
     /// Статус ответа.

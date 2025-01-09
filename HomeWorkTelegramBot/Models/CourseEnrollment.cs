@@ -9,7 +9,7 @@ namespace HomeWorkTelegramBot.Models
   /// <summary>
   /// Модель, представляющая запись пользователя на курс.
   /// </summary>
-  internal class CourseEnrollment
+  public class CourseEnrollment
   {
     /// <summary>
     /// Уникальный идентификатор записи.

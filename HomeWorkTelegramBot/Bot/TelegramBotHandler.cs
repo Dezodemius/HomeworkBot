@@ -118,19 +118,19 @@ namespace HomeWorkTelegramBot.Bot
       {
         if (inlineKeyboardMarkup == null && messageId == null)
         {
-          return await botClient.SendMessage(chatId, message);
+          return await botClient.SendMessage(chatId, message, parseMode: ParseMode.Html);
         }
         else if (inlineKeyboardMarkup == null && messageId.HasValue)
         {
-          return await botClient.EditMessageText(chatId, messageId.Value, message);
+          return await botClient.EditMessageText(chatId, messageId.Value, message, parseMode: ParseMode.Html);
         }
         else if (messageId.HasValue)
         {
-          return await botClient.EditMessageText(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup);
+          return await botClient.EditMessageText(chatId, messageId.Value, message, replyMarkup: inlineKeyboardMarkup, parseMode: ParseMode.Html);
         }
         else
         {
-          return await botClient.SendMessage(chatId, message, replyMarkup: inlineKeyboardMarkup);
+          return await botClient.SendMessage(chatId, message, replyMarkup: inlineKeyboardMarkup, parseMode: ParseMode.Html);
         }
       }
       catch (Exception ex)
@@ -145,8 +145,12 @@ namespace HomeWorkTelegramBot.Bot
     /// </summary>
     /// <param name="data">Модели Callback/</param>
     /// <returns>Кнопки сообщения по моделям данных.</returns>
-    internal static InlineKeyboardMarkup GetInlineKeyboardMarkupAsync(List<CallbackModel> data)
+    internal static InlineKeyboardMarkup? GetInlineKeyboardMarkupAsync(List<CallbackModel>? data)
     {
+      if (data == null)
+      {
+        return null;
+      }
 
       List<List<InlineKeyboardButton>> buttons = new List<List<InlineKeyboardButton>>();
 
@@ -254,7 +258,7 @@ namespace HomeWorkTelegramBot.Bot
             var inlineKeyboard = GetPaginatedInlineKeyboardMarkup(items, newPage);
 
             // Обновляем сообщение с новой клавиатурой
-            await botClient.EditMessageReplyMarkupAsync(
+            await botClient.EditMessageReplyMarkup(
                 chatId: callbackQuery.Message.Chat.Id,
                 messageId: callbackQuery.Message.MessageId,
                 replyMarkup: inlineKeyboard

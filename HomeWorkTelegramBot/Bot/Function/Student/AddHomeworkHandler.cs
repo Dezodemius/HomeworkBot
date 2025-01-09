@@ -4,6 +4,8 @@ using Telegram.Bot.Types;
 using HomeWorkTelegramBot.Core;
 using HomeWorkTelegramBot.Models;
 using System.Text;
+using HomeWorkTelegramBot.Bot.Function.GitUtilities;
+using System.IO;
 
 namespace HomeWorkTelegramBot.Bot.Function.Student
 {
@@ -41,20 +43,205 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
       if (UserTaskMap.TryGetValue(message.From.Id, out int taskId))
       {
         UserAnswerMap[message.From.Id] = message.Text;
-
         var taskWork = TaskWorkService.GetTaskWorkById(taskId);
-        StringBuilder stringBuilder = new StringBuilder();
+        var course = CourseService.GetCourseById(taskWork.CourseId);
+        var courseEnrollment = CourseEnrollmentService.GetCourseEnrollmentByCourseAndUser(course.Id, message.Chat.Id);
+        var answer = AnswerService.GetAnswerByChatIdAndTaskId(message.Chat.Id, taskId);
 
+        var messageLast = await SendProcessingMessageAsync(botClient, message.From.Id);
+        var result = new GitRepositoryManager().CloneAndPrepareRepository(message.Text, courseEnrollment, answer);
+
+        var responseMessage = BuildResponseMessage(taskWork, message.Text, result);
+        var callbackModels = GetCallbackModels(result, taskId);
+
+        await Task.Delay(1000);
+        await botClient.DeleteMessageAsync(message.From.Id, messageLast.MessageId);
+
+        if (result == ErrorCode.CompiletedError)
+        {
+          await SendErrorFileAsync(botClient, message.From.Id, course, taskWork);
+        }
+
+        await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, responseMessage, TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
+      }
+      else
+      {
+        await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, "Ошибка: не удалось найти задание. Пожалуйста, попробуйте снова.");
+      }
+    }
+
+    /// <summary>
+    /// Отправляет сообщение о начале проверки ответа.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram-бота для отправки сообщений.</param>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <returns>Задача, представляющая асинхронную операцию отправки сообщения.</returns>
+    private async Task<Message> SendProcessingMessageAsync(ITelegramBotClient botClient, long chatId)
+    {
+      return await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Идёт проверка ответа. Пожалуйста, подождите...");
+    }
+
+    /// <summary>
+    /// Формирует сообщение с результатом проверки.
+    /// </summary>
+    /// <param name="taskWork">Информация о задании.</param>
+    /// <param name="userAnswer">Ответ пользователя.</param>
+    /// <param name="result">Результат проверки.</param>
+    /// <returns>Строка с сообщением для пользователя.</returns>
+    private string BuildResponseMessage(TaskWork taskWork, string userAnswer, ErrorCode result)
+    {
+      string statusEmoji = result != ErrorCode.None ? "🔴" : "🟢";
+      var stringBuilder = new StringBuilder();
+      stringBuilder.AppendLine($"Задание: {taskWork.Name}");
+      stringBuilder.AppendLine($"\r\nОписание: {taskWork.Description}");
+      stringBuilder.AppendLine($"\r\nВаш ответ: {userAnswer}");
+      stringBuilder.AppendLine($"\r\n{statusEmoji} Статус проверки: <b>{GitLinkValidator.GetErrorMessage(result)}</b>");
+      stringBuilder.AppendLine($"\r\nВы хотите сохранить этот ответ?");
+      return stringBuilder.ToString();
+    }
+
+    /// <summary>
+    /// Получает модели обратного вызова в зависимости от результата проверки.
+    /// </summary>
+    /// <param name="result">Результат проверки.</param>
+    /// <param name="taskId">Идентификатор задания.</param>
+    /// <returns>Список моделей обратного вызова.</returns>
+    private List<CallbackModel> GetCallbackModels(ErrorCode result, int taskId)
+    {
+      if (result != ErrorCode.None && result != ErrorCode.CompiletedError)
+      {
+        return null;
+      }
+
+      return new List<CallbackModel>
+    {
+        new CallbackModel("Сохранить", $"/saveAnswer_{taskId}"),
+        new CallbackModel("Отменить", $"/cancelAnswer"),
+    };
+    }
+
+    /// <summary>
+    /// Отправляет файл с ошибками пользователю, если он существует.
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram-бота для отправки сообщений.</param>
+    /// <param name="chatId">Идентификатор чата пользователя.</param>
+    /// <param name="course">Информация о курсе.</param>
+    /// <param name="taskWork">Информация о задании.</param>
+    /// <returns>Задача, представляющая асинхронную операцию отправки файла.</returns>
+    private async Task SendErrorFileAsync(ITelegramBotClient botClient, long chatId, Courses course, TaskWork taskWork)
+    {
+      var user = UserService.GetUserByChatId(chatId);
+      string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HomeWorkAnswers", course.Name, $"{user.Name} {user.Surname} {user.Lastname}", $"{taskWork.Name}.txt");
+
+      Console.WriteLine($"Путь к файлу: {filePath}");
+
+      if (System.IO.File.Exists(filePath))
+      {
+        try
+        {
+          using (var errorStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+          {
+            var errorInputFile = InputFile.FromStream(errorStream);
+
+            await botClient.SendDocument(
+                chatId: user.ChatId,
+                document: errorInputFile,
+                caption: "Файл с ошибками");
+          }
+        }
+        catch (Exception ex)
+        {
+          Console.WriteLine($"Ошибка при открытии файла: {ex.Message}");
+          await TelegramBotHandler.SendMessageAsync(botClient, user.ChatId, "Не удалось открыть файл с ошибками. Пожалуйста, попробуйте позже.");
+        }
+      }
+      else
+      {
+        Console.WriteLine("Файл не найден.");
+        await TelegramBotHandler.SendMessageAsync(botClient, user.ChatId, "Файл с ошибками не найден.");
+      }
+    }
+
+    /// <summary>
+    /// Запрашивает у пользователя ввод ответа на домашнее задание и отображает кнопки "Сохранить" и "Отменить".
+    /// </summary>
+    /// <param name="botClient">Клиент Telegram-бота для отправки сообщений.</param>
+    /// <param name="message">Сообщение, содержащее текст ответа от пользователя.</param>
+    /// <returns>Задача, представляющая асинхронную операцию.</returns>
+    public async Task RequestAnswerConfirmationAsync2(ITelegramBotClient botClient, Message message)
+    {
+      if (UserTaskMap.TryGetValue(message.From.Id, out int taskId))
+      {
+        UserAnswerMap[message.From.Id] = message.Text;
+        var taskWork = TaskWorkService.GetTaskWorkById(taskId);
+        var course = CourseService.GetCourseById(taskWork.CourseId);
+        var courseEnrollment = CourseEnrollmentService.GetCourseEnrollmentByCourseAndUser(course.Id, message.Chat.Id);
+        var answer = AnswerService.GetAnswerByChatIdAndTaskId(message.Chat.Id, taskId);
+
+        var messageLast = await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, "Идёт проверка ответа. Пожалуйста, подождите...");
+        var result = new GitRepositoryManager().CloneAndPrepareRepository(message.Text, courseEnrollment, answer);
+
+        string statusEmoji = result != ErrorCode.None ? "🔴" : "🟢";
+
+        StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.AppendLine($"Задание: {taskWork.Name}");
         stringBuilder.AppendLine($"\r\nОписание: {taskWork.Description}");
         stringBuilder.AppendLine($"\r\nВаш ответ: {message.Text}");
+        stringBuilder.AppendLine($"\r\n{statusEmoji} Статус проверки: <b>{GitLinkValidator.GetErrorMessage(result)}</b>");
         stringBuilder.AppendLine($"\r\nВы хотите сохранить этот ответ?");
 
-        List<CallbackModel> callbackModels = new List<CallbackModel>
+        List<CallbackModel>? callbackModels = new List<CallbackModel>
         {
           new CallbackModel("Сохранить", $"/saveAnswer_{taskId}"),
-          new CallbackModel("Отменить", $"/cancelAnswer")
+          new CallbackModel("Отменить", $"/cancelAnswer"),
         };
+
+        await Task.Delay(1000);
+        await botClient.DeleteMessage(message.From.Id, messageLast.MessageId);
+
+        if (result == ErrorCode.CompiletedError)
+        {
+          var user = UserService.GetUserByChatId(message.From.Id);
+          string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HomeWorkAnswers", course.Name, $"{user.Name} {user.Surname} {user.Lastname}", $"{taskWork.Name}.txt");
+
+          Console.WriteLine($"Путь к файлу: {filePath}");
+
+          if (System.IO.File.Exists(filePath))
+          {
+            try
+            {
+              using (var errorStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+              {
+                var errorInputFile = InputFile.FromStream(errorStream);
+
+                await botClient.SendDocument(
+                        chatId: user.ChatId,
+                        document: errorInputFile,
+                        caption: "Файл с ошибками");
+              }
+            }
+            catch (Exception ex)
+            {
+              Console.WriteLine($"Ошибка при открытии файла: {ex.Message}");
+              await TelegramBotHandler.SendMessageAsync(botClient, user.ChatId, "Не удалось открыть файл с ошибками. Пожалуйста, попробуйте позже.");
+            }
+          }
+          else
+          {
+            Console.WriteLine("Файл не найден.");
+            await TelegramBotHandler.SendMessageAsync(botClient, user.ChatId, "Файл с ошибками не найден.");
+          }
+        }
+        else if (result != ErrorCode.None)
+        {
+          int lastNewLineIndex = stringBuilder.ToString().LastIndexOf(Environment.NewLine);
+          if (lastNewLineIndex >= 0)
+          {
+            stringBuilder.Remove(lastNewLineIndex, stringBuilder.Length - lastNewLineIndex);
+          }
+
+          callbackModels = null;
+        }
 
         await TelegramBotHandler.SendMessageAsync(botClient, message.From.Id, stringBuilder.ToString(), TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels));
       }

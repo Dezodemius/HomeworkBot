@@ -73,6 +73,16 @@ namespace HomeWorkTelegramBot.DataBase
         .ToList();
     }
 
-
+    /// <summary>
+    /// Получает запись о зачислении пользователя на курс по идентификатору курса и пользователя.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Объект CourseEnrollment или null, если запись не найдена.</returns>
+    public CourseEnrollment GetCourseEnrollmentByCourseAndUser(int courseId, long userId)
+    {
+      return ApplicationData.DbContext.CourseEnrollments
+          .FirstOrDefault(e => e.CourseId == courseId && e.UserId == userId);
+    }
   }
 }

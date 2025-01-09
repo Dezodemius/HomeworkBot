@@ -128,5 +128,33 @@ namespace HomeWorkTelegramBot.Core
         throw;
       }
     }
+
+    /// <summary>
+    /// Получает запись о зачислении пользователя на курс по идентификатору курса и пользователя и логирует это действие.
+    /// </summary>
+    /// <param name="courseId">Идентификатор курса.</param>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Объект CourseEnrollment или null, если запись не найдена.</returns>
+    public static CourseEnrollment GetCourseEnrollmentByCourseAndUser(int courseId, long userId)
+    {
+      try
+      {
+        var enrollment = enrollmentRepository.GetCourseEnrollmentByCourseAndUser(courseId, userId);
+        if (enrollment != null)
+        {
+          LogInformation($"Найдена запись о зачислении: CourseId - {courseId}, UserId - {userId}");
+        }
+        else
+        {
+          LogWarning($"Запись о зачислении не найдена: CourseId - {courseId}, UserId - {userId}");
+        }
+        return enrollment;
+      }
+      catch (Exception ex)
+      {
+        LogError($"Ошибка при получении записи о зачислении: {ex.Message}");
+        throw;
+      }
+    }
   }
 }

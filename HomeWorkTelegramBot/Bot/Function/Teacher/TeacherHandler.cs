@@ -51,7 +51,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         { "/createhw", async () => await new NewTaskWork().HandleCallback(botClient, callbackQuery) },
         { "/selectcourse_nt", async () => await new NewTaskWork().HandleCallback(botClient, callbackQuery) },
-
+        
         { "/studhwstat", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectcourse_sd", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/selectuser_", async () => await new GetStudentStatistics().HandleCallbackQueryAsync(botClient, callbackQuery) },

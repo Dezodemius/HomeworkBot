@@ -85,19 +85,17 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
           var errorInputFile = InputFile.FromStream(errorStream);
           var originalInputFile = InputFile.FromStream(originalStream);
 
-          await botClient.DeleteMessageAsync(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId);
+          await botClient.DeleteMessage(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId);
 
           await botClient.SendDocument(
               chatId: callbackQuery.Message.Chat.Id,
               document: errorInputFile,
-              caption: "Файл с ошибками"
-          );
+              caption: "Файл с ошибками");
 
           await botClient.SendDocument(
               chatId: callbackQuery.Message.Chat.Id,
               document: originalInputFile,
-              caption: "Исходный лог-файл"
-          );
+              caption: "Исходный лог-файл");
         }
       }
       finally
