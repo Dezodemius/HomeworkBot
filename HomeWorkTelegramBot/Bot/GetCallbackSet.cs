@@ -1,23 +1,20 @@
 ﻿using HomeWorkTelegramBot.Models;
-using Telegram.Bot.Types;
-using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Text;
 using HomeWorkTelegramBot.Core;
 
 namespace HomeWorkTelegramBot.Bot
 {
-  internal class GetInlineKeyboard
+  internal class GetCallbackSet
   {
     /// <summary>
     /// Создает клавиатуру с курсами.
     /// </summary>
     /// <param name="courses">Список курсов.</param>
     /// <returns>Клавиатуру с данными о курсах.</returns>
-    public static InlineKeyboardMarkup GetCoursesKeyboard(List<Courses> courses, string commandText, int page = 0)
+    public static List<CallbackModel> GetCoursesCallbacks(List<Courses> courses, string commandText)
     {
-      return GetPagination(courses, commandText, page);
+      return GetCallbacks(courses, commandText);
     }
 
     /// <summary>
@@ -25,9 +22,9 @@ namespace HomeWorkTelegramBot.Bot
     /// </summary>
     /// <param name="users">Список студентов курса.</param>
     /// <returns>Клавиатуру с данными о студентах.</returns>
-    public static InlineKeyboardMarkup GetStudentsKeyboard(List<Models.User> users, string commandText, int page = 0)
+    public static List<CallbackModel> GetStudentsCallbacks(List<Models.User> users, string commandText)
     {
-      return GetPagination(users, commandText, page);
+      return GetCallbacks(users, commandText);
     }
 
     /// <summary>
@@ -35,9 +32,9 @@ namespace HomeWorkTelegramBot.Bot
     /// </summary>
     /// <param name="tasks">Список заданий курса.</param>
     /// <returns>Клавиатуру с данными о заданиях.</returns>
-    public static InlineKeyboardMarkup GetTaskKeyboard(List<TaskWork> tasks, int page = 0)
+    public static List<CallbackModel> GetTaskCallbacks(List<TaskWork> tasks)
     {
-      return GetPagination(tasks, "selecttask", page);
+      return GetCallbacks(tasks, "selecttask");
     }
 
     /// <summary>
@@ -45,9 +42,9 @@ namespace HomeWorkTelegramBot.Bot
     /// </summary>
     /// <param name="tasks">Список заданий курса.</param>
     /// <returns>Клавиатуру с данными о заданиях.</returns>
-    public static InlineKeyboardMarkup GetAnswersKeyboard(List<Answer> answers, int page = 0)
+    public static List<CallbackModel> GetAnswersCallbacks(List<Answer> answers)
     {
-      return GetPagination(answers, "selectanswer", page);
+      return GetCallbacks(answers, "selectanswer");
     }
 
     /// <summary>
@@ -56,25 +53,13 @@ namespace HomeWorkTelegramBot.Bot
     /// <typeparam name="T">Тип объекта (User, TaskWork или Courses).</typeparam>
     /// <param name="items">Список объектов.</param>
     /// <param name="commandText">Префикс команды.</param>
-    /// <param name="page">Текущая страница.</param>
-    /// <param name="itemsPerPage">Количество элементов на странице.</param>
     /// <returns>Клавиатура с кнопками и навигацией.</returns>
-    private static InlineKeyboardMarkup GetPagination<T>(List<T> items, string commandText, int page = 1, int itemsPerPage = 2)
+    private static List<CallbackModel> GetCallbacks<T>(List<T> items, string commandText)
     {
       List<CallbackModel> callbackModels = new List<CallbackModel>();
-
-      //var totalPages = (int)Math.Ceiling(items.Count / (double)itemsPerPage);
-      //page = Math.Max(1, Math.Min(page, totalPages));
-      //var pageItems = items
-      //  .Skip((page - 1) * itemsPerPage)
-      //  .Take(itemsPerPage);
-
-
       GetDataButtons(commandText, callbackModels, items);
-      return TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbackModels);
-      //GetNavigationButtons(page, callbackModels, totalPages);
-
-      //return TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
+      return callbackModels;
+      //return TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbackModels);
     }
 
     /// <summary>
@@ -138,36 +123,6 @@ namespace HomeWorkTelegramBot.Bot
       }
 
       return $"Для ответа с id {answer.Id} не найдено задание.";
-    }
-
-    /// <summary>
-    /// Формирует и добавляет кнопки навигации.
-    /// </summary>
-    /// <param name="page">Номер страницы.</param>
-    /// <param name="callbackModels">Список объектов класса CallbackModel.</param>
-    /// <param name="totalPages">Общее число страниц.</param>
-    private static void GetNavigationButtons(int page, List<CallbackModel> callbackModels, int totalPages)
-    {
-      if (totalPages != 0)
-      {
-        if (page > 1)
-        {
-          callbackModels.Add(new CallbackModel("◀️", $"page_{page - 1}"));
-        }
-
-        callbackModels.Add(new CallbackModel($"{page}/{totalPages}", "current_page"));
-
-        if (page < totalPages)
-        {
-          callbackModels.Add(new CallbackModel("▶️", $"page_{page + 1}"));
-        }
-
-        callbackModels.Add(new CallbackModel($"В главное меню", "/menu"));
-      }
-      else
-      {
-        callbackModels.Add(new CallbackModel($"В главное меню", "/menu"));
-      }
     }
   }
 }

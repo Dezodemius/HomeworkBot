@@ -1,8 +1,4 @@
-﻿using HomeWorkTelegramBot.Core;
-using HomeWorkTelegramBot.DataBase;
-using HomeWorkTelegramBot.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Text;
+﻿using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -31,13 +27,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
     public async Task HandleCallback(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
-      //if (callbackQuery.Data.StartsWith("page_"))
-      //{
-      //  int page = int.Parse(callbackQuery.Data.Split('_')[1]);
-      //  //await HandlePagination(botClient, callbackQuery, page);
-      //  return;
-      //}
-
       if (callbackQuery.Data.StartsWith("/selectcourse_"))
       {
         string[] parts = callbackQuery.Data.Split('_');
@@ -81,84 +70,38 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
     }
 
-    /*public async Task HandlePagination(ITelegramBotClient botClient, CallbackQuery callbackQuery, int page)
-    {
-      var messageText = callbackQuery.Message.Text;
-      InlineKeyboardMarkup newKeyboard = null;
-
-      using (var context = new ApplicationDbContext())
-      {
-        if (messageText.Contains("выберите курс"))
-        {
-          var courses = await context.Courses
-            .Where(c => c.TeacherId == callbackQuery.From.Id)
-            .ToListAsync();
-          string commandText = messageText.Contains("статистики") ? "selectcourse_tw" : "selectcourse_sd";
-          newKeyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, commandText, page);
-        }
-        else if (messageText.Contains("студент"))
-        {
-          var studentsId = CourseEnrollmentService.GetAllUsersCourseEnrollments(_selectedCourseId);
-          var students = new List<Models.User>();
-          foreach (var student in studentsId)
-          {
-            var foundStudent = UserService.GetUserById(student.Id);
-            if (foundStudent != null)
-            {
-              students.Add(foundStudent);
-            }
-          }
-
-          newKeyboard = GetInlineKeyboard.GetStudentsKeyboard(students, "selectuser", page);
-        }
-        else if (messageText.Contains("задание"))
-        {
-          var tasks = await context.TaskWorks
-            .Where(tw => tw.CourseId == _selectedCourseId)
-            .ToListAsync();
-          newKeyboard = GetInlineKeyboard.GetTaskKeyboard(tasks, page);
-        }
-      }
-
-      if (newKeyboard != null)
-      {
-        await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.Message.Chat.Id, callbackQuery.Message.Text, newKeyboard, callbackQuery.Message.Id);
-      }
-    }*/
 
     public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
     {
       StringBuilder sb = new StringBuilder();
       sb.AppendLine("Добро пожаловать в панель преподавателя. Выберите действие:");
-      InlineKeyboardMarkup keyboard = CreateDefaultKeyboard();
-
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, sb.ToString(), keyboard);
+      List<CallbackModel> callbacks = GetDefaultButtonsCallbacks();
+      InlineKeyboardMarkup keyboard = CreateDefaultKeyboard(callbacks);
+      var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, sb.ToString(), keyboard);
+      TelegramBotHandler.InitializePagination(chatId, message.MessageId, callbacks);
     }
 
-    private static InlineKeyboardMarkup CreateDefaultKeyboard()
+    private static List<CallbackModel> GetDefaultButtonsCallbacks()
     {
-      return new InlineKeyboardMarkup(new[]
-            {
-        new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Создать новое домашнее задание", "/createhw"),
-            },
-        new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Посмотреть статусы домашних заданий студента", "/studhwstat"),
-            },
-        new[]
-            {
-                InlineKeyboardButton.WithCallbackData("Посмотреть выполнение домашнего задания", "/hwstatistics"),
-            },
-      });
+      return new List<CallbackModel>
+      {
+        new CallbackModel("Создать новое домашнее задание", "/createhw"),
+        new CallbackModel("Посмотреть статусы домашних заданий студента", "/studhwstat"),
+        new CallbackModel("Посмотреть выполнение домашнего задания", "/hwstatistics")
+      };
+    }
+
+    private static InlineKeyboardMarkup CreateDefaultKeyboard(List<CallbackModel> callbacks)
+    {
+      return TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
     }
 
     private async Task HandleMenuCommand(ITelegramBotClient botClient, CallbackQuery callbackQuery)
     {
       StringBuilder sb = new StringBuilder();
       sb.AppendLine("Выберите действие:");
-      InlineKeyboardMarkup keyboard = CreateDefaultKeyboard();
+      List<CallbackModel> callbacks = GetDefaultButtonsCallbacks();
+      InlineKeyboardMarkup keyboard = CreateDefaultKeyboard(callbacks);
       await new RateTaskWorkHandler().ClearData();
       await new GetStudentStatistics().ClearData();
       await new GetTaskWorkStatistics().ClearData();

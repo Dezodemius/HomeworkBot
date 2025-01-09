@@ -54,7 +54,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
       if (!_userSteps.ContainsKey(chatId))
       {
-        await InitializeCreation(botClient, chatId);
+        await InitializeCreation(botClient, chatId, callbackQuery.Message.MessageId);
         return;
       }
 
@@ -86,7 +86,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
       if (!_userSteps.ContainsKey(chatId))
       {
-        await InitializeCreation(botClient, chatId);
+        await InitializeCreation(botClient, chatId, message.MessageId);
         return;
       }
 
@@ -211,14 +211,16 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
     /// <param name="chatId">Уникальный идентификатор чата пользователя.</param>
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
-    private static async Task InitializeCreation(ITelegramBotClient botClient, long chatId)
+    private static async Task InitializeCreation(ITelegramBotClient botClient, long chatId, int messageId)
     {
       _userSteps[chatId] = CreationStep.CourseSelection;
       _creationData[chatId] = new TaskWork();
       LogInformation($"Начало создания нового задания преподавателем с ChatId {chatId}");
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
-      var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, "selectcourse_nt");
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard);
+      var callbacks = GetCallbackSet.GetCoursesCallbacks(courses, "selectcourse_nt");
+      var keyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
+      var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Пожалуйста, выберите курс:", keyboard, messageId);
+      TelegramBotHandler.InitializePagination(chatId, message.MessageId, callbacks);
     }
 
     /// <summary>

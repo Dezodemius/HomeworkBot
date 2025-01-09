@@ -141,12 +141,15 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         task.CourseId = courseId;
         _userSteps[chatId] = GetTaskStep.TaskSelection;
         var courseTasks = TaskWorkService.GetTaskWorksByCourseId(courseId);
-        var keyboard = GetInlineKeyboard.GetTaskKeyboard(courseTasks);
+        var callbacks = GetCallbackSet.GetTaskCallbacks(courseTasks);
+        callbacks.Add(new CallbackModel("В главное меню", $"/menu"));
+        var keyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
         LogInformation($"Курс {courseId} выбран для просмотра статистики выполнения заданий студентами преподавателем с ChatId {chatId}");
         if (courseTasks.Count > 0)
         {
-          await TelegramBotHandler.SendMessageAsync(botClient, chatId,
+          var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId,
             $"Был выбран курс: {courseId}. Пожалуйста, выберите задание:", keyboard, messageId);
+          TelegramBotHandler.InitializePagination(callbackQuery.From.Id, message.MessageId, callbacks);
         }
         else
         {
@@ -175,9 +178,16 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _userSteps[chatId] = GetTaskStep.AnswerSelection;
         string messageData = GetMessageData(chatId, task);
         var users = GetUsersByChatId(task);
-        var keyboard = GetInlineKeyboard.GetStudentsKeyboard(users, "useransw");
+        var callbacks = GetCallbackSet.GetStudentsCallbacks(users, "useransw");
+        var keyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
+        if (keyboard.InlineKeyboard.Count() == 0)
+        {
+          keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(new CallbackModel("В главвное меню", $"/menu"));
+        }
+
         LogInformation($"Студент с chatId {taskId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");
-        await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
+        var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
+        TelegramBotHandler.InitializePagination(callbackQuery.From.Id, message.MessageId, callbacks);
       }
     }
 
@@ -195,7 +205,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       if (answers != null)
       {
         var users = new List<Models.User>();
-        foreach(var answer in answers)
+        foreach (var answer in answers)
         {
           var user = UserService.GetUserByChatId(answer.UserId);
           if (user != null)
@@ -296,8 +306,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       _taskData[chatId] = new TaskWork();
       LogInformation($"Начало получения статистики выполнения задания преподавателем с ChatId {chatId}");
       var courses = CourseService.GetAllCoursesByTeacherId(chatId);
-      var keyboard = GetInlineKeyboard.GetCoursesKeyboard(courses, "selectcourse_tw");
-      await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Для получения статистики выполнения задания, пожалуйста, выберите курс:", keyboard, messageId);
+      var callbacks = GetCallbackSet.GetCoursesCallbacks(courses, "selectcourse_tw");
+      var keyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
+      var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Для получения статистики выполнения задания, пожалуйста, выберите курс:", keyboard, messageId);
+      TelegramBotHandler.InitializePagination(chatId, message.MessageId, callbacks);
     }
 
     public static async Task ClearData()

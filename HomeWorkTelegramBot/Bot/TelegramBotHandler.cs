@@ -30,7 +30,6 @@ namespace HomeWorkTelegramBot.Bot
     /// <summary>
     /// Инициализирует новый экземпляр класса TelegramBotHandler.
     /// </summary>
-    /// <param name="dbManager">Менеджер базы данных.</param>
     /// <param name="botToken">Токен Telegram бота.</param>
     public TelegramBotHandler(string botToken)
     {
