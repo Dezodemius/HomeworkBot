@@ -155,7 +155,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     /// <returns>Возвращает созданную Inline-клавиатуру.</returns>
     private static InlineKeyboardMarkup GetMenuKeyboard()
     {
-      var callbackModels = new CallbackModel("В главное меню", "/menu");
+      var callbackModels = new CallbackModel("В главное меню", "/start");
       var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
       return keyboard;
     }

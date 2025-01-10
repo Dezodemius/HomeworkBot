@@ -61,7 +61,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         return;
       }
 
-      if (data == "/menu" && _userSteps.ContainsKey(chatId))
+      if (data == "/start" && _userSteps.ContainsKey(chatId))
       {
         var messageData = $"Обновление данных об ответе на задание с id {_taskData[chatId].Id} прервано";
         await CompleteTaskCheck(botClient, chatId, _taskData[chatId].Id, callbackQuery.Message.MessageId, messageData);
@@ -142,7 +142,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         _userSteps[chatId] = GetTaskStep.TaskSelection;
         var courseTasks = TaskWorkService.GetTaskWorksByCourseId(courseId);
         var callbacks = GetCallbackSet.GetTaskCallbacks(courseTasks);
-        callbacks.Add(new CallbackModel("В главное меню", $"/menu"));
+        callbacks.Add(new CallbackModel("В главное меню", $"/start"));
         var keyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
         LogInformation($"Курс {courseId} выбран для просмотра статистики выполнения заданий студентами преподавателем с ChatId {chatId}");
         if (courseTasks.Count > 0)
@@ -182,7 +182,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         var keyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
         if (keyboard.InlineKeyboard.Count() == 0)
         {
-          keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(new CallbackModel("В главвное меню", $"/menu"));
+          keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(new CallbackModel("В главное меню", $"/start"));
         }
 
         LogInformation($"Студент с chatId {taskId} выбран для просмотра статистики выполнения заданий студента преподавателем с ChatId {chatId}");

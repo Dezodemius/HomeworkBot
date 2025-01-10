@@ -14,6 +14,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
   internal class RateTaskWork
   {
     private static readonly Dictionary<long, Answer> _answerData = new Dictionary<long, Answer>();
+    private static readonly Dictionary<long, List<string>> _comentsData = new Dictionary<long, List<string>>();
     private static readonly Dictionary<long, UpdateAnswerStatus> _userSteps = new Dictionary<long, UpdateAnswerStatus>();
 
     /// <summary>
@@ -25,6 +26,16 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       /// Этап изменения статуса ответа.
       /// </summary>
       ChoseAnswerStatus,
+
+      /// <summary>
+      /// Этап добавления комментариев к ответа.
+      /// </summary>
+      AddComment,
+
+      /// <summary>
+      /// Этап подтверждения сохранения ответа.
+      /// </summary>
+      SaveAnswerConfirmation,
 
       /// <summary>
       /// Процесс выбора завершен.
@@ -53,7 +64,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         return;
       }
 
-      if (data == "/menu" && _userSteps.ContainsKey(chatId))
+      if (data == "/start" && _userSteps.ContainsKey(chatId))
       {
         var messageData = $"Обновление данных об ответе на задание с id {_answerData[chatId].Id} прервано";
         await CompleteAnswerUpdate(botClient, chatId, taskId, callbackQuery.Message.MessageId, messageData);
@@ -66,7 +77,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         case UpdateAnswerStatus.ChoseAnswerStatus:
           await HandleAnswerSelection(botClient, callbackQuery);
-          currentStep = UpdateAnswerStatus.Completed;
+          break;
+
+        case UpdateAnswerStatus.AddComment:
+          await HandleAddComment(botClient, callbackQuery);
           break;
 
         case UpdateAnswerStatus.Completed:
@@ -104,6 +118,37 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
       var messageData = $"Данные об ответе на задание с id {answerId} изменены";
       await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, messageId, messageData);
+    }
+
+    /// <summary>
+    /// Обрабатывает добавление нового комментария к ответу на задание.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="callbackQuery">Callback-запрос, полученный от пользователя.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
+    private static async Task HandleAddComment(ITelegramBotClient botClient, CallbackQuery callbackQuery)
+    {
+      long chatId = callbackQuery.From.Id;
+      string data = callbackQuery.Data;
+      int messageId = callbackQuery.Message.MessageId;
+      int answerId = -1;
+      var status = Answer.TaskStatus.IncorrectAnswer;
+      if (data.StartsWith("/correct_"))
+      {
+        answerId = int.Parse(data.Replace("/correct_", string.Empty));
+        status = Answer.TaskStatus.CorrectAnswer;
+      }
+
+      if (data.StartsWith("/incorrect_"))
+      {
+        answerId = int.Parse(data.Replace("/incorrect_", string.Empty));
+      }
+
+      //TryChangeAnswerStatus(botClient, chatId, answerId, status);
+
+      //var messageData = $"Данные об ответе на задание с id {answerId} изменены";
+      //await CompleteAnswerUpdate(botClient, chatId, _answerData[chatId].TaskId, messageId, messageData);
+
     }
 
     /// <summary>
@@ -216,7 +261,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       }
       else
       {
-        var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(new CallbackModel("В главное меню", "/menu"));
+        var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(new CallbackModel("В главное меню", "/start"));
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, "Не найден ответ выбранного пользователя", keyboard, messageId);
       }
     }
@@ -232,7 +277,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
           {
           new ("Правильный ответ", $"/correct_{_answerData[chatId].Id}"),
           new ("Неправильный ответ", $"/incorrect_{_answerData[chatId].Id}"),
-          new ("В главное меню", "/menu"),
+          new ("В главное меню", "/start"),
           };
       var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
       return keyboard;
@@ -297,7 +342,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       if (_answerData.TryGetValue(chatId, out var answer))
       {
         LogInformation($"{messageData} преподавателем с ChatId {chatId}");
-        var callbackModels = new CallbackModel("В главное меню", "/menu");
+        var callbackModels = new CallbackModel("В главное меню", "/start");
         var keyboard = TelegramBotHandler.GetInlineKeyboardMarkupAsync(callbackModels);
         await TelegramBotHandler.SendMessageAsync(botClient, chatId, messageData, keyboard, messageId);
         await ClearData();

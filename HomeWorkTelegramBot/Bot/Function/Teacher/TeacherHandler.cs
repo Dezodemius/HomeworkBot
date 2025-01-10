@@ -54,7 +54,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         { "/correct_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/incorrect_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
 
-        { "/menu", async () => await new TeacherHandler().HandleMenuCommand(botClient, callbackQuery) },
+        { "/start", async () => await HandleStartButton(botClient, callbackQuery.From.Id) },
         { "/page:", async () => await TelegramBotHandler.HandlePaginationCallbackAsync(botClient, callbackQuery) },
 
       };
@@ -77,6 +77,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       sb.AppendLine("Добро пожаловать в панель преподавателя. Выберите действие:");
       List<CallbackModel> callbacks = GetDefaultButtonsCallbacks();
       InlineKeyboardMarkup keyboard = CreateDefaultKeyboard(callbacks);
+      await new RateTaskWorkHandler().ClearData();
+      await new GetStudentStatistics().ClearData();
+      await new GetTaskWorkStatistics().ClearData();
+      await new NewTaskWork().ClearData();
       var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, sb.ToString(), keyboard);
       TelegramBotHandler.InitializePagination(chatId, message.MessageId, callbacks);
     }
