@@ -35,7 +35,7 @@ namespace HomeWorkTelegramBot.Bot.Function.UnregisteredUser
       }
     }
 
-    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int? messageId = null)
     {
       throw new NotImplementedException();
     }

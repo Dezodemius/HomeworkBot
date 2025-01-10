@@ -221,8 +221,13 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
         answer.UserId = userId;
         _userSteps[chatId] = GetStudentDataStep.AnswerSelection;
         string messageData = GetMessageData(answer);
-       // var callbacks = GetInlineKeyboard.GetDataButtons();
-        var callbacks = GetMessageButtons(answer);
+        // var callbacks = GetInlineKeyboard.GetDataButtons();
+        var callbacks = new List<CallbackModel>();
+        var messageButtons = GetMessageButtons(answer);
+        if (messageButtons != null)
+        {
+          callbacks = messageButtons;
+        }
         callbacks.Add(new CallbackModel("В главное меню", $"/start"));
         var keyboard = TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
         if (keyboard != null)

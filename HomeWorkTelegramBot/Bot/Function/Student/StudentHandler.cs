@@ -33,7 +33,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
     {
       var commandHandlers = new Dictionary<string, Func<Task>>
       {
-        { "/start", async () => await HandleStartButton(botClient, callbackQuery.From.Id)},
+        { "/start", async () => await HandleStartButton(botClient, callbackQuery.From.Id, callbackQuery.Message.MessageId)},
         { "/viewHomework_id", async () => await new HomeworkHandler().HandleHomeworkSelection(botClient, callbackQuery) },
         { "/viewHomework", async () => await new HomeworkHandler().DisplayHomework(botClient, callbackQuery) },
       };
@@ -48,7 +48,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Student
       }
     }
 
-    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int? messageId = null)
     {
       string message = $"{Utils.TimeGreeting.GetGreeting()}. Выберите функцию:";
       List<CallbackModel> callbacks = new List<CallbackModel>();
