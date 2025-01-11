@@ -21,6 +21,18 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     }
 
     /// <summary>
+    /// Обрабатывает callback-запрос, полученный от пользователя.
+    /// </summary>
+    /// <param name="botClient">Экземпляр клиента Telegram бота.</param>
+    /// <param name="callbackQuery">Callback-запрос, полученный от пользователя.</param>
+    /// <param name="taskId">Уникальный идентификатор задания.</param>
+    /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>
+    public async Task HandleMessageAsync(ITelegramBotClient botClient, Message message, int taskId = -1)
+    {
+      await RateTaskWork.ProcessUpdateAnswer(botClient, message, taskId);
+    }
+
+    /// <summary>
     /// Очищает временные данные.
     /// </summary>
     /// <returns>Асинхронная задача, представляющая процесс обработки.</returns>

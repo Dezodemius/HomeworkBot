@@ -40,7 +40,7 @@ namespace HomeWorkTelegramBot.Bot.Function.Administrator
       }
     }
 
-    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int? messageId = null)
     {
       Mode.AllReset();
       List<CallbackModel> callbackModels = new List<CallbackModel>();

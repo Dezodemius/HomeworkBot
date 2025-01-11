@@ -16,6 +16,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
       {
         await new NewTaskWork().HandleMessageAsync(botClient, message);
       }
+      else if (RateTaskWork._comentsData!=null)
+      {
+        await new RateTaskWorkHandler().HandleMessageAsync(botClient, message);
+      }
       else
       {
         if (message.Text == "/start")
@@ -53,8 +57,10 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
 
         { "/correct_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
         { "/incorrect_", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/save", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
+        { "/addcomment", async () => await new RateTaskWorkHandler().HandleCallbackQueryAsync(botClient, callbackQuery) },
 
-        { "/menu", async () => await new TeacherHandler().HandleMenuCommand(botClient, callbackQuery) },
+        { "/start", async () => await HandleStartButton(botClient, callbackQuery.From.Id, callbackQuery.Message.MessageId) },
         { "/page:", async () => await TelegramBotHandler.HandlePaginationCallbackAsync(botClient, callbackQuery) },
 
       };
@@ -71,13 +77,17 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     }
 
 
-    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId)
+    public async Task HandleStartButton(ITelegramBotClient botClient, long chatId, int? messageId = null)
     {
       StringBuilder sb = new StringBuilder();
       sb.AppendLine("Добро пожаловать в панель преподавателя. Выберите действие:");
       List<CallbackModel> callbacks = GetDefaultButtonsCallbacks();
       InlineKeyboardMarkup keyboard = CreateDefaultKeyboard(callbacks);
-      var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, sb.ToString(), keyboard);
+      await new RateTaskWorkHandler().ClearData();
+      await new GetStudentStatistics().ClearData();
+      await new GetTaskWorkStatistics().ClearData();
+      await new NewTaskWork().ClearData();
+      var message = await TelegramBotHandler.SendMessageAsync(botClient, chatId, sb.ToString(), keyboard, messageId);
       TelegramBotHandler.InitializePagination(chatId, message.MessageId, callbacks);
     }
 
@@ -94,20 +104,6 @@ namespace HomeWorkTelegramBot.Bot.Function.Teacher
     private static InlineKeyboardMarkup CreateDefaultKeyboard(List<CallbackModel> callbacks)
     {
       return TelegramBotHandler.GetPaginatedInlineKeyboardMarkup(callbacks);
-    }
-
-    private async Task HandleMenuCommand(ITelegramBotClient botClient, CallbackQuery callbackQuery)
-    {
-      StringBuilder sb = new StringBuilder();
-      sb.AppendLine("Выберите действие:");
-      List<CallbackModel> callbacks = GetDefaultButtonsCallbacks();
-      InlineKeyboardMarkup keyboard = CreateDefaultKeyboard(callbacks);
-      await new RateTaskWorkHandler().ClearData();
-      await new GetStudentStatistics().ClearData();
-      await new GetTaskWorkStatistics().ClearData();
-      await new NewTaskWork().ClearData();
-
-      await TelegramBotHandler.SendMessageAsync(botClient, callbackQuery.From.Id, sb.ToString(), keyboard, callbackQuery.Message.Id);
     }
   }
 }
